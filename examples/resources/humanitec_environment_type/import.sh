@@ -1,0 +1,1 @@
+terraform import humanitec_environment_type.environment_type "development"

@@ -38,9 +38,9 @@ const (
 
 // Defines values for RunnerType.
 const (
-	RunnerTypeKubernetes       RunnerType = "kubernetes"
-	RunnerTypeKubernetesGke    RunnerType = "kubernetes-gke"
-	RunnerTypeRemoteKubernetes RunnerType = "remote-kubernetes"
+	RunnerTypeKubernetes      RunnerType = "kubernetes"
+	RunnerTypeKubernetesAgent RunnerType = "kubernetes-agent"
+	RunnerTypeKubernetesGke   RunnerType = "kubernetes-gke"
 )
 
 // Defines values for StateStorageType.
@@ -340,6 +340,33 @@ type InternalRunner struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// K8sAgentRunnerConfiguration Runner configuration for a Kubernetes Agent.
+type K8sAgentRunnerConfiguration struct {
+	// Job Properties of the Kubernetes Runner Job.
+	Job K8sRunnerJobConfig `json:"job"`
+
+	// Key A public ed25519 key in PEM format. The caller must hold the matching private key.
+	Key K8sAgentRunnerKey `json:"key"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
+// K8sAgentRunnerConfigurationUpdateBody Object to update an existing runner configuration for a Kubernetes Agent.
+type K8sAgentRunnerConfigurationUpdateBody struct {
+	// Job Properties of the Kubernetes Runner Job.
+	Job *K8sRunnerJobConfig `json:"job,omitempty"`
+
+	// Key A public ed25519 key in PEM format. The caller must hold the matching private key.
+	Key *K8sAgentRunnerKey `json:"key,omitempty"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
+// K8sAgentRunnerKey A public ed25519 key in PEM format. The caller must hold the matching private key.
+type K8sAgentRunnerKey = string
+
 // K8sGkeRunnerConfiguration Runner configuration for a GKE cluster.
 type K8sGkeRunnerConfiguration struct {
 	// Cluster Configuration to access a GKE cluster.
@@ -440,10 +467,10 @@ type K8sRunnerK8sCluster struct {
 // K8sRunnerK8sClusterAuth Configuration to obtain access to a k8s cluster.
 type K8sRunnerK8sClusterAuth struct {
 	// ClientCertificateData Kubeconfig Field: user.client-certificate-data
-	ClientCertificateData *string `json:"client-certificate-data,omitempty"`
+	ClientCertificateData *string `json:"client_certificate_data,omitempty"`
 
 	// ClientKeyData Kubeconfig Field: user.client-key-data
-	ClientKeyData *string `json:"client-key-data,omitempty"`
+	ClientKeyData *string `json:"client_key_data,omitempty"`
 
 	// ServiceAccountToken Service account token.
 	ServiceAccountToken *string `json:"service_account_token,omitempty"`
@@ -452,7 +479,7 @@ type K8sRunnerK8sClusterAuth struct {
 // K8sRunnerK8sClusterClusterData Cluster data to access Kubernetes cluster.
 type K8sRunnerK8sClusterClusterData struct {
 	// CertificateAuthorityData Kubeconfig Field: cluster.certificate-authority-data
-	CertificateAuthorityData string `json:"certificate-authority-data"`
+	CertificateAuthorityData string `json:"certificate_authority_data"`
 
 	// ProxyUrl Kubeconfig Field: cluster.proxy-url
 	ProxyUrl *string `json:"proxy_url,omitempty"`
@@ -787,24 +814,6 @@ type RefreshRunnerActionResult struct {
 
 	// Updated If true, it means that the runner was updated to a new value. Otherwise it was not updated and `runner_id` indicates the existing value.
 	Updated bool `json:"updated"`
-}
-
-// RemoteK8sRunnerConfiguration Runner configuration for a remote Kubernetes cluster.
-type RemoteK8sRunnerConfiguration struct {
-	// Job Properties of the Kubernetes Runner Job.
-	Job K8sRunnerJobConfig `json:"job"`
-
-	// Type The Runner type.
-	Type RunnerType `json:"type"`
-}
-
-// RemoteK8sRunnerConfigurationUpdateBody Object to update an existing runner configuration for a remote Kubernetes cluster.
-type RemoteK8sRunnerConfigurationUpdateBody struct {
-	// Job Properties of the Kubernetes Runner Job.
-	Job *K8sRunnerJobConfig `json:"job,omitempty"`
-
-	// Type The Runner type.
-	Type RunnerType `json:"type"`
 }
 
 // ResourceClass A resource class requested by the resource graph. 'default' is the default value.
@@ -1411,24 +1420,24 @@ func (t *RunnerConfiguration) MergeK8sGkeRunnerConfiguration(v K8sGkeRunnerConfi
 	return err
 }
 
-// AsRemoteK8sRunnerConfiguration returns the union data inside the RunnerConfiguration as a RemoteK8sRunnerConfiguration
-func (t RunnerConfiguration) AsRemoteK8sRunnerConfiguration() (RemoteK8sRunnerConfiguration, error) {
-	var body RemoteK8sRunnerConfiguration
+// AsK8sAgentRunnerConfiguration returns the union data inside the RunnerConfiguration as a K8sAgentRunnerConfiguration
+func (t RunnerConfiguration) AsK8sAgentRunnerConfiguration() (K8sAgentRunnerConfiguration, error) {
+	var body K8sAgentRunnerConfiguration
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromRemoteK8sRunnerConfiguration overwrites any union data inside the RunnerConfiguration as the provided RemoteK8sRunnerConfiguration
-func (t *RunnerConfiguration) FromRemoteK8sRunnerConfiguration(v RemoteK8sRunnerConfiguration) error {
-	v.Type = "remote-kubernetes"
+// FromK8sAgentRunnerConfiguration overwrites any union data inside the RunnerConfiguration as the provided K8sAgentRunnerConfiguration
+func (t *RunnerConfiguration) FromK8sAgentRunnerConfiguration(v K8sAgentRunnerConfiguration) error {
+	v.Type = "kubernetes-agent"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeRemoteK8sRunnerConfiguration performs a merge with any union data inside the RunnerConfiguration, using the provided RemoteK8sRunnerConfiguration
-func (t *RunnerConfiguration) MergeRemoteK8sRunnerConfiguration(v RemoteK8sRunnerConfiguration) error {
-	v.Type = "remote-kubernetes"
+// MergeK8sAgentRunnerConfiguration performs a merge with any union data inside the RunnerConfiguration, using the provided K8sAgentRunnerConfiguration
+func (t *RunnerConfiguration) MergeK8sAgentRunnerConfiguration(v K8sAgentRunnerConfiguration) error {
+	v.Type = "kubernetes-agent"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1455,10 +1464,10 @@ func (t RunnerConfiguration) ValueByDiscriminator() (interface{}, error) {
 	switch discriminator {
 	case "kubernetes":
 		return t.AsK8sRunnerConfiguration()
+	case "kubernetes-agent":
+		return t.AsK8sAgentRunnerConfiguration()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfiguration()
-	case "remote-kubernetes":
-		return t.AsRemoteK8sRunnerConfiguration()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
@@ -1530,24 +1539,24 @@ func (t *RunnerConfigurationUpdate) MergeK8sGkeRunnerConfigurationUpdateBody(v K
 	return err
 }
 
-// AsRemoteK8sRunnerConfigurationUpdateBody returns the union data inside the RunnerConfigurationUpdate as a RemoteK8sRunnerConfigurationUpdateBody
-func (t RunnerConfigurationUpdate) AsRemoteK8sRunnerConfigurationUpdateBody() (RemoteK8sRunnerConfigurationUpdateBody, error) {
-	var body RemoteK8sRunnerConfigurationUpdateBody
+// AsK8sAgentRunnerConfigurationUpdateBody returns the union data inside the RunnerConfigurationUpdate as a K8sAgentRunnerConfigurationUpdateBody
+func (t RunnerConfigurationUpdate) AsK8sAgentRunnerConfigurationUpdateBody() (K8sAgentRunnerConfigurationUpdateBody, error) {
+	var body K8sAgentRunnerConfigurationUpdateBody
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromRemoteK8sRunnerConfigurationUpdateBody overwrites any union data inside the RunnerConfigurationUpdate as the provided RemoteK8sRunnerConfigurationUpdateBody
-func (t *RunnerConfigurationUpdate) FromRemoteK8sRunnerConfigurationUpdateBody(v RemoteK8sRunnerConfigurationUpdateBody) error {
-	v.Type = "remote-kubernetes"
+// FromK8sAgentRunnerConfigurationUpdateBody overwrites any union data inside the RunnerConfigurationUpdate as the provided K8sAgentRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) FromK8sAgentRunnerConfigurationUpdateBody(v K8sAgentRunnerConfigurationUpdateBody) error {
+	v.Type = "kubernetes-agent"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeRemoteK8sRunnerConfigurationUpdateBody performs a merge with any union data inside the RunnerConfigurationUpdate, using the provided RemoteK8sRunnerConfigurationUpdateBody
-func (t *RunnerConfigurationUpdate) MergeRemoteK8sRunnerConfigurationUpdateBody(v RemoteK8sRunnerConfigurationUpdateBody) error {
-	v.Type = "remote-kubernetes"
+// MergeK8sAgentRunnerConfigurationUpdateBody performs a merge with any union data inside the RunnerConfigurationUpdate, using the provided K8sAgentRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) MergeK8sAgentRunnerConfigurationUpdateBody(v K8sAgentRunnerConfigurationUpdateBody) error {
+	v.Type = "kubernetes-agent"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1574,10 +1583,10 @@ func (t RunnerConfigurationUpdate) ValueByDiscriminator() (interface{}, error) {
 	switch discriminator {
 	case "kubernetes":
 		return t.AsK8sRunnerConfigurationUpdateBody()
+	case "kubernetes-agent":
+		return t.AsK8sAgentRunnerConfigurationUpdateBody()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfigurationUpdateBody()
-	case "remote-kubernetes":
-		return t.AsRemoteK8sRunnerConfigurationUpdateBody()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}

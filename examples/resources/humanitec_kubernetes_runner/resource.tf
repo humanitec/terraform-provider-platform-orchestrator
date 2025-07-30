@@ -24,6 +24,7 @@ resource "humanitec_kubernetes_runner" "test" {
     }
   }
   state_storage_configuration {
+    type = "kubernetes"
     kubernetes_configuration {
       namespace = "humanitec"
     }

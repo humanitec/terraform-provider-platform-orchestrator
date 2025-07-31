@@ -52,7 +52,7 @@ resource "humanitec_kubernetes_runner" "test" {
 
 ### Required
 
-- `id` (String) The unique identifier for the Environment Type.
+- `id` (String) The unique identifier for the Kubernetes Runner.
 - `runner_configuration` (Attributes) The configuration of the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration))
 - `state_storage_configuration` (Attributes) The state storage configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--state_storage_configuration))
 

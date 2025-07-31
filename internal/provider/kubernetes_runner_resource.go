@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -130,11 +129,11 @@ func (r *KubernetesRunnerResource) Metadata(ctx context.Context, req resource.Me
 func (r *KubernetesRunnerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Environment Type resource",
+		MarkdownDescription: "Kubernetes Runner resource",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier for the Environment Type.",
+				MarkdownDescription: "The unique identifier for the Kubernetes Runner.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
@@ -147,52 +146,52 @@ func (r *KubernetesRunnerResource) Schema(ctx context.Context, req resource.Sche
 				},
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "The description of the Kubernetes Runner.",
+				MarkdownDescription: "The description of the Kubernetes Runner cluster.",
 				Optional:            true,
 			},
 			"runner_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The configuration of the Kubernetes Runner.",
+				MarkdownDescription: "The configuration of the Kubernetes Runner cluster.",
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"cluster": schema.SingleNestedAttribute{
-						MarkdownDescription: "The cluster configuration for the Kubernetes Runner.",
+						MarkdownDescription: "The cluster configuration for the Kubernetes Runner cluster.",
 						Required:            true,
 						Attributes: map[string]schema.Attribute{
 							"cluster_data": schema.SingleNestedAttribute{
-								MarkdownDescription: "The cluster data for the Kubernetes Runner.",
+								MarkdownDescription: "The cluster data for the Kubernetes Runner cluster.",
 								Required:            true,
 								Attributes: map[string]schema.Attribute{
 									"certificate_authority_data": schema.StringAttribute{
-										MarkdownDescription: "The certificate authority data for the Kubernetes Runner.",
+										MarkdownDescription: "The certificate authority data for the Kubernetes Runner cluster.",
 										Required:            true,
 									},
 									"server": schema.StringAttribute{
-										MarkdownDescription: "The server URL for the Kubernetes Runner.",
+										MarkdownDescription: "The server URL for the Kubernetes Runner cluster.",
 										Required:            true,
 									},
 									"proxy_url": schema.StringAttribute{
-										MarkdownDescription: "The proxy URL for the Kubernetes Runner.",
+										MarkdownDescription: "The proxy URL for the Kubernetes Runner cluster.",
 										Optional:            true,
 									},
 								},
 							},
 							"auth": schema.SingleNestedAttribute{
-								MarkdownDescription: "The authentication configuration for the Kubernetes Runner.",
+								MarkdownDescription: "The authentication configuration for the Kubernetes Runner cluster.",
 								Required:            true,
 								Sensitive:           true,
 								Attributes: map[string]schema.Attribute{
 									"client_certificate_data": schema.StringAttribute{
-										MarkdownDescription: "The client certificate data for the Kubernetes Runner.",
+										MarkdownDescription: "The client certificate data for the Kubernetes Runner cluster.",
 										Optional:            true,
 										Computed:            true,
 									},
 									"client_key_data": schema.StringAttribute{
-										MarkdownDescription: "The client key data for the Kubernetes Runner.",
+										MarkdownDescription: "The client key data for the Kubernetes Runner cluster.",
 										Optional:            true,
 										Computed:            true,
 									},
 									"service_account_token": schema.StringAttribute{
-										MarkdownDescription: "The service account token for the Kubernetes Runner.",
+										MarkdownDescription: "The service account token for the Kubernetes Runner cluster.",
 										Optional:            true,
 										Computed:            true,
 									},
@@ -276,7 +275,7 @@ func (r *KubernetesRunnerResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	runnerConfigurationFromObject, err := createRunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
+	runnerConfigurationFromObject, err := createKubernetesRunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
 		return
@@ -355,7 +354,7 @@ func (r *KubernetesRunnerResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	updateRunnerConfigurationBodyFromObject, err := updateRunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
+	updateRunnerConfigurationBodyFromObject, err := updateKubernetesRunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
 		return
@@ -415,9 +414,9 @@ func (r *KubernetesRunnerResource) Delete(ctx context.Context, req resource.Dele
 		// Successfully deleted, no further action needed.
 	case 404:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment Type with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -428,7 +427,7 @@ func (r *KubernetesRunnerResource) ImportState(ctx context.Context, req resource
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func parseRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *KubernetesRunnerResourceModel) (basetypes.ObjectValue, error) {
+func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *KubernetesRunnerResourceModel) (basetypes.ObjectValue, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	if data.RunnerConfiguration.IsUnknown() || data.RunnerConfiguration.IsNull() {
 		runnerConfig = KubernetesRunnerConfiguration{}
@@ -485,25 +484,11 @@ func parseRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguratio
 	return objectValue, nil
 }
 
-func parseStateStorageConfigurationResponse(ctx context.Context, k8sStateStorageConfiguration canyoncp.K8sStorageConfiguration) *basetypes.ObjectValue {
-	var stateStorageConfig KubernetesRunnerStateStorageConfigurationModel
-
-	stateStorageConfig.Type = string(k8sStateStorageConfiguration.Type)
-	stateStorageConfig.KubernetesConfiguration.Namespace = k8sStateStorageConfiguration.Namespace
-
-	objectValue, diags := types.ObjectValueFrom(ctx, KubernetesRunnerStateStorageConfigurationAttributeTypes(), stateStorageConfig)
-	if diags.HasError() {
-		tflog.Warn(ctx, "can't parse state storage configuration from model", map[string]interface{}{"err": diags.Errors()})
-		return nil
-	}
-	return &objectValue
-}
-
 func toKubernetesRunnerResourceModel(item canyoncp.Runner, data KubernetesRunnerResourceModel) (KubernetesRunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
-	runnerConfigurationModel, err := parseRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
+	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
 	if err != nil {
 		return KubernetesRunnerResourceModel{}, err
 	}
@@ -521,7 +506,7 @@ func toKubernetesRunnerResourceModel(item canyoncp.Runner, data KubernetesRunner
 	}, nil
 }
 
-func createRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
+func createKubernetesRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
@@ -554,27 +539,11 @@ func createRunnerConfigurationFromObject(ctx context.Context, obj types.Object) 
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),
 			PodTemplate:    jobPodTemplate,
 		},
-		Type: canyoncp.RunnerTypeKubernetes,
 	})
 	return *runnerConfiguration, nil
 }
 
-func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.StateStorageConfiguration, error) {
-	var stateStorageConfig KubernetesRunnerStateStorageConfigurationModel
-	diags := obj.As(ctx, &stateStorageConfig, basetypes.ObjectAsOptions{})
-	if diags.HasError() {
-		return canyoncp.StateStorageConfiguration{}, fmt.Errorf("failed to parse state storage configuration from model: %v", diags.Errors())
-	}
-
-	var stateStorageConfiguration = new(canyoncp.StateStorageConfiguration)
-	_ = stateStorageConfiguration.FromK8sStorageConfiguration(canyoncp.K8sStorageConfiguration{
-		Type:      canyoncp.StateStorageType(stateStorageConfig.Type),
-		Namespace: stateStorageConfig.KubernetesConfiguration.Namespace,
-	})
-	return *stateStorageConfiguration, nil
-}
-
-func updateRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
+func updateKubernetesRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
@@ -607,7 +576,6 @@ func updateRunnerConfigurationFromObject(ctx context.Context, obj types.Object) 
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),
 			PodTemplate:    jobPodTemplate,
 		},
-		Type: canyoncp.RunnerTypeKubernetes,
 	})
 	return *updateRunnerConfiguration, nil
 }

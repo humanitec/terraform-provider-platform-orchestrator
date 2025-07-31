@@ -215,13 +215,13 @@ paths:
           in: header
           required: true
           schema:
-            type: string
+            type: string          
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeploymentResultsUpdateBody"
+              $ref: "#/components/schemas/DeploymentResultsUpdateBody"          
       responses:
         "204":
           description: Results successfully received.
@@ -231,13 +231,17 @@ paths:
           $ref: "#/components/responses/404NotFound"
         "409":
           $ref: "#/components/responses/409Conflict"
-
-  /orgs/{orgId}/runners/{runnerId}/actions/poll-requests:
+  
+  /orgs/{orgId}/remote-runners/{runnerId}/actions/poll-requests:
     post:
+      security:
+        - jwtAuth: []
       summary: Long-poll wait for pending messages for a remote runner
       description: |
         Remote runners should poll this endpoint to receive pending messages.
-      operationId: waitForRunnerMessages
+      operationId: waitForRemoteRunnerMessages
+      tags:
+        - RemoteRunnerMessages
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/runnerIdPathParam"
@@ -247,7 +251,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RunnerMessage"
+                $ref: "#/components/schemas/RemoteRunnerMessage"
         "204":
           description: No messages for the runner.
         "404":
@@ -308,6 +312,30 @@ paths:
                 $ref: "#/components/schemas/InternalModuleUsage"
         404:
           $ref: "#/components/responses/404NotFound"
+  
+  /internal/orgs/{orgId}/remote-runners/{runnerId}/actions/push-message:
+    post:
+      summary: Push a message to a remote runner
+      description: |
+        Sends a message to a specific remote runner for processing.
+      operationId: internalPushMessageToRemoteRunner
+      tags:
+        - internal
+        - RemoteRunnerMessages
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/runnerIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoteRunnerMessage"
+      responses:
+        204:
+          description: Message pushed successfully.
+        503:
+          description: Runner is not connected.
 
   /orgs/{orgId}/metadata-keys:
     get:
@@ -480,13 +508,16 @@ paths:
                 "$ref": "#/components/schemas/Jwks"
 
 components:
-
   securitySchemes:
     userIdHeader:
       type: apiKey
       in: header
       name: From
-
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+            
   responses:
     400BadRequest:
       description: The request was invalid. More detail can be found in the error body.
@@ -555,7 +586,7 @@ components:
       example: "sample-runner"
       required: true
       schema:
-        type: string
+        type: string        
     perPageQueryParam:
       name: per_page
       in: query
@@ -625,7 +656,7 @@ components:
       maxLength: 63
       pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
       x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
-
+  
     DeploymentResultsUpdateBody:
       description: The outcome of the runner execution.
       type: object
@@ -648,14 +679,14 @@ components:
           $ref: '#/components/schemas/DeploymentResultMetadata'
       required:
         - status
-
+    
     DeploymentResultMetadata:
       x-go-type-skip-optional-pointer: true
       description: The metadata produced by the resources involved in the deployment.
       type: array
       items:
         $ref: '#/components/schemas/DeploymentResultMetadataPerNode'
-
+    
     DeploymentResultMetadataPerNode:
       description: The metadata produced by a specific resource identified by its hash.
       type: object
@@ -674,13 +705,13 @@ components:
           example:
             k8s_namespace: test-namespace
             gcp_project: test-gcp-project
-
+    
     DeploymentTFResourceCounts:
       type: object
       x-go-type-skip-optional-pointer: true
       description: Details about the Terraform resources added / removed / changed .
       properties:
-        num_resources:
+        num_resources: 
           type: integer
           description: Number of Terraform resources involved in the deployment.
         num_resources_added:
@@ -691,7 +722,7 @@ components:
           description: Number of Terraform resources removed by this deployment run.
         num_resources_changed:
           type: integer
-          description: Number of Terraform resources changed by this deployment run.
+          description: Number of Terraform resources changed by this deployment run.        
       required:
         - num_resources
         - num_resources_added
@@ -1108,31 +1139,31 @@ components:
           description: The list of active resource nodes.
           items:
             $ref: "#/components/schemas/ActiveResourceNode"
-
-    RunnerMessage:
+    
+    RemoteRunnerMessage:
       oneOf:
-        - $ref: "#/components/schemas/RunnerMessageCreateJob"
-        - $ref: "#/components/schemas/RunnerMessageGetJobStatus"
+        - $ref: "#/components/schemas/RemoteRunnerMessageCreateJob"
+        - $ref: "#/components/schemas/RemoteRunnerMessageGetJobStatus"
       discriminator:
         propertyName: action
         mapping:
-          create-job: "#/components/schemas/RunnerMessageCreateJob"
-          get-job-status: "#/components/schemas/RunnerMessageGetJobStatus"
+          create-job: "#/components/schemas/RemoteRunnerMessageCreateJob"
+          get-job-status: "#/components/schemas/RemoteRunnerMessageGetJobStatus"
 
-    RunnerMessageAction:
+    RemoteRunnerMessageAction:
       description: The action to be performed by the remote runner.
       type: string
       enum:
         - create-job
         - get-job-status
 
-
-    RunnerMessageCreateJob:
+    
+    RemoteRunnerMessageCreateJob:
       type: object
       description: The response for creating a job on the runner.
       properties:
         action:
-          $ref: "#/components/schemas/RunnerMessageAction"
+          $ref: "#/components/schemas/RemoteRunnerMessageAction"
         job_id:
           type: string
           description: The ID of the job created on the runner.
@@ -1145,19 +1176,24 @@ components:
           type: object
           additionalProperties: true
           description: The configuration for the job to be created on the runner. It must be parsable into a kubernetes Job definition.
+        deployment_token:
+          type: string
+          description: The deployment token to authenticate any request to update deployment results from the remote runner.
+          example: "deployment-token-12345"  
       required:
         - action
         - job_id
         - namespace
         - configuration
+        - deployment_token
 
 
-    RunnerMessageGetJobStatus:
+    RemoteRunnerMessageGetJobStatus:
       type: object
       description: The response for getting the status of a job on the runner.
       properties:
         action:
-          $ref: "#/components/schemas/RunnerMessageAction"
+          $ref: "#/components/schemas/RemoteRunnerMessageAction"
         job_id:
           type: string
           description: The ID of the job whose status is being requested.
@@ -1165,11 +1201,16 @@ components:
         namespace:
           type: string
           description: The ID of the namespace associated with the job.
-          example: "test-namespace"
+          example: "test-namespace"       
+        deployment_token:
+          type: string
+          description: The deployment token to authenticate any request to update deployment results from the remote runner.
+          example: "deployment-token-12345"         
       required:
         - action
         - job_id
         - namespace
+        - deployment_token
 
     OpenidConfiguration:
       description: OpenID discovery configuration.

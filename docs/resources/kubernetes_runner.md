@@ -3,12 +3,12 @@
 page_title: "humanitec_kubernetes_runner Resource - humanitec"
 subcategory: ""
 description: |-
-  Environment Type resource
+  Kubernetes Runner resource
 ---
 
 # humanitec_kubernetes_runner (Resource)
 
-Environment Type resource
+Kubernetes Runner resource
 
 ## Example Usage
 
@@ -52,20 +52,20 @@ resource "humanitec_kubernetes_runner" "test" {
 
 ### Required
 
-- `id` (String) The unique identifier for the Environment Type.
-- `runner_configuration` (Attributes) The configuration of the Kubernetes Runner. (see [below for nested schema](#nestedatt--runner_configuration))
+- `id` (String) The unique identifier for the Kubernetes Runner.
+- `runner_configuration` (Attributes) The configuration of the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration))
 - `state_storage_configuration` (Attributes) The state storage configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--state_storage_configuration))
 
 ### Optional
 
-- `description` (String) The description of the Kubernetes Runner.
+- `description` (String) The description of the Kubernetes Runner cluster.
 
 <a id="nestedatt--runner_configuration"></a>
 ### Nested Schema for `runner_configuration`
 
 Required:
 
-- `cluster` (Attributes) The cluster configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--runner_configuration--cluster))
+- `cluster` (Attributes) The cluster configuration for the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration--cluster))
 - `job` (Attributes) The job configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--runner_configuration--job))
 
 <a id="nestedatt--runner_configuration--cluster"></a>
@@ -73,17 +73,17 @@ Required:
 
 Required:
 
-- `auth` (Attributes, Sensitive) The authentication configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--runner_configuration--cluster--auth))
-- `cluster_data` (Attributes) The cluster data for the Kubernetes Runner. (see [below for nested schema](#nestedatt--runner_configuration--cluster--cluster_data))
+- `auth` (Attributes, Sensitive) The authentication configuration for the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration--cluster--auth))
+- `cluster_data` (Attributes) The cluster data for the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration--cluster--cluster_data))
 
 <a id="nestedatt--runner_configuration--cluster--auth"></a>
 ### Nested Schema for `runner_configuration.cluster.auth`
 
 Optional:
 
-- `client_certificate_data` (String) The client certificate data for the Kubernetes Runner.
-- `client_key_data` (String) The client key data for the Kubernetes Runner.
-- `service_account_token` (String) The service account token for the Kubernetes Runner.
+- `client_certificate_data` (String) The client certificate data for the Kubernetes Runner cluster.
+- `client_key_data` (String) The client key data for the Kubernetes Runner cluster.
+- `service_account_token` (String) The service account token for the Kubernetes Runner cluster.
 
 
 <a id="nestedatt--runner_configuration--cluster--cluster_data"></a>
@@ -91,12 +91,12 @@ Optional:
 
 Required:
 
-- `certificate_authority_data` (String) The certificate authority data for the Kubernetes Runner.
-- `server` (String) The server URL for the Kubernetes Runner.
+- `certificate_authority_data` (String) The certificate authority data for the Kubernetes Runner cluster.
+- `server` (String) The server URL for the Kubernetes Runner cluster.
 
 Optional:
 
-- `proxy_url` (String) The proxy URL for the Kubernetes Runner.
+- `proxy_url` (String) The proxy URL for the Kubernetes Runner cluster.
 
 
 

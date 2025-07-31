@@ -163,7 +163,7 @@ paths:
     get:
       operationId: getInternalRunner
       tags:
-        - Runners
+        - Runner
         - internal
       summary: Get runner in the org with secret configuration as secret path
       parameters:
@@ -798,7 +798,7 @@ paths:
     get:
       operationId: listRunners
       tags:
-        - Runners
+        - Runner
       summary: List runners in the org
       security:
         - userIdHeader: []
@@ -824,7 +824,7 @@ paths:
     post:
       operationId: createRunner
       tags:
-        - Runners
+        - Runner
       summary: Create a runner in the org
       security:
         - userIdHeader: []
@@ -852,7 +852,7 @@ paths:
     get:
       operationId: getRunner
       tags:
-        - Runners
+        - Runner
       summary: Get runner in the org
       security:
         - userIdHeader: []
@@ -871,7 +871,7 @@ paths:
     patch:
       operationId: updateRunner
       tags:
-        - Runners
+        - Runner
       summary: Update runner in the org
       security:
         - userIdHeader: []
@@ -900,7 +900,7 @@ paths:
     delete:
       operationId: deleteRunner
       tags:
-        - Runners
+        - Runner
       summary: Delete runner in the org
       security:
         - userIdHeader: []
@@ -2098,7 +2098,7 @@ components:
       enum:
         - kubernetes
         - kubernetes-gke
-        - remote-kubernetes
+        - kubernetes-agent
     
     StateStorageType:
       description: Type of the Terraform Backend used by the runner.
@@ -2390,7 +2390,6 @@ components:
       required:
         - org_id
         - id
-        - state_storage_type
         - created_at
         - updated_at
       properties:
@@ -2430,7 +2429,6 @@ components:
             - org_id
             - id
             - runner_configuration
-            - state_storage_type
             - state_storage_configuration
             - created_at
           properties:
@@ -2444,26 +2442,26 @@ components:
       oneOf:
         - $ref: "#/components/schemas/K8sRunnerConfiguration"
         - $ref: "#/components/schemas/K8sGkeRunnerConfiguration"
-        - $ref: "#/components/schemas/RemoteK8sRunnerConfiguration"
+        - $ref: "#/components/schemas/K8sAgentRunnerConfiguration"
       discriminator: 
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sRunnerConfiguration"
           kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfiguration"
-          remote-kubernetes: "#/components/schemas/RemoteK8sRunnerConfiguration"
-    
+          kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfiguration"
+
     RunnerConfigurationUpdate:
       description: The data needed to update the runner configuration.
       oneOf:
         - $ref: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
         - $ref: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
-        - $ref: "#/components/schemas/RemoteK8sRunnerConfigurationUpdateBody"      
+        - $ref: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
       discriminator: 
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
           kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
-          remote-kubernetes: "#/components/schemas/RemoteK8sRunnerConfigurationUpdateBody"          
+          kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
 
 
     InternalRunner:
@@ -2571,10 +2569,10 @@ components:
       description: Configuration to obtain access to a k8s cluster.
       type: object
       properties:
-        client-certificate-data:
+        client_certificate_data:
           description: 'Kubeconfig Field: user.client-certificate-data'
           type: string
-        client-key-data:
+        client_key_data:
           description: 'Kubeconfig Field: user.client-key-data'
           type: string
         service_account_token:
@@ -2586,7 +2584,7 @@ components:
       type: object
       x-go-type-skip-optional-pointer: true
       properties:
-        certificate-authority-data:
+        certificate_authority_data:
           description: 'Kubeconfig Field: cluster.certificate-authority-data'
           type: string
         proxy_url:
@@ -2596,8 +2594,20 @@ components:
           description: 'Kubeconfig Field: cluster.server'
           type: string
       required:
-      - certificate-authority-data
+      - certificate_authority_data
       - server
+
+    K8sAgentRunnerKey:
+      description: A public ed25519 key in PEM format. The caller must hold the matching private key.
+      type: string
+      example: |
+        -----BEGIN PUBLIC KEY-----
+        MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
+        -----END PUBLIC KEY-----
+      pattern: ^-----BEGIN PUBLIC KEY-----\n[^\n]+\n-----END PUBLIC KEY-----(\n)?$
+      x-pattern-error: "key: does not look like an ed25519 public key in PEM format"
+      minLength: 1
+      maxLength: 200
     
     StateStorageConfiguration:
       description: Configuration for the Terraform Backend used by the runner.
@@ -2691,17 +2701,20 @@ components:
         - job
         - cluster
     
-    RemoteK8sRunnerConfiguration:
-      description: Runner configuration for a remote Kubernetes cluster.
+    K8sAgentRunnerConfiguration:
+      description: Runner configuration for a Kubernetes Agent.
       type: object
       properties:
         type: 
           $ref: "#/components/schemas/RunnerType"        
         job: 
           $ref: "#/components/schemas/K8sRunnerJobConfig"
+        key:
+          $ref: "#/components/schemas/K8sAgentRunnerKey"
       required:
         - type
         - job
+        - key
 
     RunnerUpdateBody:
       type: object
@@ -2742,14 +2755,16 @@ components:
       required:
         - type
 
-    RemoteK8sRunnerConfigurationUpdateBody:
-      description: Object to update an existing runner configuration for a remote Kubernetes cluster.
+    K8sAgentRunnerConfigurationUpdateBody:
+      description: Object to update an existing runner configuration for a Kubernetes Agent.
       type: object
       properties:
         job: 
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         type:
           $ref: "#/components/schemas/RunnerType"
+        key:
+          $ref: "#/components/schemas/K8sAgentRunnerKey"
       required:
         - type
 

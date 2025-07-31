@@ -22,70 +22,42 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
-var _ resource.Resource = &KubernetesGkeRunnerResource{}
-var _ resource.ResourceWithImportState = &KubernetesGkeRunnerResource{}
+var _ resource.Resource = &KubernetesAgentRunnerResource{}
+var _ resource.ResourceWithImportState = &KubernetesAgentRunnerResource{}
 
-func NewKubernetesGkeRunnerResource() resource.Resource {
-	return &KubernetesGkeRunnerResource{}
+func NewKubernetesAgentRunnerResource() resource.Resource {
+	return &KubernetesAgentRunnerResource{}
 }
 
-// KubernetesGkeRunner defines the resource implementation.
-type KubernetesGkeRunnerResource struct {
+// KubernetesAgentRunner defines the resource implementation.
+type KubernetesAgentRunnerResource struct {
 	cpClient canyoncp.ClientWithResponsesInterface
 	orgId    string
 }
 
-// KubernetesGkeRunnerModel describes the resource data model.
-type KubernetesGkeRunnerResourceModel struct {
+// KubernetesAgentRunnerModel describes the resource data model.
+type KubernetesAgentRunnerResourceModel struct {
 	Id                        types.String `tfsdk:"id"`
 	Description               types.String `tfsdk:"description"`
 	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
 	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
 }
 
-// KubernetesGkeRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
-type KubernetesGkeRunnerConfiguration struct {
-	Cluster KubernetesGkeRunnerCluster `tfsdk:"cluster"`
-	Job     KubernetesGkeRunnerJob     `tfsdk:"job"`
+// KubernetesAgentRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
+type KubernetesAgentRunnerConfiguration struct {
+	Key types.String             `tfsdk:"key"`
+	Job KubernetesAgentRunnerJob `tfsdk:"job"`
 }
 
-type KubernetesGkeRunnerCluster struct {
-	Name       types.String                   `tfsdk:"name"`
-	ProjectId  types.String                   `tfsdk:"project_id"`
-	ProxyUrl   types.String                   `tfsdk:"proxy_url"`
-	Location   types.String                   `tfsdk:"location"`
-	InternalIp types.Bool                     `tfsdk:"internal_ip"`
-	Auth       KubernetesGkeRunnerClusterAuth `tfsdk:"auth"`
-}
-
-type KubernetesGkeRunnerClusterAuth struct {
-	GcpAudience       types.String `tfsdk:"gcp_audience"`
-	GcpServiceAccount types.String `tfsdk:"gcp_service_account"`
-}
-
-type KubernetesGkeRunnerJob struct {
+type KubernetesAgentRunnerJob struct {
 	Namespace      types.String `tfsdk:"namespace"`
 	ServiceAccount types.String `tfsdk:"service_account"`
 	PodTemplate    types.String `tfsdk:"pod_template"`
 }
 
-func KubernetesGkeRunnerConfigurationAttributeTypes() map[string]attr.Type {
+func KubernetesAgentRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"cluster": types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"name":        types.StringType,
-				"project_id":  types.StringType,
-				"location":    types.StringType,
-				"proxy_url":   types.StringType,
-				"internal_ip": types.BoolType,
-				"auth": types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"gcp_audience":        types.StringType,
-						"gcp_service_account": types.StringType,
-					},
-				},
-			},
-		},
+		"key": types.StringType,
 		"job": types.ObjectType{
 			AttrTypes: map[string]attr.Type{
 				"namespace":       types.StringType,
@@ -96,16 +68,16 @@ func KubernetesGkeRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	}
 }
 
-type KubernetesGkeRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                      `tfsdk:"type"`
-	KubernetesConfiguration KubernetesGkeRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
+type KubernetesAgentRunnerStateStorageConfigurationModel struct {
+	Type                    string                                                        `tfsdk:"type"`
+	KubernetesConfiguration KubernetesAgentRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
 }
 
-type KubernetesGkeRunnerKubernetesStateStorageConfigurationModel struct {
+type KubernetesAgentRunnerKubernetesStateStorageConfigurationModel struct {
 	Namespace string `tfsdk:"namespace"`
 }
 
-func KubernetesGkeRunnerStateStorageConfigurationAttributeTypes() map[string]attr.Type {
+func KubernetesAgentRunnerStateStorageConfigurationAttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"type": types.StringType,
 		"kubernetes_configuration": types.ObjectType{
@@ -116,18 +88,18 @@ func KubernetesGkeRunnerStateStorageConfigurationAttributeTypes() map[string]att
 	}
 }
 
-func (r *KubernetesGkeRunnerResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_kubernetes_gke_runner"
+func (r *KubernetesAgentRunnerResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_kubernetes_agent_runner"
 }
 
-func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *KubernetesAgentRunnerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Kubernetes GKE Runner resource",
+		MarkdownDescription: "Kubernetes Agent Runner resource",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier for the Kubernetes GKE Runner.",
+				MarkdownDescription: "The unique identifier for the Kubernetes Agent Runner.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
@@ -140,69 +112,31 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"description": schema.StringAttribute{
-				MarkdownDescription: "The description of the Kubernetes GKE Runner.",
+				MarkdownDescription: "The description of the Kubernetes Agent Runner.",
 				Optional:            true,
 			},
 			"runner_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The configuration of the Kubernetes GKE cluster.",
+				MarkdownDescription: "The configuration of the Kubernetes Agent Runner.",
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
-					"cluster": schema.SingleNestedAttribute{
-						MarkdownDescription: "The cluster configuration for the Kubernetes GKE Runner.",
+					"key": schema.StringAttribute{
+						MarkdownDescription: "The public ed25519 key in PEM format used to identify the caller identity. The caller must hold the matching private key.",
 						Required:            true,
-						Attributes: map[string]schema.Attribute{
-							"name": schema.StringAttribute{
-								MarkdownDescription: "The name of the Kubernetes GKE cluster.",
-								Required:            true,
-							},
-							"project_id": schema.StringAttribute{
-								MarkdownDescription: "The project ID where the GKE cluster is located.",
-								Required:            true,
-							},
-							"location": schema.StringAttribute{
-								MarkdownDescription: "The location of the GKE cluster.",
-								Required:            true,
-							},
-							"proxy_url": schema.StringAttribute{
-								MarkdownDescription: "The proxy URL for the Kubernetes GKE cluster.",
-								Optional:            true,
-							},
-							"internal_ip": schema.BoolAttribute{
-								MarkdownDescription: "Whether to use internal IP for the Kubernetes GKE cluster.",
-								Optional:            true,
-								Computed:            true,
-							},
-							"auth": schema.SingleNestedAttribute{
-								MarkdownDescription: "The authentication configuration for the Kubernetes GKE cluster.",
-								Required:            true,
-								Sensitive:           true,
-								Attributes: map[string]schema.Attribute{
-									"gcp_audience": schema.StringAttribute{
-										MarkdownDescription: "The GCP audience to authenticate to the GKE cluster.",
-										Required:            true,
-									},
-									"gcp_service_account": schema.StringAttribute{
-										MarkdownDescription: "The GCP service account to authenticate to the GKE cluster.",
-										Required:            true,
-									},
-								},
-							},
-						},
 					},
 					"job": schema.SingleNestedAttribute{
-						MarkdownDescription: "The job configuration for the Kubernetes GKE Runner.",
+						MarkdownDescription: "The job configuration for the Kubernetes Job triggered by the Kubernetes Agent Runner.",
 						Required:            true,
 						Attributes: map[string]schema.Attribute{
 							"namespace": schema.StringAttribute{
-								MarkdownDescription: "The namespace for the Kubernetes GKE Runner job.",
+								MarkdownDescription: "The namespace for the Kubernetes Runner job.",
 								Required:            true,
 							},
 							"service_account": schema.StringAttribute{
-								MarkdownDescription: "The service account for the Kubernetes GKE Runner job.",
+								MarkdownDescription: "The service account for the Kubernetes Runner job.",
 								Required:            true,
 							},
 							"pod_template": schema.StringAttribute{
-								MarkdownDescription: "JSON encoded pod template for the Kubernetes GKE Runner job.",
+								MarkdownDescription: "JSON encoded pod template for the Kubernetes Runner job.",
 								Optional:            true,
 							},
 						},
@@ -210,18 +144,18 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"state_storage_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The state storage configuration for the Kubernetes GKE Runner.",
+				MarkdownDescription: "The state storage configuration for the Kubernetes Agent Runner.",
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of state storage configuration for the Kubernetes GKE Runner.",
+						MarkdownDescription: "The type of state storage configuration for the Kubernetes Agent Runner.",
 						Required:            true,
 						Validators: []validator.String{
 							stringvalidator.OneOf("kubernetes"),
 						},
 					},
 					"kubernetes_configuration": schema.SingleNestedAttribute{
-						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes GKE Runner.",
+						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Agent Runner.",
 						Required:            true,
 						Attributes: map[string]schema.Attribute{
 							"namespace": schema.StringAttribute{
@@ -236,7 +170,7 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *KubernetesGkeRunnerResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *KubernetesAgentRunnerResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	// Prevent panic if the provider has not been configured.
 	if req.ProviderData == nil {
 		return
@@ -255,8 +189,8 @@ func (r *KubernetesGkeRunnerResource) Configure(ctx context.Context, req resourc
 	r.orgId = providerData.OrgId
 }
 
-func (r *KubernetesGkeRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data KubernetesGkeRunnerResourceModel
+func (r *KubernetesAgentRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data KubernetesAgentRunnerResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -265,7 +199,7 @@ func (r *KubernetesGkeRunnerResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	runnerConfigurationFromObject, err := createKubernetesGKERunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
+	runnerConfigurationFromObject, err := createKubernetesAgentRunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
 		return
@@ -293,8 +227,8 @@ func (r *KubernetesGkeRunnerResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	if data, err = toKubernetesGkeRunnerResourceModel(*httpResp.JSON201); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesGkeRunnerResourceModel: %s", err))
+	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON201); err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesAgentRunnerResourceModel: %s", err))
 		return
 	} else {
 		// Save data into Terraform state
@@ -303,8 +237,8 @@ func (r *KubernetesGkeRunnerResource) Create(ctx context.Context, req resource.C
 
 }
 
-func (r *KubernetesGkeRunnerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data KubernetesGkeRunnerResourceModel
+func (r *KubernetesAgentRunnerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data KubernetesAgentRunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -324,8 +258,8 @@ func (r *KubernetesGkeRunnerResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	if data, err = toKubernetesGkeRunnerResourceModel(*httpResp.JSON200); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesGkeRunnerResourceModel: %s", err))
+	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON200); err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesAgentRunnerResourceModel: %s", err))
 		return
 	} else {
 		// Save updated data into Terraform state
@@ -334,8 +268,8 @@ func (r *KubernetesGkeRunnerResource) Read(ctx context.Context, req resource.Rea
 
 }
 
-func (r *KubernetesGkeRunnerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state KubernetesGkeRunnerResourceModel
+func (r *KubernetesAgentRunnerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data, state KubernetesAgentRunnerResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -344,7 +278,7 @@ func (r *KubernetesGkeRunnerResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	updateRunnerConfigurationBodyFromObject, err := updateKubernetesGkeRunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
+	updateRunnerConfigurationBodyFromObject, err := updateK8sAgentRunnerConfigurationFromObject(ctx, data.RunnerConfiguration)
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
 		return
@@ -374,8 +308,8 @@ func (r *KubernetesGkeRunnerResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	if data, err = toKubernetesGkeRunnerResourceModel(*httpResp.JSON200); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesGkeRunnerResourceModel: %s", err))
+	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON200); err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesAgentRunnerResourceModel: %s", err))
 		return
 	} else {
 		// Save data info into Terraform state
@@ -383,8 +317,8 @@ func (r *KubernetesGkeRunnerResource) Update(ctx context.Context, req resource.U
 	}
 }
 
-func (r *KubernetesGkeRunnerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data KubernetesGkeRunnerResourceModel
+func (r *KubernetesAgentRunnerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data KubernetesAgentRunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -413,56 +347,46 @@ func (r *KubernetesGkeRunnerResource) Delete(ctx context.Context, req resource.D
 	resp.State.RemoveResource(ctx)
 }
 
-func (r *KubernetesGkeRunnerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *KubernetesAgentRunnerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func parseKubernetesGKERunnerConfigurationResponse(ctx context.Context, k8sGKERunnerConfiguration canyoncp.K8sGkeRunnerConfiguration) (basetypes.ObjectValue, error) {
-	runnerConfig := KubernetesGkeRunnerConfiguration{
-		Cluster: KubernetesGkeRunnerCluster{
-			Name:       types.StringValue(k8sGKERunnerConfiguration.Cluster.Name),
-			ProjectId:  types.StringValue(k8sGKERunnerConfiguration.Cluster.ProjectId),
-			Location:   types.StringValue(k8sGKERunnerConfiguration.Cluster.Location),
-			InternalIp: types.BoolValue(ref.DerefOr(k8sGKERunnerConfiguration.Cluster.InternalIp, false)),
-			ProxyUrl:   types.StringPointerValue(k8sGKERunnerConfiguration.Cluster.ProxyUrl),
-			Auth: KubernetesGkeRunnerClusterAuth{
-				GcpAudience:       types.StringValue(k8sGKERunnerConfiguration.Cluster.Auth.GcpAudience),
-				GcpServiceAccount: types.StringValue(k8sGKERunnerConfiguration.Cluster.Auth.GcpServiceAccount),
-			},
-		},
-		Job: KubernetesGkeRunnerJob{
-			Namespace:      types.StringValue(k8sGKERunnerConfiguration.Job.Namespace),
-			ServiceAccount: types.StringValue(k8sGKERunnerConfiguration.Job.ServiceAccount),
+func parseKubernetesAgentRunnerConfigurationResponse(ctx context.Context, k8sAgentRunnerConfiguration canyoncp.K8sAgentRunnerConfiguration) (basetypes.ObjectValue, error) {
+	runnerConfig := KubernetesAgentRunnerConfiguration{
+		Key: types.StringValue(k8sAgentRunnerConfiguration.Key),
+		Job: KubernetesAgentRunnerJob{
+			Namespace:      types.StringValue(k8sAgentRunnerConfiguration.Job.Namespace),
+			ServiceAccount: types.StringValue(k8sAgentRunnerConfiguration.Job.ServiceAccount),
 		},
 	}
 
-	if k8sGKERunnerConfiguration.Job.PodTemplate != nil {
-		podTemplate, _ := json.Marshal(k8sGKERunnerConfiguration.Job.PodTemplate)
+	if k8sAgentRunnerConfiguration.Job.PodTemplate != nil {
+		podTemplate, _ := json.Marshal(k8sAgentRunnerConfiguration.Job.PodTemplate)
 		runnerConfig.Job.PodTemplate = types.StringValue(string(podTemplate))
 	}
 
-	objectValue, diags := types.ObjectValueFrom(ctx, KubernetesGkeRunnerConfigurationAttributeTypes(), runnerConfig)
+	objectValue, diags := types.ObjectValueFrom(ctx, KubernetesAgentRunnerConfigurationAttributeTypes(), runnerConfig)
 	if diags.HasError() {
 		return basetypes.ObjectValue{}, fmt.Errorf("failed to build runner configuration from model parsing API response: %v", diags.Errors())
 	}
 	return objectValue, nil
 }
 
-func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner) (KubernetesGkeRunnerResourceModel, error) {
-	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sGkeRunnerConfiguration()
+func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner) (KubernetesAgentRunnerResourceModel, error) {
+	k8sAgentRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sAgentRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
-	runnerConfigurationModel, err := parseKubernetesGKERunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
+	runnerConfigurationModel, err := parseKubernetesAgentRunnerConfigurationResponse(context.Background(), k8sAgentRunnerConfiguration)
 	if err != nil {
-		return KubernetesGkeRunnerResourceModel{}, err
+		return KubernetesAgentRunnerResourceModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesGkeRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return KubernetesAgentRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesGkeRunnerResourceModel{
+	return KubernetesAgentRunnerResourceModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,
@@ -470,8 +394,8 @@ func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner) (KubernetesGkeRunn
 	}, nil
 }
 
-func createKubernetesGKERunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
-	var runnerConfig KubernetesGkeRunnerConfiguration
+func createKubernetesAgentRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
+	var runnerConfig KubernetesAgentRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
 		return canyoncp.RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
@@ -485,18 +409,8 @@ func createKubernetesGKERunnerConfigurationFromObject(ctx context.Context, obj t
 	}
 
 	var runnerConfiguration = new(canyoncp.RunnerConfiguration)
-	_ = runnerConfiguration.FromK8sGkeRunnerConfiguration(canyoncp.K8sGkeRunnerConfiguration{
-		Cluster: canyoncp.K8sRunnerGkeCluster{
-			InternalIp: ref.Ref(runnerConfig.Cluster.InternalIp.ValueBool()),
-			Name:       runnerConfig.Cluster.Name.ValueString(),
-			ProjectId:  runnerConfig.Cluster.ProjectId.ValueString(),
-			Location:   runnerConfig.Cluster.Location.ValueString(),
-			ProxyUrl:   fromStringValueToStringPointer(runnerConfig.Cluster.ProxyUrl),
-			Auth: canyoncp.K8sRunnerGcpTemporaryAuth{
-				GcpAudience:       runnerConfig.Cluster.Auth.GcpAudience.ValueString(),
-				GcpServiceAccount: runnerConfig.Cluster.Auth.GcpServiceAccount.ValueString(),
-			},
-		},
+	_ = runnerConfiguration.FromK8sAgentRunnerConfiguration(canyoncp.K8sAgentRunnerConfiguration{
+		Key: runnerConfig.Key.ValueString(),
 		Job: canyoncp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),
@@ -506,8 +420,8 @@ func createKubernetesGKERunnerConfigurationFromObject(ctx context.Context, obj t
 	return *runnerConfiguration, nil
 }
 
-func updateKubernetesGkeRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
-	var runnerConfig KubernetesGkeRunnerConfiguration
+func updateK8sAgentRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
+	var runnerConfig KubernetesAgentRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
 		return canyoncp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
@@ -521,18 +435,8 @@ func updateKubernetesGkeRunnerConfigurationFromObject(ctx context.Context, obj t
 	}
 
 	var updateRunnerConfiguration = new(canyoncp.RunnerConfigurationUpdate)
-	_ = updateRunnerConfiguration.FromK8sGkeRunnerConfigurationUpdateBody(canyoncp.K8sGkeRunnerConfigurationUpdateBody{
-		Cluster: &canyoncp.K8sRunnerGkeCluster{
-			Name:       runnerConfig.Cluster.Name.ValueString(),
-			ProjectId:  runnerConfig.Cluster.ProjectId.ValueString(),
-			Location:   runnerConfig.Cluster.Location.ValueString(),
-			ProxyUrl:   fromStringValueToStringPointer(runnerConfig.Cluster.ProxyUrl),
-			InternalIp: ref.Ref(runnerConfig.Cluster.InternalIp.ValueBool()),
-			Auth: canyoncp.K8sRunnerGcpTemporaryAuth{
-				GcpAudience:       runnerConfig.Cluster.Auth.GcpAudience.ValueString(),
-				GcpServiceAccount: runnerConfig.Cluster.Auth.GcpServiceAccount.ValueString(),
-			},
-		},
+	_ = updateRunnerConfiguration.FromK8sAgentRunnerConfigurationUpdateBody(canyoncp.K8sAgentRunnerConfigurationUpdateBody{
+		Key: ref.Ref(runnerConfig.Key.ValueString()),
 		Job: &canyoncp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),

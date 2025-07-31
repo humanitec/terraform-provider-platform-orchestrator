@@ -188,6 +188,7 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 		NewEnvironmentTypeResource,
 		NewKubernetesRunnerResource,
 		NewKubernetesGkeRunnerResource,
+		NewKubernetesAgentRunnerResource,
 	}
 }
 

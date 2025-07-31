@@ -3,12 +3,12 @@
 page_title: "humanitec_kubernetes_gke_runner Resource - humanitec"
 subcategory: ""
 description: |-
-  Kubernetes GKE resource
+  Kubernetes GKE Runner resource
 ---
 
 # humanitec_kubernetes_gke_runner (Resource)
 
-Kubernetes GKE resource
+Kubernetes GKE Runner resource
 
 ## Example Usage
 

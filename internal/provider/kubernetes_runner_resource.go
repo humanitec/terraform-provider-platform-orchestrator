@@ -133,7 +133,7 @@ func (r *KubernetesRunnerResource) Schema(ctx context.Context, req resource.Sche
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier for the Environment Type.",
+				MarkdownDescription: "The unique identifier for the Kubernetes Runner.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
@@ -414,9 +414,9 @@ func (r *KubernetesRunnerResource) Delete(ctx context.Context, req resource.Dele
 		// Successfully deleted, no further action needed.
 	case 404:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment Type with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 

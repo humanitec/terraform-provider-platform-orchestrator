@@ -114,6 +114,9 @@ func (r *KubernetesAgentRunnerResource) Schema(ctx context.Context, req resource
 			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the Kubernetes Agent Runner.",
 				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(200),
+				},
 			},
 			"runner_configuration": schema.SingleNestedAttribute{
 				MarkdownDescription: "The configuration of the Kubernetes Agent Runner.",
@@ -161,6 +164,9 @@ func (r *KubernetesAgentRunnerResource) Schema(ctx context.Context, req resource
 							"namespace": schema.StringAttribute{
 								MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
 								Required:            true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(63),
+								},
 							},
 						},
 					},

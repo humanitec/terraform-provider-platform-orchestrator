@@ -27,6 +27,11 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_agent_runner.test",
+						tfjsonpath.New("description"),
+						knownvalue.Null(),
+					),
+					statecheck.ExpectKnownValue(
+						"humanitec_kubernetes_agent_runner.test",
 						tfjsonpath.New("runner_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"key": knownvalue.StringExact(`-----BEGIN PUBLIC KEY-----

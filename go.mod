@@ -12,6 +12,8 @@ require (
 	github.com/pkg/errors v0.9.1
 )
 
+require github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
+
 require (
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect

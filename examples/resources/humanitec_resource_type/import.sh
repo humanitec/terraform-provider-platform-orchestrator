@@ -1,0 +1,1 @@
+terraform import humanitec_resource_type.resource_type "my_resource"

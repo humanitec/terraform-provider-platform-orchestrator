@@ -190,6 +190,7 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 		NewKubernetesGkeRunnerResource,
 		NewKubernetesAgentRunnerResource,
 		NewProviderResource,
+		NewResourceTypeResource,
 	}
 }
 
@@ -204,6 +205,7 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 		NewKubernetesGkeRunnerDataSource,
 		NewKubernetesAgentRunnerDataSource,
 		NewProviderDataSource,
+		NewResourceTypeDataSource,
 	}
 }
 

@@ -1,5 +1,5 @@
-resource "humanitec_kubernetes_runner" "test" {
-  id          = "test"
+resource "humanitec_kubernetes_runner" "my_runner" {
+  id          = "my_runner"
   description = "Development Kubernetes Runner"
   runner_configuration = {
     cluster = {

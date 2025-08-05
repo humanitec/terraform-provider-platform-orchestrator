@@ -13,8 +13,8 @@ Kubernetes Runner resource
 ## Example Usage
 
 ```terraform
-resource "humanitec_kubernetes_runner" "test" {
-  id          = "test"
+resource "humanitec_kubernetes_runner" "my_runner" {
+  id          = "my_runner"
   description = "Development Kubernetes Runner"
   runner_configuration = {
     cluster = {
@@ -136,5 +136,5 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-terraform import humanitec_kubernetes_runner.id "test"
+terraform import humanitec_kubernetes_runner.my_runner "my-runner"
 ```

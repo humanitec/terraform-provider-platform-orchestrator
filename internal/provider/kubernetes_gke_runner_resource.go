@@ -134,6 +134,7 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 						regexp.MustCompile(`^[a-z](?:-?[a-z0-9]+)+$`),
 						"must start with a lowercase letter, can contain lowercase letters, numbers, and hyphens and can not be empty.",
 					),
+					stringvalidator.LengthAtMost(100),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -142,6 +143,9 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 			"description": schema.StringAttribute{
 				MarkdownDescription: "The description of the Kubernetes GKE Runner.",
 				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(200),
+				},
 			},
 			"runner_configuration": schema.SingleNestedAttribute{
 				MarkdownDescription: "The configuration of the Kubernetes GKE cluster.",
@@ -196,6 +200,9 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 							"namespace": schema.StringAttribute{
 								MarkdownDescription: "The namespace for the Kubernetes GKE Runner job.",
 								Required:            true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(63),
+								},
 							},
 							"service_account": schema.StringAttribute{
 								MarkdownDescription: "The service account for the Kubernetes GKE Runner job.",
@@ -227,6 +234,9 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 							"namespace": schema.StringAttribute{
 								MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
 								Required:            true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(63),
+								},
 							},
 						},
 					},

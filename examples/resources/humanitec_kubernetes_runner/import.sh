@@ -1,1 +1,1 @@
-terraform import humanitec_kubernetes_runner.id "test"
+terraform import humanitec_kubernetes_runner.my_runner "my-runner"

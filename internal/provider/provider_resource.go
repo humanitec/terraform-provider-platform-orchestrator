@@ -236,7 +236,7 @@ func (r *ProviderResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 

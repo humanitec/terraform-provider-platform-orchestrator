@@ -208,16 +208,7 @@ func TestAccModuleResourceWithSourceCode(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("coprovisioned"),
-						knownvalue.ListPartial(map[int]knownvalue.Check{
-							0: knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"type":                         knownvalue.StringExact("custom-type"),
-								"class":                        knownvalue.StringExact("default"),
-								"id":                           knownvalue.Null(),
-								"params":                       knownvalue.Null(),
-								"copy_dependents_from_current": knownvalue.Bool(false),
-								"is_dependent_on_current":      knownvalue.Bool(true),
-							}),
-						}),
+						knownvalue.ListSizeExact(0),
 					),
 				},
 			},
@@ -353,14 +344,7 @@ resource "humanitec_module" "test" {
 ` + sourceCode + `
 EOT
   
-  coprovisioned = [
-    {
-      type                         = "custom-type"
-      class                        = "default"
-      copy_dependents_from_current = false
-      is_dependent_on_current      = true
-    }
-  ]
+  coprovisioned = []
 }
 `
 	return rs

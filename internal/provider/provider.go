@@ -207,6 +207,7 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 		NewKubernetesAgentRunnerDataSource,
 		NewProviderDataSource,
 		NewResourceTypeDataSource,
+		NewModuleDataSource,
 	}
 }
 

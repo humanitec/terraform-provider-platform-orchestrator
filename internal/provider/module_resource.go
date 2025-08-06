@@ -124,6 +124,7 @@ func (r *ModuleResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"module_source": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "The source of the OpenTofu module backing this module. Required, if module source code is not defined.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 200),

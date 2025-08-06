@@ -35,7 +35,6 @@ type EnvironmentTypeResourceModel struct {
 	Id          types.String `tfsdk:"id"`
 	DisplayName types.String `tfsdk:"display_name"`
 	Uuid        types.String `tfsdk:"uuid"`
-	CreatedAt   types.String `tfsdk:"created_at"`
 }
 
 func (r *EnvironmentTypeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -74,13 +73,6 @@ func (r *EnvironmentTypeResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"uuid": schema.StringAttribute{
 				MarkdownDescription: "The UUID of the Environment Type.",
-				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "The creation timestamp of the Environment Type.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -214,6 +206,5 @@ func toEnvironmentTypeModel(item canyoncp.EnvironmentType) EnvironmentTypeResour
 		Id:          types.StringValue(item.Id),
 		Uuid:        types.StringValue(item.Uuid.String()),
 		DisplayName: types.StringValue(item.DisplayName),
-		CreatedAt:   types.StringValue(item.CreatedAt.String()),
 	}
 }

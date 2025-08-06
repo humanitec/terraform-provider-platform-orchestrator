@@ -27,6 +27,5 @@ data "humanitec_environment_type" "environment_type" {
 
 ### Read-Only
 
-- `created_at` (String) Environment Type creation timestamp
 - `display_name` (String) Environment Type display name
 - `uuid` (String) Environment Type UUID

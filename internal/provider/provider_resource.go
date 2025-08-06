@@ -9,6 +9,7 @@ import (
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -35,12 +36,12 @@ type ProviderResource struct {
 
 // ProviderResourceModel describes the resource data model.
 type ProviderResourceModel struct {
-	Id                types.String `tfsdk:"id"`
-	Description       types.String `tfsdk:"description"`
-	ProviderType      types.String `tfsdk:"provider_type"`
-	Source            types.String `tfsdk:"source"`
-	VersionConstraint types.String `tfsdk:"version_constraint"`
-	Configuration     types.String `tfsdk:"configuration"`
+	Id                types.String         `tfsdk:"id"`
+	Description       types.String         `tfsdk:"description"`
+	ProviderType      types.String         `tfsdk:"provider_type"`
+	Source            types.String         `tfsdk:"source"`
+	VersionConstraint types.String         `tfsdk:"version_constraint"`
+	Configuration     jsontypes.Normalized `tfsdk:"configuration"`
 }
 
 func (r *ProviderResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -112,6 +113,8 @@ func (r *ProviderResource) Schema(ctx context.Context, req resource.SchemaReques
 			"configuration": schema.StringAttribute{
 				MarkdownDescription: "JSON encoded configuration of the provider.",
 				Optional:            true,
+				CustomType:          jsontypes.NormalizedType{},
+				Computed:            true,
 			},
 		},
 	}
@@ -147,9 +150,9 @@ func (r *ProviderResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	var configuration map[string]interface{}
-	if data.Configuration.ValueString() != "" {
-		if err := json.Unmarshal([]byte(data.Configuration.ValueString()), &configuration); err != nil {
-			resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Provider configuration is not a valid object: %s", err))
+	if !data.Configuration.IsNull() && !data.Configuration.IsUnknown() {
+		if diags := data.Configuration.Unmarshal(&configuration); diags.HasError() {
+			resp.Diagnostics.Append(diags...)
 			return
 		}
 	}
@@ -210,10 +213,10 @@ func (r *ProviderResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	var configuration *map[string]interface{}
-	if data.Configuration.ValueString() != "" {
-		if err := json.Unmarshal([]byte(data.Configuration.ValueString()), &configuration); err != nil {
-			resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Provider configuration is not a valid object: %s", err))
+	var configuration map[string]interface{}
+	if !data.Configuration.IsNull() && !data.Configuration.IsUnknown() {
+		if diags := data.Configuration.Unmarshal(&configuration); diags.HasError() {
+			resp.Diagnostics.Append(diags...)
 			return
 		}
 	}
@@ -223,7 +226,7 @@ func (r *ProviderResource) Update(ctx context.Context, req resource.UpdateReques
 	var updateBody = canyoncp.UpdateModuleProviderJSONRequestBody{
 		Description:       ref.RefStringEmptyNil(data.Description.ValueString()),
 		VersionConstraint: ref.RefStringEmptyNil(data.VersionConstraint.ValueString()),
-		Configuration:     configuration,
+		Configuration:     ref.Ref(configuration),
 	}
 
 	httpResp, err := r.cpClient.UpdateModuleProviderWithResponse(ctx, r.orgId, providerType, id, updateBody)
@@ -295,10 +298,10 @@ func (r *ProviderResource) ImportState(ctx context.Context, req resource.ImportS
 }
 
 func toProviderResourceModel(item canyoncp.ModuleProvider) ProviderResourceModel {
-	var configuration = types.StringNull()
-	if len(item.Configuration) > 0 {
+	var configuration jsontypes.Normalized
+	if item.Configuration != nil {
 		configJson, _ := json.Marshal(item.Configuration)
-		configuration = types.StringValue(string(configJson))
+		configuration = jsontypes.NewNormalizedValue(string(configJson))
 	}
 
 	return ProviderResourceModel{

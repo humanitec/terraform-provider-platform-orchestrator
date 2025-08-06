@@ -7,6 +7,7 @@ import (
 	"regexp"
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -29,12 +30,12 @@ type ProviderDataSource struct {
 
 // ProviderDataSourceModel describes the data source data model.
 type ProviderDataSourceModel struct {
-	Id                types.String `tfsdk:"id"`
-	Description       types.String `tfsdk:"description"`
-	ProviderType      types.String `tfsdk:"provider_type"`
-	Source            types.String `tfsdk:"source"`
-	VersionConstraint types.String `tfsdk:"version_constraint"`
-	Configuration     types.String `tfsdk:"configuration"`
+	Id                types.String         `tfsdk:"id"`
+	Description       types.String         `tfsdk:"description"`
+	ProviderType      types.String         `tfsdk:"provider_type"`
+	Source            types.String         `tfsdk:"source"`
+	VersionConstraint types.String         `tfsdk:"version_constraint"`
+	Configuration     jsontypes.Normalized `tfsdk:"configuration"`
 }
 
 func (d *ProviderDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -82,6 +83,7 @@ func (d *ProviderDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			"configuration": schema.StringAttribute{
 				MarkdownDescription: "JSON encoded configuration of the provider",
 				Computed:            true,
+				CustomType:          jsontypes.NormalizedType{},
 			},
 		},
 	}

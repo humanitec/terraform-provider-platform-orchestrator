@@ -59,7 +59,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 			},
 			// Update testing
 			{
-				Config: testAccKubernetesAgentRunnerResource("tf-provider-test", `-----BEGIN PUBLIC KEY-----
+				Config: testAccKubernetesAgentRunnerResourceUpdateNoPodTemplate("tf-provider-test", `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 -----END PUBLIC KEY-----`, "default"),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -79,7 +79,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
 								"service_account": knownvalue.StringExact("humanitec-runner"),
-								"pod_template":    knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"humanitec-runner"}}}`),
+								"pod_template":    knownvalue.StringExact("{}"),
 							}),
 						}),
 					),
@@ -130,6 +130,30 @@ EOT
 	kubernetes_configuration = {
 	  namespace = "` + stateNamespace + `"
     }
+  }
+}
+`
+}
+
+func testAccKubernetesAgentRunnerResourceUpdateNoPodTemplate(id, key, stateNamespace string) string {
+	return `
+resource "humanitec_kubernetes_agent_runner" "test" {
+  id = "` + id + `"
+  runner_configuration = {
+	key = <<EOT
+` + key + `
+EOT
+	job = {
+	  namespace = "default"
+      service_account = "humanitec-runner"
+	  pod_template = "{}"
+	}
+  }
+  state_storage_configuration = {
+	type = "kubernetes"
+	kubernetes_configuration = {
+	  namespace = "` + stateNamespace + `"
+	}
   }
 }
 `

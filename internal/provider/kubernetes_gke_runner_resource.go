@@ -9,6 +9,7 @@ import (
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -64,9 +65,9 @@ type KubernetesGkeRunnerClusterAuth struct {
 }
 
 type KubernetesGkeRunnerJob struct {
-	Namespace      types.String `tfsdk:"namespace"`
-	ServiceAccount types.String `tfsdk:"service_account"`
-	PodTemplate    types.String `tfsdk:"pod_template"`
+	Namespace      types.String         `tfsdk:"namespace"`
+	ServiceAccount types.String         `tfsdk:"service_account"`
+	PodTemplate    jsontypes.Normalized `tfsdk:"pod_template"`
 }
 
 func KubernetesGkeRunnerConfigurationAttributeTypes() map[string]attr.Type {
@@ -211,6 +212,8 @@ func (r *KubernetesGkeRunnerResource) Schema(ctx context.Context, req resource.S
 							"pod_template": schema.StringAttribute{
 								MarkdownDescription: "JSON encoded pod template for the Kubernetes GKE Runner job.",
 								Optional:            true,
+								CustomType:          jsontypes.NormalizedType{},
+								Computed:            true,
 							},
 						},
 					},
@@ -448,7 +451,9 @@ func parseKubernetesGKERunnerConfigurationResponse(ctx context.Context, k8sGKERu
 
 	if k8sGKERunnerConfiguration.Job.PodTemplate != nil {
 		podTemplate, _ := json.Marshal(k8sGKERunnerConfiguration.Job.PodTemplate)
-		runnerConfig.Job.PodTemplate = types.StringValue(string(podTemplate))
+		runnerConfig.Job.PodTemplate = jsontypes.NewNormalizedValue(string(podTemplate))
+	} else {
+		runnerConfig.Job.PodTemplate = jsontypes.NewNormalizedNull()
 	}
 
 	objectValue, diags := types.ObjectValueFrom(ctx, KubernetesGkeRunnerConfigurationAttributeTypes(), runnerConfig)

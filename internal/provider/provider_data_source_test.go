@@ -93,7 +93,7 @@ func TestAccProviderDataSourceWithoutConfiguration(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.humanitec_provider.test_gcp",
 						tfjsonpath.New("configuration"),
-						knownvalue.Null(),
+						knownvalue.StringExact(`{}`),
 					),
 				},
 			},
@@ -130,6 +130,7 @@ resource "humanitec_provider" "test_gcp" {
   provider_type = "gcp"
   source = "hashicorp/google"
   version_constraint = "~> 5.0"
+  configuration = "{}"
 }
 
 data "humanitec_provider" "test_gcp" {

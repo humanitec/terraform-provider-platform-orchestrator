@@ -59,13 +59,7 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 			},
 			// Update testing
 			{
-				Config: testAccKubernetesGkeRunnerResource("tf-provider-test", "default", `pod_template = jsonencode({
-	metadata = {
-		labels = {
-			"app.kubernetes.io/name" = "humanitec-runner"
-		}
-	}	
-})`),
+				Config: testAccKubernetesGkeRunnerResource("tf-provider-test", "default", `pod_template = null`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_gke_runner.test",
@@ -90,7 +84,7 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
 								"service_account": knownvalue.StringExact("humanitec-runner"),
-								"pod_template":    knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"humanitec-runner"}}}`),
+								"pod_template":    knownvalue.Null(),
 							}),
 						}),
 					),

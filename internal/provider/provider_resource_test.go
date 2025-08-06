@@ -32,7 +32,33 @@ func TestAccProviderResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"humanitec_provider.test",
 						tfjsonpath.New("configuration"),
-						knownvalue.Null(),
+						knownvalue.StringExact(`{}`),
+					),
+					statecheck.ExpectKnownValue(
+						"humanitec_provider.test",
+						tfjsonpath.New("source"),
+						knownvalue.StringExact("hashicorp/aws"),
+					),
+				},
+			},
+			// Update testing empty configuration
+			{
+				Config: testAccProviderResourceConfig("test", "aws", "{}"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"humanitec_provider.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact("test"),
+					),
+					statecheck.ExpectKnownValue(
+						"humanitec_provider.test",
+						tfjsonpath.New("description"),
+						knownvalue.StringExact("Test Provider"),
+					),
+					statecheck.ExpectKnownValue(
+						"humanitec_provider.test",
+						tfjsonpath.New("configuration"),
+						knownvalue.StringExact(`{}`),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_provider.test",

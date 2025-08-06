@@ -7,6 +7,7 @@ import (
 	"regexp"
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -82,6 +83,7 @@ func (d *KubernetesAgentRunnerDataSource) Schema(ctx context.Context, req dataso
 							"pod_template": schema.StringAttribute{
 								MarkdownDescription: "JSON encoded pod template for the Kubernetes Runner job",
 								Computed:            true,
+								CustomType:          jsontypes.NormalizedType{},
 							},
 						},
 					},

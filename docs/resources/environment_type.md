@@ -32,7 +32,6 @@ resource "humanitec_environment_type" "environment_type" {
 
 ### Read-Only
 
-- `created_at` (String) The creation timestamp of the Environment Type.
 - `uuid` (String) The UUID of the Environment Type.
 
 ## Import

@@ -33,11 +33,6 @@ func TestAccEnvironmentTypeResource(t *testing.T) {
 						tfjsonpath.New("uuid"),
 						knownvalue.NotNull(),
 					),
-					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
-						tfjsonpath.New("created_at"),
-						knownvalue.NotNull(),
-					),
 				},
 			},
 			// Update testing
@@ -57,11 +52,6 @@ func TestAccEnvironmentTypeResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"humanitec_environment_type.test",
 						tfjsonpath.New("uuid"),
-						knownvalue.NotNull(),
-					),
-					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
-						tfjsonpath.New("created_at"),
 						knownvalue.NotNull(),
 					),
 				},

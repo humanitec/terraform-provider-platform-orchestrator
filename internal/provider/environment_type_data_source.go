@@ -32,7 +32,6 @@ type EnvironmentTypeDataSourceModel struct {
 	Id          types.String `tfsdk:"id"`
 	DisplayName types.String `tfsdk:"display_name"`
 	Uuid        types.String `tfsdk:"uuid"`
-	CreatedAt   types.String `tfsdk:"created_at"`
 }
 
 func (d *EnvironmentTypeDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -61,10 +60,6 @@ func (d *EnvironmentTypeDataSource) Schema(ctx context.Context, req datasource.S
 			},
 			"uuid": schema.StringAttribute{
 				MarkdownDescription: "Environment Type UUID",
-				Computed:            true,
-			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "Environment Type creation timestamp",
 				Computed:            true,
 			},
 		},
@@ -116,7 +111,6 @@ func (d *EnvironmentTypeDataSource) Read(ctx context.Context, req datasource.Rea
 	data.Id = types.StringValue(environmentType.Id)
 	data.DisplayName = types.StringValue(environmentType.DisplayName)
 	data.Uuid = types.StringValue(environmentType.Uuid.String())
-	data.CreatedAt = types.StringValue(environmentType.CreatedAt.String())
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

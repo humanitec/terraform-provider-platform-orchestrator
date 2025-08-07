@@ -211,6 +211,7 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 		NewResourceTypeDataSource,
 		NewModuleDataSource,
 		NewModuleRuleDataSource,
+		NewRunnerRuleDataSource,
 	}
 }
 

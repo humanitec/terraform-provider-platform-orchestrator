@@ -191,6 +191,7 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 		NewKubernetesAgentRunnerResource,
 		NewProviderResource,
 		NewResourceTypeResource,
+		NewModuleResource,
 	}
 }
 
@@ -206,6 +207,7 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 		NewKubernetesAgentRunnerDataSource,
 		NewProviderDataSource,
 		NewResourceTypeDataSource,
+		NewModuleDataSource,
 	}
 }
 

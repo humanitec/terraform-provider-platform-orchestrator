@@ -29,7 +29,7 @@ func TestAccModuleDataSourceWithSourceCode(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_source_code",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-module-source-code-data-test"),
+						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_source_code",
@@ -39,7 +39,7 @@ func TestAccModuleDataSourceWithSourceCode(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_source_code",
 						tfjsonpath.New("resource_type"),
-						knownvalue.StringExact("aws-rds"),
+						knownvalue.StringExact(awsRdsTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_source_code",

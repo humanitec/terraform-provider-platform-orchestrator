@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
@@ -199,27 +198,7 @@ func (r *ModuleRuleResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *ModuleRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, ".")
-	if len(idParts) != 2 {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			fmt.Sprintf("Expected import ID to be in the format 'provider_type.id', got: %s", req.ID),
-		)
-		return
-	}
-
-	providerTypeValue := idParts[0]
-	idValue := idParts[1]
-	if providerTypeValue == "" || idValue == "" {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			fmt.Sprintf("Expected import ID to have non-empty provider type and ID, got: %s", req.ID),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("provider_type"), providerTypeValue)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idValue)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func toModuleRuleResourceModel(item canyoncp.Rule) ModuleRuleResourceModel {

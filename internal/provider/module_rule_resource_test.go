@@ -61,7 +61,7 @@ func TestAccModuleRuleResourceDefaultFields(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      "humanitec_module.test",
+				ResourceName:      "humanitec_module_rule.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -120,7 +120,7 @@ func TestAccModuleRuleResource(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      "humanitec_module.test",
+				ResourceName:      "humanitec_module_rule.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

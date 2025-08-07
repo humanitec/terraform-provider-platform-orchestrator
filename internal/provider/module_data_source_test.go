@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,13 +12,18 @@ import (
 )
 
 func TestAccModuleDataSourceWithSourceCode(t *testing.T) {
+	var (
+		moduleId     = fmt.Sprintf("test-module-%d", time.Now().UnixNano())
+		awsRdsTypeId = fmt.Sprintf("custom-type-%d", time.Now().UnixNano())
+	)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create module resource with source code and read via data source
 			{
-				Config: testAccModuleDataSourceConfigWithSourceCode,
+				Config: testAccModuleDataSourceConfigWithSourceCode(moduleId, awsRdsTypeId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct module
 					statecheck.ExpectKnownValue(
@@ -55,24 +62,31 @@ func TestAccModuleDataSourceWithSourceCode(t *testing.T) {
 }
 
 func TestAccModuleDataSourceWithComplexStructure(t *testing.T) {
+	var (
+		moduleId       = fmt.Sprintf("test-module-%d", time.Now().UnixNano())
+		postgresTypeId = fmt.Sprintf("postgres-%d", time.Now().UnixNano())
+		awsVpcTypeId   = fmt.Sprintf("aws-vpc-%d", time.Now().UnixNano())
+		loggingTypeId  = fmt.Sprintf("logging-%d", time.Now().UnixNano())
+		providerId     = fmt.Sprintf("aws-provider-%d", time.Now().UnixNano())
+	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create module resource with complex structure and read via data source
 			{
-				Config: testAccModuleDataSourceConfigWithComplexStructure,
+				Config: testAccModuleDataSourceConfigWithComplexStructure(moduleId, postgresTypeId, awsVpcTypeId, loggingTypeId, providerId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct module
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_complex",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-module-complex-data-test"),
+						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_complex",
 						tfjsonpath.New("resource_type"),
-						knownvalue.StringExact("postgres"),
+						knownvalue.StringExact(postgresTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_complex",
@@ -83,7 +97,7 @@ func TestAccModuleDataSourceWithComplexStructure(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_complex",
 						tfjsonpath.New("coprovisioned").AtSliceIndex(0).AtMapKey("type"),
-						knownvalue.StringExact("logging"),
+						knownvalue.StringExact(loggingTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_complex",
@@ -94,13 +108,13 @@ func TestAccModuleDataSourceWithComplexStructure(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_complex",
 						tfjsonpath.New("dependencies").AtMapKey("vpc").AtMapKey("type"),
-						knownvalue.StringExact("aws-vpc"),
+						knownvalue.StringExact(awsVpcTypeId),
 					),
 					// Verify provider mapping
 					statecheck.ExpectKnownValue(
 						"data.humanitec_module.test_complex",
 						tfjsonpath.New("provider_mapping").AtMapKey("aws"),
-						knownvalue.StringExact("aws.tf-provider-aws-test"),
+						knownvalue.StringExact("aws."+providerId),
 					),
 				},
 			},
@@ -108,15 +122,16 @@ func TestAccModuleDataSourceWithComplexStructure(t *testing.T) {
 	})
 }
 
-const testAccModuleDataSourceConfigWithSourceCode = `
+func testAccModuleDataSourceConfigWithSourceCode(id, awsRdsTypeId string) string {
+	return `
 resource "humanitec_resource_type" "aws_rds" {
-  id = "aws-rds"
+  id = "` + awsRdsTypeId + `"
   description = "Postgres Database"
   output_schema = jsonencode({})
 }
 
 resource "humanitec_module" "test_source_code" {
-  id = "tf-module-source-code-data-test"
+  id = "` + id + `"
   description = "Test Module with source code for data source"
   resource_type = humanitec_resource_type.aws_rds.id
   
@@ -132,10 +147,12 @@ data "humanitec_module" "test_source_code" {
   id = humanitec_module.test_source_code.id
 }
 `
+}
 
-const testAccModuleDataSourceConfigWithComplexStructure = `
+func testAccModuleDataSourceConfigWithComplexStructure(moduleId, postgresTypeId, awsVpcTypeId, loggingTypeId, awsProviderId string) string {
+	return `
 resource "humanitec_provider" "test_aws" {
-  id = "tf-provider-aws-test"
+  id = "` + awsProviderId + `"
   description = "Test AWS Provider"
   provider_type = "aws"
   source = "hashicorp/aws"
@@ -143,25 +160,25 @@ resource "humanitec_provider" "test_aws" {
 }
 
 resource "humanitec_resource_type" "postgres" {
-  id = "postgres"
+  id = "` + postgresTypeId + `"
   description = "Postgres Database"
   output_schema = jsonencode({})
 }
 
 resource "humanitec_resource_type" "logging" {
-  id = "logging"
+  id = "` + loggingTypeId + `"
   description = "Logging Resource"
   output_schema = jsonencode({})
 }
 
 resource "humanitec_resource_type" "aws_vpc" {
-  id = "aws-vpc"
+  id = "` + awsVpcTypeId + `"
   description = "AWS VPC"
   output_schema = jsonencode({})
 }
 
 resource "humanitec_module" "test_complex" {
-  id = "tf-module-complex-data-test"
+  id = "` + moduleId + `"
   description = "Test Module with complex structure"
   resource_type = humanitec_resource_type.postgres.id
   module_source = "git::https://github.com/test/postgres-module"
@@ -195,3 +212,4 @@ data "humanitec_module" "test_complex" {
   id = humanitec_module.test_complex.id
 }
 `
+}

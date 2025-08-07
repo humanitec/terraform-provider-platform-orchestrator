@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,23 +12,31 @@ import (
 )
 
 func TestAccModuleResource(t *testing.T) {
+	var (
+		moduleId             = fmt.Sprintf("test-module-%d", time.Now().UnixNano())
+		customTypeId         = fmt.Sprintf("custom-type-%d", time.Now().UnixNano())
+		metricsTypeId        = fmt.Sprintf("metrics-%d", time.Now().UnixNano())
+		postgresTypeId       = fmt.Sprintf("postgres-%d", time.Now().UnixNano())
+		awsProviderId        = fmt.Sprintf("aws-provider-%d", time.Now().UnixNano())
+		awsUpdatedProviderId = fmt.Sprintf("aws-updated-provider-%d", time.Now().UnixNano())
+	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccModuleResource("test-module", "s3://my-bucket/module.zip", "{}"),
+				Config: testAccModuleResource(moduleId, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, "s3://my-bucket/module.zip", "{}"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("test-module"),
+						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("resource_type"),
-						knownvalue.StringExact("custom-type"),
+						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
@@ -43,7 +53,7 @@ func TestAccModuleResource(t *testing.T) {
 						tfjsonpath.New("dependencies"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"database": knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"type":   knownvalue.StringExact("postgres"),
+								"type":   knownvalue.StringExact(postgresTypeId),
 								"class":  knownvalue.StringExact("default"),
 								"id":     knownvalue.Null(),
 								"params": knownvalue.Null(),
@@ -59,7 +69,7 @@ func TestAccModuleResource(t *testing.T) {
 						"humanitec_module.test",
 						tfjsonpath.New("provider_mapping"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"aws": knownvalue.StringExact("aws.my-aws-account"),
+							"aws": knownvalue.StringExact("aws." + awsProviderId),
 						}),
 					),
 					statecheck.ExpectKnownValue(
@@ -67,7 +77,7 @@ func TestAccModuleResource(t *testing.T) {
 						tfjsonpath.New("coprovisioned"),
 						knownvalue.ListPartial(map[int]knownvalue.Check{
 							0: knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"type":                         knownvalue.StringExact("metrics"),
+								"type":                         knownvalue.StringExact(metricsTypeId),
 								"class":                        knownvalue.StringExact("default"),
 								"id":                           knownvalue.Null(),
 								"params":                       knownvalue.StringExact(`{"level":"info"}`),
@@ -80,17 +90,17 @@ func TestAccModuleResource(t *testing.T) {
 			},
 			// Update testing
 			{
-				Config: testAccModuleResourceWithUpdate("test-module", "s3://my-bucket/module-v2.zip", "jsonencode({ region = \"us-east-1\" })", "Updated test module description"),
+				Config: testAccModuleResourceWithUpdate(moduleId, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, awsUpdatedProviderId, "s3://my-bucket/module-v2.zip", "jsonencode({ region = \"us-east-1\" })", "Updated test module description"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("test-module"),
+						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("resource_type"),
-						knownvalue.StringExact("custom-type"),
+						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
@@ -107,13 +117,13 @@ func TestAccModuleResource(t *testing.T) {
 						tfjsonpath.New("dependencies"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"database": knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"type":   knownvalue.StringExact("custom-type"),
+								"type":   knownvalue.StringExact(customTypeId),
 								"class":  knownvalue.StringExact("production"),
 								"id":     knownvalue.StringExact("main-db"),
 								"params": knownvalue.StringExact(`{"version":"14"}`),
 							}),
 							"cache": knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"type":   knownvalue.StringExact("postgres"),
+								"type":   knownvalue.StringExact(postgresTypeId),
 								"class":  knownvalue.StringExact("default"),
 								"id":     knownvalue.Null(),
 								"params": knownvalue.Null(),
@@ -129,7 +139,7 @@ func TestAccModuleResource(t *testing.T) {
 						"humanitec_module.test",
 						tfjsonpath.New("provider_mapping"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
-							"aws": knownvalue.StringExact("aws.my-updated-aws-account"),
+							"aws": knownvalue.StringExact("aws." + awsUpdatedProviderId),
 						}),
 					),
 					statecheck.ExpectKnownValue(
@@ -137,7 +147,7 @@ func TestAccModuleResource(t *testing.T) {
 						tfjsonpath.New("coprovisioned"),
 						knownvalue.ListPartial(map[int]knownvalue.Check{
 							0: knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"type":                         knownvalue.StringExact("metrics"),
+								"type":                         knownvalue.StringExact(metricsTypeId),
 								"class":                        knownvalue.StringExact("advanced"),
 								"id":                           knownvalue.StringExact("mon-1"),
 								"params":                       knownvalue.Null(),
@@ -159,22 +169,27 @@ func TestAccModuleResource(t *testing.T) {
 }
 
 func TestAccModuleResourceWithSourceCode(t *testing.T) {
+	var (
+		moduleId       = fmt.Sprintf("test-module-%d", time.Now().UnixNano())
+		customTypeId   = fmt.Sprintf("custom-type-%d", time.Now().UnixNano())
+		postgresTypeId = fmt.Sprintf("postgres-%d", time.Now().UnixNano())
+	)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModuleResourceWithSourceCode("test-module-code", `resource "aws_db_instance" "default" { engine = "postgres" }`),
+				Config: testAccModuleResourceWithSourceCode(moduleId, customTypeId, `resource "aws_db_instance" "default" { engine = "postgres" }`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("test-module-code"),
+						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("resource_type"),
-						knownvalue.StringExact("custom-type"),
+						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
@@ -191,17 +206,17 @@ func TestAccModuleResourceWithSourceCode(t *testing.T) {
 			},
 			// Update testing
 			{
-				Config: testAccModuleResourceWithSourceCodeUpdate("test-module-code", `resource "aws_db_instance" "default" { engine = "mysql" }`),
+				Config: testAccModuleResourceWithSourceCodeUpdate(moduleId, customTypeId, postgresTypeId, `resource "aws_db_instance" "default" { engine = "mysql" }`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("test-module-code"),
+						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
 						tfjsonpath.New("resource_type"),
-						knownvalue.StringExact("custom-type"),
+						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_module.test",
@@ -214,7 +229,7 @@ func TestAccModuleResourceWithSourceCode(t *testing.T) {
 						tfjsonpath.New("coprovisioned"),
 						knownvalue.ListPartial(map[int]knownvalue.Check{
 							0: knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"type":                         knownvalue.StringExact("postgres"),
+								"type":                         knownvalue.StringExact(postgresTypeId),
 								"class":                        knownvalue.StringExact("advanced"),
 								"id":                           knownvalue.StringExact("postgres-1"),
 								"params":                       knownvalue.StringExact(`{"interval":"5m"}`),
@@ -229,25 +244,25 @@ func TestAccModuleResourceWithSourceCode(t *testing.T) {
 	})
 }
 
-func testAccModuleResource(id, moduleSource, moduleInputs string) string {
+func testAccModuleResource(id, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, moduleSource, moduleInputs string) string {
 	return `
 resource "humanitec_resource_type" "custom_type" {
-  id           =  "custom-type"
+  id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
 resource "humanitec_resource_type" "metrics" {
-  id           =  "metrics"
+  id           =  "` + metricsTypeId + `"
   output_schema = "{}"
 }
 
 resource "humanitec_resource_type" "postgres" {
-  id           =  "postgres"
+  id           =  "` + postgresTypeId + `"
   output_schema = "{}"
 }
 
 resource "humanitec_provider" "test_aws" {
-  id = "my-aws-account"
+  id = "` + awsProviderId + `"
   provider_type = "aws"
   source = "hashicorp/aws"
   version_constraint = ">= 4.0.0"
@@ -284,32 +299,32 @@ resource "humanitec_module" "test" {
 `
 }
 
-func testAccModuleResourceWithUpdate(id, moduleSource, moduleInputs, description string) string {
+func testAccModuleResourceWithUpdate(id, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, awsUpdatedProviderId, moduleSource, moduleInputs, description string) string {
 	return `
 resource "humanitec_resource_type" "custom_type" {
-  id           =  "custom-type"
+  id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
 resource "humanitec_resource_type" "metrics" {
-  id           =  "metrics"
+  id           =  "` + metricsTypeId + `"
   output_schema = "{}"
 }
 
 resource "humanitec_resource_type" "postgres" {
-  id           =  "postgres"
+  id           =  "` + postgresTypeId + `"
   output_schema = "{}"
 }
 
 resource "humanitec_provider" "test_aws" {
-  id = "my-aws-account"
+  id = "` + awsProviderId + `"
   provider_type = "aws"
   source = "hashicorp/aws"
   version_constraint = ">= 4.0.0"
 }
 
 resource "humanitec_provider" "test_aws_updated" {
-  id = "my-updated-aws-account"
+  id = "` + awsUpdatedProviderId + `"
   provider_type = "aws"
   source = "hashicorp/aws"
   version_constraint = ">= 4.0.0"
@@ -353,10 +368,10 @@ resource "humanitec_module" "test" {
 `
 }
 
-func testAccModuleResourceWithSourceCode(id, sourceCode string) string {
+func testAccModuleResourceWithSourceCode(id, customTypeId, sourceCode string) string {
 	rs := `
 resource "humanitec_resource_type" "custom_type" {
-  id           =  "custom-type"
+  id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
@@ -373,15 +388,15 @@ EOT
 	return rs
 }
 
-func testAccModuleResourceWithSourceCodeUpdate(id, sourceCode string) string {
+func testAccModuleResourceWithSourceCodeUpdate(id, customTypeId, postgresTypeId, sourceCode string) string {
 	rs := `
 resource "humanitec_resource_type" "custom_type" {
-  id           =  "custom-type"
+  id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
 resource "humanitec_resource_type" "postgres" {
-  id           =  "postgres"
+  id           =  "` + postgresTypeId + `"
   output_schema = "{}"
 }
 
@@ -406,68 +421,3 @@ EOT
 `
 	return rs
 }
-
-// prepareProvidersAndResourceTypes sets up the necessary providers and resource types for the tests.
-// func prepareProvidersAndResourceTypes(t *testing.T, canyonCpClient canyoncp.ClientWithResponsesInterface, orgId string) {
-// 	t.Helper()
-
-// 	resp, err := canyonCpClient.CreateModuleProviderWithResponse(t.Context(), orgId, canyoncp.CreateModuleProviderJSONRequestBody{
-// 		Id:                "my-aws-account",
-// 		Source:            "hashicorp/aws",
-// 		ProviderType:      "aws",
-// 		VersionConstraint: "~> 3.0",
-// 	})
-// 	require.NoError(t, err, "Failed to create module provider `my-aws-account`")
-// 	require.Contains(t, []int{http.StatusCreated, http.StatusConflict}, resp.StatusCode(), "Unexpected status code when creating module provider: %v", string(resp.Body))
-
-// 	resp, err = canyonCpClient.CreateModuleProviderWithResponse(t.Context(), orgId, canyoncp.CreateModuleProviderJSONRequestBody{
-// 		Id:                "my-updated-aws-account",
-// 		Source:            "hashicorp/aws",
-// 		ProviderType:      "aws",
-// 		VersionConstraint: "~> 3.0",
-// 	})
-// 	require.NoError(t, err, "Failed to create module provider `my-updated-aws-account`")
-// 	require.Contains(t, []int{http.StatusCreated, http.StatusConflict}, resp.StatusCode(), "Unexpected status code when creating module provider: %v", string(resp.Body))
-
-// 	respType, err := canyonCpClient.CreateResourceTypeWithResponse(t.Context(), orgId, canyoncp.CreateResourceTypeJSONRequestBody{
-// 		Id:           "custom-type",
-// 		OutputSchema: map[string]interface{}{},
-// 	})
-// 	require.NoError(t, err, "Failed to create resource type `custom-type`")
-// 	require.Contains(t, []int{http.StatusCreated, http.StatusConflict}, respType.StatusCode(), "Unexpected status code when creating resource type")
-
-// 	respType, err = canyonCpClient.CreateResourceTypeWithResponse(t.Context(), orgId, canyoncp.CreateResourceTypeJSONRequestBody{
-// 		Id:           "metrics",
-// 		OutputSchema: map[string]interface{}{},
-// 	})
-// 	require.NoError(t, err, "Failed to create resource type `metrics`")
-// 	require.Contains(t, []int{http.StatusCreated, http.StatusConflict}, respType.StatusCode(), "Unexpected status code when creating resource type")
-
-// 	respType, err = canyonCpClient.CreateResourceTypeWithResponse(t.Context(), orgId, canyoncp.CreateResourceTypeJSONRequestBody{
-// 		Id:           "postgres",
-// 		OutputSchema: map[string]interface{}{},
-// 	})
-// 	require.NoError(t, err, "Failed to create resource type `environment`")
-// 	require.Contains(t, []int{http.StatusCreated, http.StatusConflict}, respType.StatusCode(), "Unexpected status code when creating resource type")
-// }
-
-// // destroyProvidersAndResourceTypes cleans up the providers and resource types created during the tests.
-// func destroyProvidersAndResourceTypes(t *testing.T, canyonCpClient canyoncp.ClientWithResponsesInterface, orgId string) {
-// 	t.Helper()
-
-// 	providerResp, err := canyonCpClient.DeleteModuleProviderWithResponse(t.Context(), orgId, "aws", "my-aws-account")
-// 	require.NoError(t, err, "Failed to delete module provider `my-aws-account`")
-// 	require.Equal(t, http.StatusNoContent, providerResp.StatusCode(), "Unexpected status code when deleting module provider: %v - %s", providerResp.StatusCode(), string(providerResp.Body))
-
-// 	providerResp, err = canyonCpClient.DeleteModuleProviderWithResponse(t.Context(), orgId, "aws", "my-updated-aws-account")
-// 	require.NoError(t, err, "Failed to delete module provider `my-updated-aws-account`")
-// 	require.Equal(t, http.StatusNoContent, providerResp.StatusCode(), "Unexpected status code when deleting module provider: %v - %s", providerResp.StatusCode(), string(providerResp.Body))
-
-// 	typeResp, err := canyonCpClient.DeleteResourceTypeWithResponse(t.Context(), orgId, "custom-type")
-// 	require.NoError(t, err, "Failed to delete resource type `custom-type`")
-// 	require.Equal(t, http.StatusNoContent, typeResp.StatusCode(), "Unexpected status code when deleting resource type: %v - %s", typeResp.StatusCode(), string(typeResp.Body))
-
-// 	typeResp, err = canyonCpClient.DeleteResourceTypeWithResponse(t.Context(), orgId, "metrics")
-// 	require.NoError(t, err, "Failed to delete resource type `metrics`")
-// 	require.Equal(t, http.StatusNoContent, typeResp.StatusCode(), "Unexpected status code when deleting resource type: %v - %s", typeResp.StatusCode(), string(typeResp.Body))
-// }

@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,19 +12,20 @@ import (
 )
 
 func TestAccProviderDataSource(t *testing.T) {
+	var providerId = fmt.Sprintf("aws-provider-%d", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create provider resource and read via data source
 			{
-				Config: testAccProviderDataSourceConfig,
+				Config: testAccProviderDataSourceConfig(providerId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct provider
 					statecheck.ExpectKnownValue(
 						"data.humanitec_provider.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-data-test"),
+						knownvalue.StringExact(providerId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_provider.test",
@@ -56,19 +59,20 @@ func TestAccProviderDataSource(t *testing.T) {
 }
 
 func TestAccProviderDataSourceWithoutConfiguration(t *testing.T) {
+	var providerId = fmt.Sprintf("aws-provider-%d", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create provider resource without configuration and read via data source
 			{
-				Config: testAccProviderDataSourceConfigWithoutConfiguration,
+				Config: testAccProviderDataSourceConfigWithoutConfiguration(providerId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct provider
 					statecheck.ExpectKnownValue(
 						"data.humanitec_provider.test_gcp",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-gcp-data-test"),
+						knownvalue.StringExact(providerId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_provider.test_gcp",
@@ -101,9 +105,10 @@ func TestAccProviderDataSourceWithoutConfiguration(t *testing.T) {
 	})
 }
 
-const testAccProviderDataSourceConfig = `
+func testAccProviderDataSourceConfig(providerId string) string {
+	return `
 resource "humanitec_provider" "test" {
-  id = "tf-provider-data-test"
+  id = "` + providerId + `"
   description = "Test AWS Provider for data source"
   provider_type = "aws"
   source = "hashicorp/aws"
@@ -122,10 +127,12 @@ data "humanitec_provider" "test" {
   provider_type = humanitec_provider.test.provider_type
 }
 `
+}
 
-const testAccProviderDataSourceConfigWithoutConfiguration = `
-resource "humanitec_provider" "test_gcp" {
-  id = "tf-provider-gcp-data-test"
+func testAccProviderDataSourceConfigWithoutConfiguration(providerId string) string {
+	return `
+  resource "humanitec_provider" "test_gcp" {
+  id = "` + providerId + `"
   description = "Test GCP Provider for data source"
   provider_type = "gcp"
   source = "hashicorp/google"
@@ -138,3 +145,4 @@ data "humanitec_provider" "test_gcp" {
   provider_type = humanitec_provider.test_gcp.provider_type
 }
 `
+}

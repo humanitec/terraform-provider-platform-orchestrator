@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -13,6 +14,7 @@ import (
 )
 
 func TestAccResourceTypeResource(t *testing.T) {
+	var resourceTypeId = fmt.Sprintf("aws-rds-%d", time.Now().UnixNano())
 	outputSchema := `{
 		"properties": {
 			"host": {
@@ -33,12 +35,12 @@ func TestAccResourceTypeResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccResourceTypeResourceConfig("example", "{}", nil, nil),
+				Config: testAccResourceTypeResourceConfig(resourceTypeId, "{}", nil, nil),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_resource_type.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("example"),
+						knownvalue.StringExact(resourceTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_resource_type.test",
@@ -59,12 +61,12 @@ func TestAccResourceTypeResource(t *testing.T) {
 			},
 			// Update testing
 			{
-				Config: testAccResourceTypeResourceConfig("example", outputSchema, &description, &isDeveloperAccessibleFalse),
+				Config: testAccResourceTypeResourceConfig(resourceTypeId, outputSchema, &description, &isDeveloperAccessibleFalse),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_resource_type.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("example"),
+						knownvalue.StringExact(resourceTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_resource_type.test",

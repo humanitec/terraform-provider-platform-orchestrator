@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -11,20 +13,21 @@ import (
 )
 
 func TestAccKubernetesRunnerResource(t *testing.T) {
+	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccKubernetesRunnerResource("tf-provider-test", KubernetesRunnerClusterAuth{
+				Config: testAccKubernetesRunnerResource(runnerId, KubernetesRunnerClusterAuth{
 					ClientCertificateData: types.StringValue("client-certificate-data"),
 				}, ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_runner.test",
@@ -63,7 +66,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 			},
 			// Update testing
 			{
-				Config: testAccKubernetesRunnerResource("tf-provider-test", KubernetesRunnerClusterAuth{
+				Config: testAccKubernetesRunnerResource(runnerId, KubernetesRunnerClusterAuth{
 					ServiceAccountToken: types.StringValue("service-account-token"),
 				}, `pod_template = jsonencode({
 	metadata = {
@@ -76,7 +79,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_runner.test",

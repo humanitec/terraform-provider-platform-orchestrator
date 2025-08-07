@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,19 +12,20 @@ import (
 )
 
 func TestAccKubernetesGkeRunnerDataSource(t *testing.T) {
+	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create runner resource and read via data source
 			{
-				Config: testAccKubernetesGkeRunnerDataSourceConfig,
+				Config: testAccKubernetesGkeRunnerDataSourceConfig(runnerId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct runner
 					statecheck.ExpectKnownValue(
 						"data.humanitec_kubernetes_gke_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-gke-data-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_kubernetes_gke_runner.test",
@@ -93,9 +96,10 @@ func TestAccKubernetesGkeRunnerDataSource(t *testing.T) {
 	})
 }
 
-const testAccKubernetesGkeRunnerDataSourceConfig = `
+func testAccKubernetesGkeRunnerDataSourceConfig(runnerId string) string {
+	return `
 resource "humanitec_kubernetes_gke_runner" "test" {
-  id = "tf-provider-gke-data-test"
+  id = "` + runnerId + `"
   description = "Test GKE Runner for data source"
   
   runner_configuration = {
@@ -134,3 +138,4 @@ data "humanitec_kubernetes_gke_runner" "test" {
   id = humanitec_kubernetes_gke_runner.test.id
 }
 `
+}

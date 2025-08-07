@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,19 +12,20 @@ import (
 )
 
 func TestAccKubernetesAgentRunnerDataSource(t *testing.T) {
+	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create runner resource and read via data source
 			{
-				Config: testAccKubernetesAgentRunnerDataSourceConfig,
+				Config: testAccKubernetesAgentRunnerDataSourceConfig(runnerId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct runner
 					statecheck.ExpectKnownValue(
 						"data.humanitec_kubernetes_agent_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-agent-data-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_kubernetes_agent_runner.test",
@@ -71,9 +74,10 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 	})
 }
 
-const testAccKubernetesAgentRunnerDataSourceConfig = `
+func testAccKubernetesAgentRunnerDataSourceConfig(runnerId string) string {
+	return `
 resource "humanitec_kubernetes_agent_runner" "test" {
-  id = "tf-provider-agent-data-test"
+  id = "` + runnerId + `"
   description = "Test Agent Runner for data source"
   
   runner_configuration = {
@@ -108,3 +112,4 @@ data "humanitec_kubernetes_agent_runner" "test" {
   id = humanitec_kubernetes_agent_runner.test.id
 }
 `
+}

@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,18 +12,19 @@ import (
 )
 
 func TestAccKubernetesGkeRunnerResource(t *testing.T) {
+	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccKubernetesGkeRunnerResource("tf-provider-test", "humanitec-runner", ""),
+				Config: testAccKubernetesGkeRunnerResource(runnerId, "humanitec-runner", ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_gke_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_gke_runner.test",
@@ -59,12 +62,12 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 			},
 			// Update testing
 			{
-				Config: testAccKubernetesGkeRunnerResource("tf-provider-test", "default", `pod_template = null`),
+				Config: testAccKubernetesGkeRunnerResource(runnerId, "default", `pod_template = null`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_gke_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_gke_runner.test",

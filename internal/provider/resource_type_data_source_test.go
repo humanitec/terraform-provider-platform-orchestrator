@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,18 +12,19 @@ import (
 )
 
 func TestAccResourceTypeDataSource(t *testing.T) {
+	var resourceTypeId = fmt.Sprintf("aws-rds-%d", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Read testing
 			{
-				Config: testAccResourceTypeDataSourceConfig,
+				Config: testAccResourceTypeDataSourceConfig(resourceTypeId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"data.humanitec_resource_type.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("example"),
+						knownvalue.StringExact(resourceTypeId),
 					),
 				},
 			},
@@ -29,9 +32,10 @@ func TestAccResourceTypeDataSource(t *testing.T) {
 	})
 }
 
-const testAccResourceTypeDataSourceConfig = `
+func testAccResourceTypeDataSourceConfig(resourceTypeId string) string {
+	return `
 resource "humanitec_resource_type" "test" {
-	id = "example"
+	id = "` + resourceTypeId + `"
 	output_schema = "{}"
 }
 	
@@ -39,3 +43,4 @@ data "humanitec_resource_type" "test" {
   id = humanitec_resource_type.test.id
 }
 `
+}

@@ -192,6 +192,7 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 		NewProviderResource,
 		NewResourceTypeResource,
 		NewModuleResource,
+		NewModuleRuleResource,
 	}
 }
 

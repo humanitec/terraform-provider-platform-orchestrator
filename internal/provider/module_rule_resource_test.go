@@ -26,42 +26,42 @@ func TestAccModuleRuleResourceDefaultFields(t *testing.T) {
 			{
 				Config: testAccModuleRuleResource(moduleId, resourceTypeId, envTypeId, "", ""),
 				Check: func(s *terraform.State) error {
-					ruleId = uuid.Must(uuid.Parse(s.RootModule().Resources["humanitec_module_rule.test"].Primary.ID))
+					ruleId = uuid.Must(uuid.Parse(s.RootModule().Resources["platform-orchestrator_module_rule.test"].Primary.ID))
 					return nil
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(resourceTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("module_id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("project_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("env_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("env_type_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("resource_class"),
 						knownvalue.StringExact("default"),
 					),
@@ -71,7 +71,7 @@ func TestAccModuleRuleResourceDefaultFields(t *testing.T) {
 			{
 				Config: testAccModuleRuleResource(moduleId, resourceTypeId, envTypeId, "resource_class = \"custom-class\"", ""),
 				Check: func(s *terraform.State) error {
-					newRuleId := s.RootModule().Resources["humanitec_module_rule.test"].Primary.ID
+					newRuleId := s.RootModule().Resources["platform-orchestrator_module_rule.test"].Primary.ID
 					if newRuleId == ruleId.String() {
 						return fmt.Errorf("expected new rule ID after update, got same ID: %s", newRuleId)
 					}
@@ -79,44 +79,44 @@ func TestAccModuleRuleResourceDefaultFields(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(resourceTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("module_id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("project_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("env_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("env_type_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("resource_class"),
 						knownvalue.StringExact("custom-class"),
 					),
 				},
 			},
 			{
-				ResourceName:      "humanitec_module_rule.test",
+				ResourceName:      "platform-orchestrator_module_rule.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -135,47 +135,47 @@ func TestAccModuleRuleResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccModuleRuleResource(moduleId, resourceTypeId, envTypeId, "resource_class = \"custom-class\"", "env_type_id = humanitec_environment_type.test.id"),
+				Config: testAccModuleRuleResource(moduleId, resourceTypeId, envTypeId, "resource_class = \"custom-class\"", "env_type_id = platform-orchestrator_environment_type.test.id"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(resourceTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("module_id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("project_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("env_id"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("env_type_id"),
 						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module_rule.test",
+						"platform-orchestrator_module_rule.test",
 						tfjsonpath.New("resource_class"),
 						knownvalue.StringExact("custom-class"),
 					),
 				},
 			},
 			{
-				ResourceName:      "humanitec_module_rule.test",
+				ResourceName:      "platform-orchestrator_module_rule.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -186,24 +186,24 @@ func TestAccModuleRuleResource(t *testing.T) {
 
 func testAccModuleRuleResource(moduleId, resourceTypeId, envTypeId, classBlock, envTypeBlock string) string {
 	return `
-resource "humanitec_resource_type" "custom_type" {
+resource "platform-orchestrator_resource_type" "custom_type" {
   id           =  "` + resourceTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_environment_type" "test" {
+resource "platform-orchestrator_environment_type" "test" {
   id             = "` + envTypeId + `"
 }
  
-resource "humanitec_module" "test" {
+resource "platform-orchestrator_module" "test" {
   id             = "` + moduleId + `"
   description    = "Test module description"
-  resource_type  = humanitec_resource_type.custom_type.id
+  resource_type  = platform-orchestrator_resource_type.custom_type.id
   module_source  = "s3://my-bucket/module.zip"
 }
 
-resource "humanitec_module_rule" "test" {
-  module_id       = humanitec_module.test.id
+resource "platform-orchestrator_module_rule" "test" {
+  module_id       = platform-orchestrator_module.test.id
   ` + classBlock + `
   ` + envTypeBlock + `
 }

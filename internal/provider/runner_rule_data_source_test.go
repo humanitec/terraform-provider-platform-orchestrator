@@ -26,17 +26,17 @@ func TestAccRunnerRuleDataSource(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct runner rule
 					statecheck.ExpectKnownValue(
-						"data.humanitec_runner_rule.test",
+						"data.platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("runner_id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_runner_rule.test",
+						"data.platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("env_type_id"),
 						knownvalue.StringExact(""),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_runner_rule.test",
+						"data.platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("project_id"),
 						knownvalue.StringExact(""),
 					),
@@ -62,17 +62,17 @@ func TestAccRunnerRuleDataSourceWithEnvType(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct runner rule
 					statecheck.ExpectKnownValue(
-						"data.humanitec_runner_rule.test",
+						"data.platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("runner_id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_runner_rule.test",
+						"data.platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("env_type_id"),
 						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_runner_rule.test",
+						"data.platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("project_id"),
 						knownvalue.StringExact(""),
 					),
@@ -84,7 +84,7 @@ func TestAccRunnerRuleDataSourceWithEnvType(t *testing.T) {
 
 func testAccRunnerRuleDataSourceBasic(runnerId string) string {
 	return `
-resource "humanitec_kubernetes_agent_runner" "test" {
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
   id = "` + runnerId + `"
   runner_configuration = {
     key = <<EOT
@@ -105,23 +105,23 @@ EOT
   }
 }
 
-resource "humanitec_runner_rule" "test" {
-  runner_id = humanitec_kubernetes_agent_runner.test.id
+resource "platform-orchestrator_runner_rule" "test" {
+  runner_id = platform-orchestrator_kubernetes_agent_runner.test.id
 }
 
-data "humanitec_runner_rule" "test" {
-  id = humanitec_runner_rule.test.id
+data "platform-orchestrator_runner_rule" "test" {
+  id = platform-orchestrator_runner_rule.test.id
 }
 `
 }
 
 func testAccRunnerRuleDataSourceWithEnvType(runnerId, envTypeId string) string {
 	return `
-resource "humanitec_environment_type" "test" {
+resource "platform-orchestrator_environment_type" "test" {
   id = "` + envTypeId + `"
 }
 
-resource "humanitec_kubernetes_agent_runner" "test" {
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
   id = "` + runnerId + `"
   runner_configuration = {
     key = <<EOT
@@ -142,13 +142,13 @@ EOT
   }
 }
 
-resource "humanitec_runner_rule" "test" {
-  runner_id   = humanitec_kubernetes_agent_runner.test.id
-  env_type_id = humanitec_environment_type.test.id
+resource "platform-orchestrator_runner_rule" "test" {
+  runner_id   = platform-orchestrator_kubernetes_agent_runner.test.id
+  env_type_id = platform-orchestrator_environment_type.test.id
 }
 
-data "humanitec_runner_rule" "test" {
-  id = humanitec_runner_rule.test.id
+data "platform-orchestrator_runner_rule" "test" {
+  id = platform-orchestrator_runner_rule.test.id
 }
 `
 }

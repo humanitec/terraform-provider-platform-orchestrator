@@ -38,22 +38,22 @@ func TestAccResourceTypeResource(t *testing.T) {
 				Config: testAccResourceTypeResourceConfig(resourceTypeId, "{}", nil, nil),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(resourceTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("description"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("output_schema"),
 						knownvalue.StringExact("{}"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("is_developer_accessible"),
 						knownvalue.Bool(true),
 					),
@@ -64,17 +64,17 @@ func TestAccResourceTypeResource(t *testing.T) {
 				Config: testAccResourceTypeResourceConfig(resourceTypeId, outputSchema, &description, &isDeveloperAccessibleFalse),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(resourceTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Example Resource Type"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("output_schema"),
 						knownvalue.StringFunc(func(v string) error {
 							var obj1 interface{}
@@ -96,14 +96,14 @@ func TestAccResourceTypeResource(t *testing.T) {
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_resource_type.test",
+						"platform-orchestrator_resource_type.test",
 						tfjsonpath.New("is_developer_accessible"),
 						knownvalue.Bool(false),
 					),
 				},
 			},
 			{
-				ResourceName: "humanitec_resource_type.test",
+				ResourceName: "platform-orchestrator_resource_type.test",
 				ImportState:  true,
 			},
 			// Delete testing automatically occurs in TestCase
@@ -114,7 +114,7 @@ func TestAccResourceTypeResource(t *testing.T) {
 func testAccResourceTypeResourceConfig(id, outputSchema string, description *string, isDeveloperAccessible *bool) string {
 	if description == nil && isDeveloperAccessible == nil {
 		return fmt.Sprintf(`
-	resource "humanitec_resource_type" "test" {
+	resource "platform-orchestrator_resource_type" "test" {
 		id = "%s"
 		output_schema = "%s"
 	}`, id, outputSchema)
@@ -122,7 +122,7 @@ func testAccResourceTypeResourceConfig(id, outputSchema string, description *str
 
 	if description == nil {
 		return fmt.Sprintf(`
-	resource "humanitec_resource_type" "test" {
+	resource "platform-orchestrator_resource_type" "test" {
 		id = "%s"
 		output_schema = "%s"
 		is_developer_accessible = %t
@@ -131,7 +131,7 @@ func testAccResourceTypeResourceConfig(id, outputSchema string, description *str
 
 	if isDeveloperAccessible == nil {
 		return fmt.Sprintf(`
-	resource "humanitec_resource_type" "test" {
+	resource "platform-orchestrator_resource_type" "test" {
 		id = "%s"
 		description = "%s"
 		output_schema = <<EOT
@@ -141,7 +141,7 @@ func testAccResourceTypeResourceConfig(id, outputSchema string, description *str
 	}
 
 	return fmt.Sprintf(`
-	resource "humanitec_resource_type" "test" {
+	resource "platform-orchestrator_resource_type" "test" {
 		id = "%s"
 		description = "%s"
 		output_schema = <<EOT

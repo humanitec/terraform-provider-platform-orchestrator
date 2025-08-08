@@ -22,12 +22,12 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 				Config: testAccKubernetesGkeRunnerResource(runnerId, "humanitec-runner", ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_gke_runner.test",
+						"platform-orchestrator_kubernetes_gke_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_gke_runner.test",
+						"platform-orchestrator_kubernetes_gke_runner.test",
 						tfjsonpath.New("runner_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"cluster": knownvalue.MapExact(map[string]knownvalue.Check{
@@ -49,7 +49,7 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_gke_runner.test",
+						"platform-orchestrator_kubernetes_gke_runner.test",
 						tfjsonpath.New("state_storage_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
@@ -65,12 +65,12 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 				Config: testAccKubernetesGkeRunnerResource(runnerId, "default", `pod_template = null`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_gke_runner.test",
+						"platform-orchestrator_kubernetes_gke_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_gke_runner.test",
+						"platform-orchestrator_kubernetes_gke_runner.test",
 						tfjsonpath.New("runner_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"cluster": knownvalue.MapExact(map[string]knownvalue.Check{
@@ -92,7 +92,7 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_gke_runner.test",
+						"platform-orchestrator_kubernetes_gke_runner.test",
 						tfjsonpath.New("state_storage_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
@@ -104,7 +104,7 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      "humanitec_kubernetes_gke_runner.test",
+				ResourceName:      "platform-orchestrator_kubernetes_gke_runner.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -115,7 +115,7 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 
 func testAccKubernetesGkeRunnerResource(id, stateNamespace, podTemplate string) string {
 	return `
-resource "humanitec_kubernetes_gke_runner" "test" {
+resource "platform-orchestrator_kubernetes_gke_runner" "test" {
   id = "` + id + `"
   runner_configuration = {
     cluster = {

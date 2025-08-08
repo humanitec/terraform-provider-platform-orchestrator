@@ -23,32 +23,32 @@ func TestAccProviderDataSource(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct provider
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test",
+						"data.platform-orchestrator_provider.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(providerId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test",
+						"data.platform-orchestrator_provider.test",
 						tfjsonpath.New("provider_type"),
 						knownvalue.StringExact("aws"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test",
+						"data.platform-orchestrator_provider.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test AWS Provider for data source"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test",
+						"data.platform-orchestrator_provider.test",
 						tfjsonpath.New("source"),
 						knownvalue.StringExact("hashicorp/aws"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test",
+						"data.platform-orchestrator_provider.test",
 						tfjsonpath.New("version_constraint"),
 						knownvalue.StringExact(">= 4.0.0"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test",
+						"data.platform-orchestrator_provider.test",
 						tfjsonpath.New("configuration"),
 						knownvalue.StringExact(`{"assume_role":{"role_arn":"arn:aws:iam::123456789012:role/HumanitecRole"},"region":"us-east-1"}`),
 					),
@@ -70,32 +70,32 @@ func TestAccProviderDataSourceWithoutConfiguration(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct provider
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test_gcp",
+						"data.platform-orchestrator_provider.test_gcp",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(providerId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test_gcp",
+						"data.platform-orchestrator_provider.test_gcp",
 						tfjsonpath.New("provider_type"),
 						knownvalue.StringExact("gcp"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test_gcp",
+						"data.platform-orchestrator_provider.test_gcp",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test GCP Provider for data source"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test_gcp",
+						"data.platform-orchestrator_provider.test_gcp",
 						tfjsonpath.New("source"),
 						knownvalue.StringExact("hashicorp/google"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test_gcp",
+						"data.platform-orchestrator_provider.test_gcp",
 						tfjsonpath.New("version_constraint"),
 						knownvalue.StringExact("~> 5.0"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_provider.test_gcp",
+						"data.platform-orchestrator_provider.test_gcp",
 						tfjsonpath.New("configuration"),
 						knownvalue.StringExact(`{}`),
 					),
@@ -107,7 +107,7 @@ func TestAccProviderDataSourceWithoutConfiguration(t *testing.T) {
 
 func testAccProviderDataSourceConfig(providerId string) string {
 	return `
-resource "humanitec_provider" "test" {
+resource "platform-orchestrator_provider" "test" {
   id = "` + providerId + `"
   description = "Test AWS Provider for data source"
   provider_type = "aws"
@@ -122,16 +122,16 @@ resource "humanitec_provider" "test" {
   })
 }
 
-data "humanitec_provider" "test" {
-  id = humanitec_provider.test.id
-  provider_type = humanitec_provider.test.provider_type
+data "platform-orchestrator_provider" "test" {
+  id = platform-orchestrator_provider.test.id
+  provider_type = platform-orchestrator_provider.test.provider_type
 }
 `
 }
 
 func testAccProviderDataSourceConfigWithoutConfiguration(providerId string) string {
 	return `
-  resource "humanitec_provider" "test_gcp" {
+  resource "platform-orchestrator_provider" "test_gcp" {
   id = "` + providerId + `"
   description = "Test GCP Provider for data source"
   provider_type = "gcp"
@@ -140,9 +140,9 @@ func testAccProviderDataSourceConfigWithoutConfiguration(providerId string) stri
   configuration = "{}"
 }
 
-data "humanitec_provider" "test_gcp" {
-  id = humanitec_provider.test_gcp.id
-  provider_type = humanitec_provider.test_gcp.provider_type
+data "platform-orchestrator_provider" "test_gcp" {
+  id = platform-orchestrator_provider.test_gcp.id
+  provider_type = platform-orchestrator_provider.test_gcp.provider_type
 }
 `
 }

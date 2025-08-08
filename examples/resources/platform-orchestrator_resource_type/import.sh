@@ -1,0 +1,1 @@
+terraform import platform-orchestrator_resource_type.resource_type "my_resource"

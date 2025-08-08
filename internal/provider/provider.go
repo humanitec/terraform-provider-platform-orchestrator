@@ -65,7 +65,7 @@ type HumanitecProviderData struct {
 }
 
 func (p *HumanitecProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "humanitec"
+	resp.TypeName = "platform-orchestrator"
 	resp.Version = p.version
 }
 

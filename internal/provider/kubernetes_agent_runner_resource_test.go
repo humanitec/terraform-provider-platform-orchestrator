@@ -24,17 +24,17 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 -----END PUBLIC KEY-----`, "humanitec-runner"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_agent_runner.test",
+						"platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_agent_runner.test",
+						"platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("description"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_agent_runner.test",
+						"platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("runner_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"key": knownvalue.StringExact(`-----BEGIN PUBLIC KEY-----
@@ -49,7 +49,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_agent_runner.test",
+						"platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("state_storage_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
@@ -67,12 +67,12 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 -----END PUBLIC KEY-----`, "default"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_agent_runner.test",
+						"platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_agent_runner.test",
+						"platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("runner_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"key": knownvalue.StringExact(`-----BEGIN PUBLIC KEY-----
@@ -87,7 +87,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_agent_runner.test",
+						"platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("state_storage_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
@@ -99,7 +99,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 				},
 			},
 			{
-				ResourceName:      "humanitec_kubernetes_agent_runner.test",
+				ResourceName:      "platform-orchestrator_kubernetes_agent_runner.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -110,7 +110,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 
 func testAccKubernetesAgentRunnerResource(id, key, stateNamespace string) string {
 	return `
-resource "humanitec_kubernetes_agent_runner" "test" {
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
   id = "` + id + `"
   runner_configuration = {
 	key = <<EOT
@@ -140,7 +140,7 @@ EOT
 
 func testAccKubernetesAgentRunnerResourceUpdateNoPodTemplate(id, key, stateNamespace string) string {
 	return `
-resource "humanitec_kubernetes_agent_runner" "test" {
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
   id = "` + id + `"
   runner_configuration = {
 	key = <<EOT

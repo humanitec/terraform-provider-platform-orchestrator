@@ -1,3 +1,3 @@
-provider "humanitec" {
+provider "platform-orchestrator" {
   org_id = "organization"
 }

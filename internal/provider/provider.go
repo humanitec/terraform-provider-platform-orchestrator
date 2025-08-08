@@ -34,7 +34,7 @@ const (
 	HUM_ORG_ID_ENV_VAR     = "HUMANITEC_ORG_ID"
 	HUM_AUTH_TOKEN_ENV_VAR = "HUMANITEC_AUTH_TOKEN"
 
-	HUM_DEFAULT_API_URL = "https://cartwrightdanielhoegerharvey.humanitec-labs.newapp.io"
+	HUM_DEFAULT_API_URL = "https://bradtkerosenbaumcummings.humanitec-labs.newapp.io"
 )
 
 // Ensure HumanitecProvider satisfies various provider interfaces.

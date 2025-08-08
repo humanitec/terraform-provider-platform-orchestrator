@@ -5,17 +5,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func TestAccRunnerRuleResourceBasic(t *testing.T) {
-	var (
-		runnerId = fmt.Sprintf("test-runner-%d", time.Now().UnixNano())
-	)
-
+	var runnerId = fmt.Sprintf("test-runner-%d", time.Now().UnixNano())
+	var envTypeId = fmt.Sprintf("test-env-type-%d", time.Now().UnixNano())
+	var ruleId uuid.UUID
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -23,6 +24,10 @@ func TestAccRunnerRuleResourceBasic(t *testing.T) {
 			// Create and Read testing - minimal configuration
 			{
 				Config: testAccRunnerRuleResourceBasic(runnerId),
+				Check: func(s *terraform.State) error {
+					ruleId = uuid.Must(uuid.Parse(s.RootModule().Resources["humanitec_runner_rule.test"].Primary.ID))
+					return nil
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_runner_rule.test",
@@ -37,38 +42,25 @@ func TestAccRunnerRuleResourceBasic(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"humanitec_runner_rule.test",
 						tfjsonpath.New("env_type_id"),
-						knownvalue.Null(),
+						knownvalue.StringExact(""),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_runner_rule.test",
 						tfjsonpath.New("project_id"),
-						knownvalue.Null(),
+						knownvalue.StringExact(""),
 					),
 				},
 			},
-			{
-				ResourceName:      "humanitec_runner_rule.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Delete testing automatically occurs in TestCase
-		},
-	})
-}
-
-func TestAccRunnerRuleResourceWithEnvType(t *testing.T) {
-	var (
-		runnerId  = fmt.Sprintf("test-runner-%d", time.Now().UnixNano())
-		envTypeId = fmt.Sprintf("test-env-type-%d", time.Now().UnixNano())
-	)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			// Create and Read testing - with environment type
+			// Update any fields means re-creating the resource
 			{
 				Config: testAccRunnerRuleResourceWithEnvType(runnerId, envTypeId),
+				Check: func(s *terraform.State) error {
+					newRuleId := s.RootModule().Resources["humanitec_runner_rule.test"].Primary.ID
+					if newRuleId == ruleId.String() {
+						return fmt.Errorf("expected new rule ID after update, got same ID: %s", newRuleId)
+					}
+					return nil
+				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_runner_rule.test",
@@ -88,7 +80,7 @@ func TestAccRunnerRuleResourceWithEnvType(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"humanitec_runner_rule.test",
 						tfjsonpath.New("project_id"),
-						knownvalue.Null(),
+						knownvalue.StringExact(""),
 					),
 				},
 			},

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
-func TestAccRunnerRuleDataSourceBasic(t *testing.T) {
+func TestAccRunnerRuleDataSource(t *testing.T) {
 	var (
 		runnerId = fmt.Sprintf("test-runner-%d", time.Now().UnixNano())
 	)
@@ -33,12 +33,12 @@ func TestAccRunnerRuleDataSourceBasic(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.humanitec_runner_rule.test",
 						tfjsonpath.New("env_type_id"),
-						knownvalue.Null(),
+						knownvalue.StringExact(""),
 					),
 					statecheck.ExpectKnownValue(
 						"data.humanitec_runner_rule.test",
 						tfjsonpath.New("project_id"),
-						knownvalue.Null(),
+						knownvalue.StringExact(""),
 					),
 				},
 			},
@@ -74,7 +74,7 @@ func TestAccRunnerRuleDataSourceWithEnvType(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.humanitec_runner_rule.test",
 						tfjsonpath.New("project_id"),
-						knownvalue.Null(),
+						knownvalue.StringExact(""),
 					),
 				},
 			},

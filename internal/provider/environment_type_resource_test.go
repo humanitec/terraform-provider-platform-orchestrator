@@ -22,17 +22,17 @@ func TestAccEnvironmentTypeResource(t *testing.T) {
 				Config: testAccEnvironmentTypeResourceConfig(envTypeId, ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
+						"platform-orchestrator_environment_type.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
+						"platform-orchestrator_environment_type.test",
 						tfjsonpath.New("display_name"),
 						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
+						"platform-orchestrator_environment_type.test",
 						tfjsonpath.New("uuid"),
 						knownvalue.NotNull(),
 					),
@@ -43,24 +43,24 @@ func TestAccEnvironmentTypeResource(t *testing.T) {
 				Config: testAccEnvironmentTypeResourceConfig(envTypeId, "Example Environment Type"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
+						"platform-orchestrator_environment_type.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
+						"platform-orchestrator_environment_type.test",
 						tfjsonpath.New("display_name"),
 						knownvalue.StringExact("Example Environment Type"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_environment_type.test",
+						"platform-orchestrator_environment_type.test",
 						tfjsonpath.New("uuid"),
 						knownvalue.NotNull(),
 					),
 				},
 			},
 			{
-				ResourceName:      "humanitec_environment_type.test",
+				ResourceName:      "platform-orchestrator_environment_type.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -72,14 +72,14 @@ func TestAccEnvironmentTypeResource(t *testing.T) {
 func testAccEnvironmentTypeResourceConfig(id, display string) string {
 	if display == "" {
 		return `
-		resource "humanitec_environment_type" "test" {
+		resource "platform-orchestrator_environment_type" "test" {
 			id = "` + id + `"
 		}
 		`
 	}
 
 	return `
-	resource "humanitec_environment_type" "test" {
+	resource "platform-orchestrator_environment_type" "test" {
 		id = "` + id + `"
 		display_name = "` + display + `"
 	}

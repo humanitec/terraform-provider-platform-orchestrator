@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/humanitec/humanitec-v2",
+		Address: "registry.terraform.io/humanitec/platform-orchestrator",
 		Debug:   debug,
 	}
 

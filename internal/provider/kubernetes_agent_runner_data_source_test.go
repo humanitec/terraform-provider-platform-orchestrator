@@ -23,18 +23,18 @@ func TestAccKubernetesAgentRunnerDataSource(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct runner
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test Agent Runner for data source"),
 					),
 					// Verify runner configuration is correctly read
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("key"),
 						knownvalue.StringExact(`-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
@@ -43,28 +43,28 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 					),
 					// Verify job configuration
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("job").AtMapKey("namespace"),
 						knownvalue.StringExact("agent-namespace"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("job").AtMapKey("service_account"),
 						knownvalue.StringExact("agent-runner-sa"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("job").AtMapKey("pod_template"),
 						knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"agent-runner-test","environment":"test"}}}`),
 					),
 					// Verify state storage configuration
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("state_storage_configuration").AtMapKey("type"),
 						knownvalue.StringExact("kubernetes"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_agent_runner.test",
+						"data.platform-orchestrator_kubernetes_agent_runner.test",
 						tfjsonpath.New("state_storage_configuration").AtMapKey("kubernetes_configuration").AtMapKey("namespace"),
 						knownvalue.StringExact("agent-state-namespace"),
 					),
@@ -76,7 +76,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 
 func testAccKubernetesAgentRunnerDataSourceConfig(runnerId string) string {
 	return `
-resource "humanitec_kubernetes_agent_runner" "test" {
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
   id = "` + runnerId + `"
   description = "Test Agent Runner for data source"
   
@@ -108,8 +108,8 @@ EOT
   }
 }
 
-data "humanitec_kubernetes_agent_runner" "test" {
-  id = humanitec_kubernetes_agent_runner.test.id
+data "platform-orchestrator_kubernetes_agent_runner" "test" {
+  id = platform-orchestrator_kubernetes_agent_runner.test.id
 }
 `
 }

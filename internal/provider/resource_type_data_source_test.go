@@ -22,7 +22,7 @@ func TestAccResourceTypeDataSource(t *testing.T) {
 				Config: testAccResourceTypeDataSourceConfig(resourceTypeId),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"data.humanitec_resource_type.test",
+						"data.platform-orchestrator_resource_type.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(resourceTypeId),
 					),
@@ -34,13 +34,13 @@ func TestAccResourceTypeDataSource(t *testing.T) {
 
 func testAccResourceTypeDataSourceConfig(resourceTypeId string) string {
 	return `
-resource "humanitec_resource_type" "test" {
+resource "platform-orchestrator_resource_type" "test" {
 	id = "` + resourceTypeId + `"
 	output_schema = "{}"
 }
 	
-data "humanitec_resource_type" "test" {
-  id = humanitec_resource_type.test.id
+data "platform-orchestrator_resource_type" "test" {
+  id = platform-orchestrator_resource_type.test.id
 }
 `
 }

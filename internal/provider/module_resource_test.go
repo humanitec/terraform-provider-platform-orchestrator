@@ -29,27 +29,27 @@ func TestAccModuleResource(t *testing.T) {
 				Config: testAccModuleResource(moduleId, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, "s3://my-bucket/module.zip", "{}"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("module_source"),
 						knownvalue.StringExact("s3://my-bucket/module.zip"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("module_inputs"),
 						knownvalue.StringExact("{}"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("dependencies"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"database": knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -61,19 +61,19 @@ func TestAccModuleResource(t *testing.T) {
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test module description"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("provider_mapping"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"aws": knownvalue.StringExact("aws." + awsProviderId),
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("coprovisioned"),
 						knownvalue.ListPartial(map[int]knownvalue.Check{
 							0: knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -93,27 +93,27 @@ func TestAccModuleResource(t *testing.T) {
 				Config: testAccModuleResourceWithUpdate(moduleId, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, awsUpdatedProviderId, "s3://my-bucket/module-v2.zip", "jsonencode({ region = \"us-east-1\" })", "Updated test module description"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("module_source"),
 						knownvalue.StringExact("s3://my-bucket/module-v2.zip"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("module_inputs"),
 						knownvalue.StringExact(`{"region":"us-east-1"}`),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("dependencies"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"database": knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -131,19 +131,19 @@ func TestAccModuleResource(t *testing.T) {
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Updated test module description"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("provider_mapping"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"aws": knownvalue.StringExact("aws." + awsUpdatedProviderId),
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("coprovisioned"),
 						knownvalue.ListPartial(map[int]knownvalue.Check{
 							0: knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -159,7 +159,7 @@ func TestAccModuleResource(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      "humanitec_module.test",
+				ResourceName:      "platform-orchestrator_module.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -182,23 +182,23 @@ func TestAccModuleResourceWithSourceCode(t *testing.T) {
 				Config: testAccModuleResourceWithSourceCode(moduleId, customTypeId, `resource "aws_db_instance" "default" { engine = "postgres" }`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("module_source_code"),
 						knownvalue.StringExact(`resource "aws_db_instance" "default" { engine = "postgres" }
 `),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("coprovisioned"),
 						knownvalue.ListSizeExact(0),
 					),
@@ -209,23 +209,23 @@ func TestAccModuleResourceWithSourceCode(t *testing.T) {
 				Config: testAccModuleResourceWithSourceCodeUpdate(moduleId, customTypeId, postgresTypeId, `resource "aws_db_instance" "default" { engine = "mysql" }`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(customTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("module_source_code"),
 						knownvalue.StringExact(`resource "aws_db_instance" "default" { engine = "mysql" }
 `),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_module.test",
+						"platform-orchestrator_module.test",
 						tfjsonpath.New("coprovisioned"),
 						knownvalue.ListPartial(map[int]knownvalue.Check{
 							0: knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -246,49 +246,49 @@ func TestAccModuleResourceWithSourceCode(t *testing.T) {
 
 func testAccModuleResource(id, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, moduleSource, moduleInputs string) string {
 	return `
-resource "humanitec_resource_type" "custom_type" {
+resource "platform-orchestrator_resource_type" "custom_type" {
   id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_resource_type" "metrics" {
+resource "platform-orchestrator_resource_type" "metrics" {
   id           =  "` + metricsTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_resource_type" "postgres" {
+resource "platform-orchestrator_resource_type" "postgres" {
   id           =  "` + postgresTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_provider" "test_aws" {
+resource "platform-orchestrator_provider" "test_aws" {
   id = "` + awsProviderId + `"
   provider_type = "aws"
   source = "hashicorp/aws"
   version_constraint = ">= 4.0.0"
 }
 
-resource "humanitec_module" "test" {
+resource "platform-orchestrator_module" "test" {
   id             = "` + id + `"
   description    = "Test module description"
-  resource_type  = humanitec_resource_type.custom_type.id
+  resource_type  = platform-orchestrator_resource_type.custom_type.id
   module_source  = "` + moduleSource + `"
   module_inputs  = "` + moduleInputs + `"
   
   provider_mapping = {
-    aws = "${humanitec_provider.test_aws.provider_type}.${humanitec_provider.test_aws.id}"
+    aws = "${platform-orchestrator_provider.test_aws.provider_type}.${platform-orchestrator_provider.test_aws.id}"
   }
 
   dependencies = {
     database = {
-      type  = humanitec_resource_type.postgres.id
+      type  = platform-orchestrator_resource_type.postgres.id
       class = "default"
     }
   }
   
   coprovisioned = [
     {
-      type                         = humanitec_resource_type.metrics.id
+      type                         = platform-orchestrator_resource_type.metrics.id
       class                        = "default"
       params                       = jsonencode({"level": "info"})
       copy_dependents_from_current = false
@@ -301,62 +301,62 @@ resource "humanitec_module" "test" {
 
 func testAccModuleResourceWithUpdate(id, customTypeId, metricsTypeId, postgresTypeId, awsProviderId, awsUpdatedProviderId, moduleSource, moduleInputs, description string) string {
 	return `
-resource "humanitec_resource_type" "custom_type" {
+resource "platform-orchestrator_resource_type" "custom_type" {
   id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_resource_type" "metrics" {
+resource "platform-orchestrator_resource_type" "metrics" {
   id           =  "` + metricsTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_resource_type" "postgres" {
+resource "platform-orchestrator_resource_type" "postgres" {
   id           =  "` + postgresTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_provider" "test_aws" {
+resource "platform-orchestrator_provider" "test_aws" {
   id = "` + awsProviderId + `"
   provider_type = "aws"
   source = "hashicorp/aws"
   version_constraint = ">= 4.0.0"
 }
 
-resource "humanitec_provider" "test_aws_updated" {
+resource "platform-orchestrator_provider" "test_aws_updated" {
   id = "` + awsUpdatedProviderId + `"
   provider_type = "aws"
   source = "hashicorp/aws"
   version_constraint = ">= 4.0.0"
 }
 
-resource "humanitec_module" "test" {
+resource "platform-orchestrator_module" "test" {
   id             = "` + id + `"
   description    = "` + description + `"
-  resource_type  = humanitec_resource_type.custom_type.id
+  resource_type  = platform-orchestrator_resource_type.custom_type.id
   module_source  = "` + moduleSource + `"
   module_inputs  = ` + moduleInputs + `
   
   provider_mapping = {
-    aws = "${humanitec_provider.test_aws_updated.provider_type}.${humanitec_provider.test_aws_updated.id}"
+    aws = "${platform-orchestrator_provider.test_aws_updated.provider_type}.${platform-orchestrator_provider.test_aws_updated.id}"
   }
 
   dependencies = {
     database = {
-      type   = humanitec_resource_type.custom_type.id
+      type   = platform-orchestrator_resource_type.custom_type.id
       class  = "production"
       id     = "main-db"
       params = jsonencode({"version": "14"})
     }
     cache = {
-      type  = humanitec_resource_type.postgres.id
+      type  = platform-orchestrator_resource_type.postgres.id
       class = "default"
     }
   }
   
   coprovisioned = [
     {
-      type                         = humanitec_resource_type.metrics.id
+      type                         = platform-orchestrator_resource_type.metrics.id
       class                        = "advanced"
       id                          = "mon-1"
       params                       = null
@@ -370,14 +370,14 @@ resource "humanitec_module" "test" {
 
 func testAccModuleResourceWithSourceCode(id, customTypeId, sourceCode string) string {
 	rs := `
-resource "humanitec_resource_type" "custom_type" {
+resource "platform-orchestrator_resource_type" "custom_type" {
   id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_module" "test" {
+resource "platform-orchestrator_module" "test" {
   id                 = "` + id + `"
-  resource_type      = humanitec_resource_type.custom_type.id
+  resource_type      = platform-orchestrator_resource_type.custom_type.id
   module_source_code =<<EOT
 ` + sourceCode + `
 EOT
@@ -390,26 +390,26 @@ EOT
 
 func testAccModuleResourceWithSourceCodeUpdate(id, customTypeId, postgresTypeId, sourceCode string) string {
 	rs := `
-resource "humanitec_resource_type" "custom_type" {
+resource "platform-orchestrator_resource_type" "custom_type" {
   id           =  "` + customTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_resource_type" "postgres" {
+resource "platform-orchestrator_resource_type" "postgres" {
   id           =  "` + postgresTypeId + `"
   output_schema = "{}"
 }
 
-resource "humanitec_module" "test" {
+resource "platform-orchestrator_module" "test" {
   id                 = "` + id + `"
-  resource_type      = humanitec_resource_type.custom_type.id
+  resource_type      = platform-orchestrator_resource_type.custom_type.id
   module_source_code =<<EOT
 ` + sourceCode + `
 EOT
   
   coprovisioned = [
     {
-      type                         = humanitec_resource_type.postgres.id
+      type                         = platform-orchestrator_resource_type.postgres.id
       class                        = "advanced"
       id                          = "postgres-1"
       params                       = jsonencode({"interval": "5m"})

@@ -20,22 +20,22 @@ func TestAccProviderResource(t *testing.T) {
 				Config: testAccProviderResourceConfig("test", "aws", ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact("test"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test Provider"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("configuration"),
 						knownvalue.StringExact(`{}`),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("source"),
 						knownvalue.StringExact("hashicorp/aws"),
 					),
@@ -46,22 +46,22 @@ func TestAccProviderResource(t *testing.T) {
 				Config: testAccProviderResourceConfig("test", "aws", "{}"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact("test"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test Provider"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("configuration"),
 						knownvalue.StringExact(`{}`),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("source"),
 						knownvalue.StringExact("hashicorp/aws"),
 					),
@@ -72,29 +72,29 @@ func TestAccProviderResource(t *testing.T) {
 				Config: testAccProviderResourceConfig("test", "aws", "{ region = \"us-west-2\" }"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact("test"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test Provider"),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("configuration"),
 						knownvalue.StringExact(`{"region":"us-west-2"}`),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_provider.test",
+						"platform-orchestrator_provider.test",
 						tfjsonpath.New("source"),
 						knownvalue.StringExact("hashicorp/aws"),
 					),
 				},
 			},
 			{
-				ResourceName: "humanitec_provider.test",
+				ResourceName: "platform-orchestrator_provider.test",
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					return "aws.test", nil
 				},
@@ -113,7 +113,7 @@ func testAccProviderResourceConfig(id, providerType, configuration string) strin
 	}
 
 	return `
-resource "humanitec_provider" "test" {
+resource "platform-orchestrator_provider" "test" {
   id = "` + id + `"
   description = "Test Provider"
   provider_type = "` + providerType + `"

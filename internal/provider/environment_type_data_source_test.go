@@ -19,7 +19,7 @@ func TestAccEnvironmentTypeDataSource(t *testing.T) {
 				Config: testAccExampleDataSourceConfig,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"data.humanitec_environment_type.test",
+						"data.platform-orchestrator_environment_type.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact("example"),
 					),
@@ -30,12 +30,12 @@ func TestAccEnvironmentTypeDataSource(t *testing.T) {
 }
 
 const testAccExampleDataSourceConfig = `
-resource "humanitec_environment_type" "test" {
+resource "platform-orchestrator_environment_type" "test" {
 	id = "example"
 	display_name = "Example Environment Type"
 }
-	
-data "humanitec_environment_type" "test" {
-  id = humanitec_environment_type.test.id
+
+data "platform-orchestrator_environment_type" "test" {
+  id = platform-orchestrator_environment_type.test.id
 }
 `

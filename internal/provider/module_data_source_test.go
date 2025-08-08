@@ -27,22 +27,22 @@ func TestAccModuleDataSourceWithSourceCode(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct module
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_source_code",
+						"data.platform-orchestrator_module.test_source_code",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_source_code",
+						"data.platform-orchestrator_module.test_source_code",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test Module with source code for data source"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_source_code",
+						"data.platform-orchestrator_module.test_source_code",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(awsRdsTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_source_code",
+						"data.platform-orchestrator_module.test_source_code",
 						tfjsonpath.New("module_source_code"),
 						knownvalue.StringExact(`resource "aws_db_instance" "example" {
   identifier = var.identifier
@@ -51,7 +51,7 @@ func TestAccModuleDataSourceWithSourceCode(t *testing.T) {
 `),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_source_code",
+						"data.platform-orchestrator_module.test_source_code",
 						tfjsonpath.New("module_source"),
 						knownvalue.Null(),
 					),
@@ -79,40 +79,40 @@ func TestAccModuleDataSourceWithComplexStructure(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct module
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_complex",
+						"data.platform-orchestrator_module.test_complex",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(moduleId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_complex",
+						"data.platform-orchestrator_module.test_complex",
 						tfjsonpath.New("resource_type"),
 						knownvalue.StringExact(postgresTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_complex",
+						"data.platform-orchestrator_module.test_complex",
 						tfjsonpath.New("module_source"),
 						knownvalue.StringExact("git::https://github.com/test/postgres-module"),
 					),
 					// Verify coprovisioned structure
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_complex",
+						"data.platform-orchestrator_module.test_complex",
 						tfjsonpath.New("coprovisioned").AtSliceIndex(0).AtMapKey("type"),
 						knownvalue.StringExact(loggingTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_complex",
+						"data.platform-orchestrator_module.test_complex",
 						tfjsonpath.New("coprovisioned").AtSliceIndex(0).AtMapKey("is_dependent_on_current"),
 						knownvalue.Bool(true),
 					),
 					// Verify dependencies structure
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_complex",
+						"data.platform-orchestrator_module.test_complex",
 						tfjsonpath.New("dependencies").AtMapKey("vpc").AtMapKey("type"),
 						knownvalue.StringExact(awsVpcTypeId),
 					),
 					// Verify provider mapping
 					statecheck.ExpectKnownValue(
-						"data.humanitec_module.test_complex",
+						"data.platform-orchestrator_module.test_complex",
 						tfjsonpath.New("provider_mapping").AtMapKey("aws"),
 						knownvalue.StringExact("aws."+providerId),
 					),
@@ -124,17 +124,17 @@ func TestAccModuleDataSourceWithComplexStructure(t *testing.T) {
 
 func testAccModuleDataSourceConfigWithSourceCode(id, awsRdsTypeId string) string {
 	return `
-resource "humanitec_resource_type" "aws_rds" {
+resource "platform-orchestrator_resource_type" "aws_rds" {
   id = "` + awsRdsTypeId + `"
   description = "Postgres Database"
   output_schema = jsonencode({})
 }
 
-resource "humanitec_module" "test_source_code" {
+resource "platform-orchestrator_module" "test_source_code" {
   id = "` + id + `"
   description = "Test Module with source code for data source"
-  resource_type = humanitec_resource_type.aws_rds.id
-  
+  resource_type = platform-orchestrator_resource_type.aws_rds.id
+
   module_source_code = <<-EOT
 resource "aws_db_instance" "example" {
   identifier = var.identifier
@@ -143,15 +143,15 @@ resource "aws_db_instance" "example" {
 EOT
 }
 
-data "humanitec_module" "test_source_code" {
-  id = humanitec_module.test_source_code.id
+data "platform-orchestrator_module" "test_source_code" {
+  id = platform-orchestrator_module.test_source_code.id
 }
 `
 }
 
 func testAccModuleDataSourceConfigWithComplexStructure(moduleId, postgresTypeId, awsVpcTypeId, loggingTypeId, awsProviderId string) string {
 	return `
-resource "humanitec_provider" "test_aws" {
+resource "platform-orchestrator_provider" "test_aws" {
   id = "` + awsProviderId + `"
   description = "Test AWS Provider"
   provider_type = "aws"
@@ -159,28 +159,28 @@ resource "humanitec_provider" "test_aws" {
   version_constraint = ">= 4.0.0"
 }
 
-resource "humanitec_resource_type" "postgres" {
+resource "platform-orchestrator_resource_type" "postgres" {
   id = "` + postgresTypeId + `"
   description = "Postgres Database"
   output_schema = jsonencode({})
 }
 
-resource "humanitec_resource_type" "logging" {
+resource "platform-orchestrator_resource_type" "logging" {
   id = "` + loggingTypeId + `"
   description = "Logging Resource"
   output_schema = jsonencode({})
 }
 
-resource "humanitec_resource_type" "aws_vpc" {
+resource "platform-orchestrator_resource_type" "aws_vpc" {
   id = "` + awsVpcTypeId + `"
   description = "AWS VPC"
   output_schema = jsonencode({})
 }
 
-resource "humanitec_module" "test_complex" {
+resource "platform-orchestrator_module" "test_complex" {
   id = "` + moduleId + `"
   description = "Test Module with complex structure"
-  resource_type = humanitec_resource_type.postgres.id
+  resource_type = platform-orchestrator_resource_type.postgres.id
   module_source = "git::https://github.com/test/postgres-module"
   
   module_inputs = jsonencode({
@@ -189,11 +189,11 @@ resource "humanitec_module" "test_complex" {
   })
 
   provider_mapping = {
-    aws = "${humanitec_provider.test_aws.provider_type}.${humanitec_provider.test_aws.id}"
+    aws = "${platform-orchestrator_provider.test_aws.provider_type}.${platform-orchestrator_provider.test_aws.id}"
   }
 
   coprovisioned = [{
-    type = humanitec_resource_type.logging.id
+    type = platform-orchestrator_resource_type.logging.id
     is_dependent_on_current = true
     params = jsonencode({
       log_group = "/aws/rds/postgres"
@@ -202,14 +202,14 @@ resource "humanitec_module" "test_complex" {
 
   dependencies = {
     vpc = {
-      type = humanitec_resource_type.aws_vpc.id
+      type = platform-orchestrator_resource_type.aws_vpc.id
       class = "default"
     }
   }
 }
 
-data "humanitec_module" "test_complex" {
-  id = humanitec_module.test_complex.id
+data "platform-orchestrator_module" "test_complex" {
+  id = platform-orchestrator_module.test_complex.id
 }
 `
 }

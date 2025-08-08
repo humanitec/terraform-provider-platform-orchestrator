@@ -23,71 +23,71 @@ func TestAccKubernetesRunnerDataSource(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					// Verify the data source reads the correct runner
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("description"),
 						knownvalue.StringExact("Test Kubernetes Runner for data source"),
 					),
 					// Verify cluster configuration is correctly read
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("cluster").AtMapKey("cluster_data").AtMapKey("certificate_authority_data"),
 						knownvalue.StringExact("LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t..."),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("cluster").AtMapKey("cluster_data").AtMapKey("server"),
 						knownvalue.StringExact("https://kubernetes.example.com:6443"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("cluster").AtMapKey("cluster_data").AtMapKey("proxy_url"),
 						knownvalue.StringExact("http://proxy.example.com:8080"),
 					),
 					// Verify auth configuration (service account token)
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("cluster").AtMapKey("auth").AtMapKey("service_account_token"),
 						knownvalue.StringExact("SECRET"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("cluster").AtMapKey("auth").AtMapKey("client_certificate_data"),
 						knownvalue.Null(),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("cluster").AtMapKey("auth").AtMapKey("client_key_data"),
 						knownvalue.Null(),
 					),
 					// Verify job configuration
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("job").AtMapKey("namespace"),
 						knownvalue.StringExact("k8s-runner-namespace"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("job").AtMapKey("service_account"),
 						knownvalue.StringExact("k8s-runner-sa"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("job").AtMapKey("pod_template"),
 						knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"k8s-runner-test","runner-type":"kubernetes"}},"spec":{"containers":[{"image":"humanitec/runner:latest","name":"runner"}]}}`),
 					),
 					// Verify state storage configuration
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("state_storage_configuration").AtMapKey("type"),
 						knownvalue.StringExact("kubernetes"),
 					),
 					statecheck.ExpectKnownValue(
-						"data.humanitec_kubernetes_runner.test",
+						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("state_storage_configuration").AtMapKey("kubernetes_configuration").AtMapKey("namespace"),
 						knownvalue.StringExact("k8s-state-namespace"),
 					),
@@ -99,7 +99,7 @@ func TestAccKubernetesRunnerDataSource(t *testing.T) {
 
 func testAccKubernetesRunnerDataSourceConfig(runnerId string) string {
 	return `
-resource "humanitec_kubernetes_runner" "test" {
+resource "platform-orchestrator_kubernetes_runner" "test" {
   id = "` + runnerId + `"
   description = "Test Kubernetes Runner for data source"
   
@@ -144,8 +144,8 @@ resource "humanitec_kubernetes_runner" "test" {
   }
 }
 
-data "humanitec_kubernetes_runner" "test" {
-  id = humanitec_kubernetes_runner.test.id
+data "platform-orchestrator_kubernetes_runner" "test" {
+  id = platform-orchestrator_kubernetes_runner.test.id
 }
 `
 }

@@ -25,12 +25,12 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 				}, ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_runner.test",
+						"platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_runner.test",
+						"platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"cluster": knownvalue.MapExact(map[string]knownvalue.Check{
@@ -53,7 +53,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_runner.test",
+						"platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("state_storage_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
@@ -77,12 +77,12 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 })`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_runner.test",
+						"platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_runner.test",
+						"platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"cluster": knownvalue.MapExact(map[string]knownvalue.Check{
@@ -105,7 +105,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 						}),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_kubernetes_runner.test",
+						"platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("state_storage_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
@@ -117,7 +117,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      "humanitec_kubernetes_runner.test",
+				ResourceName:      "platform-orchestrator_kubernetes_runner.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -142,7 +142,7 @@ func testAccKubernetesRunnerResource(id string, auth KubernetesRunnerClusterAuth
 	}
 
 	return `
-resource "humanitec_kubernetes_runner" "test" {
+resource "platform-orchestrator_kubernetes_runner" "test" {
   id = "` + id + `"
   runner_configuration = {
     cluster = {

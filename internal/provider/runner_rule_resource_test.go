@@ -25,27 +25,27 @@ func TestAccRunnerRuleResourceBasic(t *testing.T) {
 			{
 				Config: testAccRunnerRuleResourceBasic(runnerId),
 				Check: func(s *terraform.State) error {
-					ruleId = uuid.Must(uuid.Parse(s.RootModule().Resources["humanitec_runner_rule.test"].Primary.ID))
+					ruleId = uuid.Must(uuid.Parse(s.RootModule().Resources["platform-orchestrator_runner_rule.test"].Primary.ID))
 					return nil
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("runner_id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("env_type_id"),
 						knownvalue.StringExact(""),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("project_id"),
 						knownvalue.StringExact(""),
 					),
@@ -55,7 +55,7 @@ func TestAccRunnerRuleResourceBasic(t *testing.T) {
 			{
 				Config: testAccRunnerRuleResourceWithEnvType(runnerId, envTypeId),
 				Check: func(s *terraform.State) error {
-					newRuleId := s.RootModule().Resources["humanitec_runner_rule.test"].Primary.ID
+					newRuleId := s.RootModule().Resources["platform-orchestrator_runner_rule.test"].Primary.ID
 					if newRuleId == ruleId.String() {
 						return fmt.Errorf("expected new rule ID after update, got same ID: %s", newRuleId)
 					}
@@ -63,29 +63,29 @@ func TestAccRunnerRuleResourceBasic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("id"),
 						knownvalue.NotNull(),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("runner_id"),
 						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("env_type_id"),
 						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
-						"humanitec_runner_rule.test",
+						"platform-orchestrator_runner_rule.test",
 						tfjsonpath.New("project_id"),
 						knownvalue.StringExact(""),
 					),
 				},
 			},
 			{
-				ResourceName:      "humanitec_runner_rule.test",
+				ResourceName:      "platform-orchestrator_runner_rule.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -96,7 +96,7 @@ func TestAccRunnerRuleResourceBasic(t *testing.T) {
 
 func testAccRunnerRuleResourceBasic(runnerId string) string {
 	return `
-resource "humanitec_kubernetes_agent_runner" "test" {
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
   id = "` + runnerId + `"
   runner_configuration = {
     key = <<EOT
@@ -117,19 +117,19 @@ EOT
   }
 }
 
-resource "humanitec_runner_rule" "test" {
-  runner_id = humanitec_kubernetes_agent_runner.test.id
+resource "platform-orchestrator_runner_rule" "test" {
+  runner_id = platform-orchestrator_kubernetes_agent_runner.test.id
 }
 `
 }
 
 func testAccRunnerRuleResourceWithEnvType(runnerId, envTypeId string) string {
 	return `
-resource "humanitec_environment_type" "test" {
+resource "platform-orchestrator_environment_type" "test" {
   id = "` + envTypeId + `"
 }
 
-resource "humanitec_kubernetes_agent_runner" "test" {
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
   id = "` + runnerId + `"
   runner_configuration = {
     key = <<EOT
@@ -150,9 +150,9 @@ EOT
   }
 }
 
-resource "humanitec_runner_rule" "test" {
-  runner_id   = humanitec_kubernetes_agent_runner.test.id
-  env_type_id = humanitec_environment_type.test.id
+resource "platform-orchestrator_runner_rule" "test" {
+  runner_id   = platform-orchestrator_kubernetes_agent_runner.test.id
+  env_type_id = platform-orchestrator_environment_type.test.id
 }
 `
 }

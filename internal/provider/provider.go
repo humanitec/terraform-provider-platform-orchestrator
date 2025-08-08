@@ -34,7 +34,7 @@ const (
 	HUM_ORG_ID_ENV_VAR     = "HUMANITEC_ORG_ID"
 	HUM_AUTH_TOKEN_ENV_VAR = "HUMANITEC_AUTH_TOKEN"
 
-	HUM_DEFAULT_API_URL = "https://hirtheschmelerreichel.humanitec-labs.newapp.io"
+	HUM_DEFAULT_API_URL = "https://bradtkerosenbaumcummings.humanitec-labs.newapp.io"
 )
 
 // Ensure HumanitecProvider satisfies various provider interfaces.
@@ -192,6 +192,8 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 		NewProviderResource,
 		NewResourceTypeResource,
 		NewModuleResource,
+		NewModuleRuleResource,
+		NewRunnerRuleResource,
 	}
 }
 
@@ -208,6 +210,8 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 		NewProviderDataSource,
 		NewResourceTypeDataSource,
 		NewModuleDataSource,
+		NewModuleRuleDataSource,
+		NewRunnerRuleDataSource,
 	}
 }
 

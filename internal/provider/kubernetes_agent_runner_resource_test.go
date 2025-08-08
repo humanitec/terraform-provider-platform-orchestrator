@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,20 +12,21 @@ import (
 )
 
 func TestAccKubernetesAgentRunnerResource(t *testing.T) {
+	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccKubernetesAgentRunnerResource("tf-provider-test", `-----BEGIN PUBLIC KEY-----
+				Config: testAccKubernetesAgentRunnerResource(runnerId, `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 -----END PUBLIC KEY-----`, "humanitec-runner"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_agent_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_agent_runner.test",
@@ -59,14 +62,14 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 			},
 			// Update testing
 			{
-				Config: testAccKubernetesAgentRunnerResourceUpdateNoPodTemplate("tf-provider-test", `-----BEGIN PUBLIC KEY-----
+				Config: testAccKubernetesAgentRunnerResourceUpdateNoPodTemplate(runnerId, `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 -----END PUBLIC KEY-----`, "default"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_agent_runner.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("tf-provider-test"),
+						knownvalue.StringExact(runnerId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_kubernetes_agent_runner.test",

@@ -1,7 +1,9 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -10,23 +12,24 @@ import (
 )
 
 func TestAccEnvironmentTypeResource(t *testing.T) {
+	envTypeId := fmt.Sprintf("example-%d", time.Now().UnixNano())
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccEnvironmentTypeResourceConfig("example", ""),
+				Config: testAccEnvironmentTypeResourceConfig(envTypeId, ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_environment_type.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("example"),
+						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_environment_type.test",
 						tfjsonpath.New("display_name"),
-						knownvalue.StringExact("example"),
+						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_environment_type.test",
@@ -37,12 +40,12 @@ func TestAccEnvironmentTypeResource(t *testing.T) {
 			},
 			// Update testing
 			{
-				Config: testAccEnvironmentTypeResourceConfig("example", "Example Environment Type"),
+				Config: testAccEnvironmentTypeResourceConfig(envTypeId, "Example Environment Type"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"humanitec_environment_type.test",
 						tfjsonpath.New("id"),
-						knownvalue.StringExact("example"),
+						knownvalue.StringExact(envTypeId),
 					),
 					statecheck.ExpectKnownValue(
 						"humanitec_environment_type.test",

@@ -21,7 +21,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalOrganizationPage"
+                $ref: "#/components/schemas/OrganizationPage"
     post:
       operationId: createInternalOrganization
       tags:
@@ -42,7 +42,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalOrganization"
+                $ref: "#/components/schemas/Organization"
         "400":
           $ref: "#/components/responses/400BadRequest"
         "409":
@@ -64,7 +64,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalOrganization"
+                $ref: "#/components/schemas/Organization"
         "404":
           $ref: "#/components/responses/404NotFound"
 
@@ -178,6 +178,28 @@ paths:
                 $ref: "#/components/schemas/InternalRunner"
         "404":
           $ref: "#/components/responses/404NotFound"
+  
+  /orgs:
+    post:
+      operationId: createOrganization
+      summary: Create a new organization with a random name and suffix.
+      tags:
+        - Organization
+      security:
+        - userIdHeader: []
+      responses:
+        "201":
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+        "409":
+          $ref: "#/components/responses/409Conflict"
 
   /orgs/{orgId}/env-types:
     get:
@@ -263,6 +285,31 @@ paths:
           $ref: "#/components/responses/404NotFound"
         "409":
           $ref: "#/components/responses/409Conflict"
+    patch:
+      operationId: updateEnvironmentType
+      summary: Update an environment type in the org
+      tags:
+        - EnvironmentType
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/envTypeIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentTypeUpdateBody"
+      responses:
+        "200":
+          description: Successful update response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentType"
+        "404":
+          $ref: "#/components/responses/404NotFound"
 
   /orgs/{orgId}/projects:
     get:
@@ -342,6 +389,31 @@ paths:
       responses:
         "200":
           description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    patch:
+      operationId: updateProject
+      summary: Update a project
+      tags:
+        - Project
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdateBody"
+      responses:
+        "200":
+          description: Successful update response.
           content:
             application/json:
               schema:
@@ -447,6 +519,32 @@ paths:
       responses:
         "200":
           description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Environment"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    patch:
+      operationId: updateEnvironment
+      summary: Update a project environment
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectIdPathParam"
+        - $ref: "#/components/parameters/envIdPathParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnvironmentUpdateBody"
+      responses:
+        "200":
+          description: Successful update response.
           content:
             application/json:
               schema:
@@ -918,7 +1016,7 @@ paths:
     get:
       operationId: listRunnerRulesInOrg
       tags:
-        - Rules
+        - Runner
       summary: List runner rules in the org
       security:
         - userIdHeader: []
@@ -980,7 +1078,7 @@ paths:
     get:
       operationId: getRunnerRuleInOrg
       tags:
-        - Rules
+        - Runner
       summary: Get an existing runner rule in the org
       security:
         - userIdHeader: [ ]
@@ -999,7 +1097,7 @@ paths:
     delete:
       operationId: deleteRunnerRuleInOrg
       tags:
-        - Rules
+        - Runner
       summary: Delete an existing runner rule in the org
       security:
         - userIdHeader: []
@@ -1392,6 +1490,22 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    401Unauthorized:
+      description: The client didn't provide valid authentication credentials.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    403Forbidden:
+      description: Server understands the request but refuses to authorize it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'            
     404NotFound:
       description: The request was valid, but the target resource or relation does not exist.
       content:
@@ -1427,13 +1541,14 @@ components:
         - message
       type: object
 
-    InternalOrganization:
+    Organization:
       type: object
       description: The internal state of an organization known by the control plane.
       required:
         - id
         - uuid
         - created_at
+        - source
       properties:
         id:
           description: The unique identifier of the org
@@ -1449,8 +1564,16 @@ components:
           example: "2023-01-01T00:00:00Z"
           type: string
           format: date-time
+        source:
+          description: The source of the org state. This is used to identify the source of the org state, such as a git repository.
+          type: string
+          enum:
+            - internal
+            - public
+          default: internal
+          example: internal
 
-    InternalOrganizationPage:
+    OrganizationPage:
       type: object
       description: A page of organization state returned from the list api.
       required:
@@ -1460,7 +1583,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/InternalOrganization"
+            $ref: "#/components/schemas/Organization"
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -1549,6 +1672,18 @@ components:
           example: sample-project
           pattern: ^[a-z](?:-?[a-z0-9]+)+$
           x-pattern-error: id must be a valid identifier
+        display_name:
+          description: Project human readable name. The id is used if this is not specified.
+          type: string
+          example: Sample Project
+          maxLength: 60
+    
+    ProjectUpdateBody:
+      type: object
+      description: A request to update a project.
+      required:
+        - display_name
+      properties:
         display_name:
           description: Project human readable name. The id is used if this is not specified.
           type: string
@@ -1659,6 +1794,18 @@ components:
           type: string
           example: My Sample Environment
           maxLength: 60
+    
+    EnvironmentUpdateBody:
+      type: object
+      description: A request to update an environment.
+      required:
+        - display_name
+      properties:
+        display_name:
+          description: Environment human readable name. The id is used if this is not specified.
+          type: string
+          example: My Sample Environment
+          maxLength: 60
 
     EnvironmentInternalUpdateBody:
       type: object
@@ -1727,6 +1874,18 @@ components:
           example: sample-env
           pattern: ^[a-z](?:-?[a-z0-9]+)+$
           x-pattern-error: id must be a valid identifier
+        display_name:
+          description: Human readable name for the environment type. This will be generated if not provided.
+          type: string
+          example: Development
+          maxLength: 60
+
+    EnvironmentTypeUpdateBody:
+      type: object
+      description: A request to update an environment type in the org.
+      required:
+        - display_name
+      properties:
         display_name:
           description: Human readable name for the environment type. This will be generated if not provided.
           type: string

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	"terraform-provider-humanitec-v2/internal/ref"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -66,9 +67,6 @@ func (r *EnvironmentTypeResource) Schema(ctx context.Context, req resource.Schem
 				Computed:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(60),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"uuid": schema.StringAttribute{
@@ -164,7 +162,28 @@ func (r *EnvironmentTypeResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *EnvironmentTypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError("Not Supported", "The Environment Type resource does not support updates.")
+	var data EnvironmentTypeResourceModel
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	httpResp, err := r.cpClient.UpdateEnvironmentTypeWithResponse(ctx, r.orgId, data.Id.ValueString(), canyoncp.UpdateEnvironmentTypeJSONRequestBody{
+		DisplayName: data.DisplayName.ValueString(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update module provider, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() != 200 {
+		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(toEnvironmentTypeModel(*httpResp.JSON200)))...)
 }
 
 func (r *EnvironmentTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

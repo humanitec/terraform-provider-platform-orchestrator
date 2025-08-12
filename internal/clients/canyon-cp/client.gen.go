@@ -30,6 +30,12 @@ const (
 	EnvironmentStatusDeleting     EnvironmentStatus = "deleting"
 )
 
+// Defines values for OrganizationSource.
+const (
+	Internal OrganizationSource = "internal"
+	Public   OrganizationSource = "public"
+)
+
 // Defines values for ProjectStatus.
 const (
 	ProjectStatusActive   ProjectStatus = "active"
@@ -196,6 +202,18 @@ type EnvironmentTypeSummary struct {
 	Uuid openapi_types.UUID `json:"uuid"`
 }
 
+// EnvironmentTypeUpdateBody A request to update an environment type in the org.
+type EnvironmentTypeUpdateBody struct {
+	// DisplayName Human readable name for the environment type. This will be generated if not provided.
+	DisplayName string `json:"display_name"`
+}
+
+// EnvironmentUpdateBody A request to update an environment.
+type EnvironmentUpdateBody struct {
+	// DisplayName Environment human readable name. The id is used if this is not specified.
+	DisplayName string `json:"display_name"`
+}
+
 // Error A standard error response
 type Error struct {
 	// Details An optional payload of metadata associated with the error.
@@ -286,31 +304,10 @@ type InternalModuleCatalogueModuleRule struct {
 	RuleId     openapi_types.UUID `json:"rule_id"`
 }
 
-// InternalOrganization The internal state of an organization known by the control plane.
-type InternalOrganization struct {
-	// CreatedAt The date and time when the org state was created.
-	CreatedAt time.Time `json:"created_at"`
-
-	// Id The unique identifier of the org
-	Id string `json:"id"`
-
-	// Uuid Unique uid for the org to identify a unique lifecycle
-	Uuid openapi_types.UUID `json:"uuid"`
-}
-
 // InternalOrganizationCreateBody A request to create a new organization state in the control plane.
 type InternalOrganizationCreateBody struct {
 	// Id The unique identifier of the org
 	Id string `json:"id"`
-}
-
-// InternalOrganizationPage A page of organization state returned from the list api.
-type InternalOrganizationPage struct {
-	// Items The items in this page
-	Items []InternalOrganization `json:"items"`
-
-	// NextPageToken The page token to use to request the next page of items
-	NextPageToken *string `json:"next_page_token,omitempty"`
 }
 
 // InternalRunner defines model for InternalRunner.
@@ -765,6 +762,33 @@ type ModuleUpdateBody struct {
 	ProviderMapping *map[string]string `json:"provider_mapping,omitempty"`
 }
 
+// Organization The internal state of an organization known by the control plane.
+type Organization struct {
+	// CreatedAt The date and time when the org state was created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// Id The unique identifier of the org
+	Id string `json:"id"`
+
+	// Source The source of the org state. This is used to identify the source of the org state, such as a git repository.
+	Source OrganizationSource `json:"source"`
+
+	// Uuid Unique uid for the org to identify a unique lifecycle
+	Uuid openapi_types.UUID `json:"uuid"`
+}
+
+// OrganizationSource The source of the org state. This is used to identify the source of the org state, such as a git repository.
+type OrganizationSource string
+
+// OrganizationPage A page of organization state returned from the list api.
+type OrganizationPage struct {
+	// Items The items in this page
+	Items []Organization `json:"items"`
+
+	// NextPageToken The page token to use to request the next page of items
+	NextPageToken *string `json:"next_page_token,omitempty"`
+}
+
 // Project A project.
 type Project struct {
 	// CreatedAt The date and time when the project was created
@@ -805,6 +829,12 @@ type ProjectPage struct {
 
 	// NextPageToken The page token to use to request the next page of items
 	NextPageToken *string `json:"next_page_token,omitempty"`
+}
+
+// ProjectUpdateBody A request to update a project.
+type ProjectUpdateBody struct {
+	// DisplayName Project human readable name. The id is used if this is not specified.
+	DisplayName string `json:"display_name"`
 }
 
 // RefreshRunnerActionResult The response body for refreshing a runner in an environment.
@@ -1157,6 +1187,12 @@ type RunnerIdPathParam = string
 // N400BadRequest A standard error response
 type N400BadRequest = Error
 
+// N401Unauthorized A standard error response
+type N401Unauthorized = Error
+
+// N403Forbidden A standard error response
+type N403Forbidden = Error
+
 // N404NotFound A standard error response
 type N404NotFound = Error
 
@@ -1328,6 +1364,9 @@ type InternalUpdateResourceTypeJSONRequestBody = ResourceTypeUpdateBody
 // CreateEnvironmentTypeJSONRequestBody defines body for CreateEnvironmentType for application/json ContentType.
 type CreateEnvironmentTypeJSONRequestBody = EnvironmentTypeCreateBody
 
+// UpdateEnvironmentTypeJSONRequestBody defines body for UpdateEnvironmentType for application/json ContentType.
+type UpdateEnvironmentTypeJSONRequestBody = EnvironmentTypeUpdateBody
+
 // CreateModuleProviderJSONRequestBody defines body for CreateModuleProvider for application/json ContentType.
 type CreateModuleProviderJSONRequestBody = ModuleProviderCreateBody
 
@@ -1346,8 +1385,14 @@ type UpdateModuleJSONRequestBody = ModuleUpdateBody
 // CreateProjectJSONRequestBody defines body for CreateProject for application/json ContentType.
 type CreateProjectJSONRequestBody = ProjectCreateBody
 
+// UpdateProjectJSONRequestBody defines body for UpdateProject for application/json ContentType.
+type UpdateProjectJSONRequestBody = ProjectUpdateBody
+
 // CreateEnvironmentJSONRequestBody defines body for CreateEnvironment for application/json ContentType.
 type CreateEnvironmentJSONRequestBody = EnvironmentCreateBody
+
+// UpdateEnvironmentJSONRequestBody defines body for UpdateEnvironment for application/json ContentType.
+type UpdateEnvironmentJSONRequestBody = EnvironmentUpdateBody
 
 // CreateResourceTypeJSONRequestBody defines body for CreateResourceType for application/json ContentType.
 type CreateResourceTypeJSONRequestBody = ResourceTypeCreateBody
@@ -1774,6 +1819,9 @@ type ClientInterface interface {
 
 	InternalUpdateResourceType(ctx context.Context, typeId ResourceTypeIdPathParam, body InternalUpdateResourceTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateOrganization request
+	CreateOrganization(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListEnvironmentTypes request
 	ListEnvironmentTypes(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentTypesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1787,6 +1835,11 @@ type ClientInterface interface {
 
 	// GetEnvironmentType request
 	GetEnvironmentType(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateEnvironmentTypeWithBody request with any body
+	UpdateEnvironmentTypeWithBody(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateEnvironmentType(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListModuleProviders request
 	ListModuleProviders(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1854,6 +1907,11 @@ type ClientInterface interface {
 	// GetProject request
 	GetProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// UpdateProjectWithBody request with any body
+	UpdateProjectWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, body UpdateProjectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListEnvironments request
 	ListEnvironments(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *ListEnvironmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1867,6 +1925,11 @@ type ClientInterface interface {
 
 	// GetEnvironment request
 	GetEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateEnvironmentWithBody request with any body
+	UpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ForceDeleteEnvironment request
 	ForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2110,6 +2173,18 @@ func (c *Client) InternalUpdateResourceType(ctx context.Context, typeId Resource
 	return c.Client.Do(req)
 }
 
+func (c *Client) CreateOrganization(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateOrganizationRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListEnvironmentTypes(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentTypesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListEnvironmentTypesRequest(c.Server, orgId, params)
 	if err != nil {
@@ -2160,6 +2235,30 @@ func (c *Client) DeleteEnvironmentType(ctx context.Context, orgId OrgIdPathParam
 
 func (c *Client) GetEnvironmentType(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetEnvironmentTypeRequest(c.Server, orgId, envTypeId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateEnvironmentTypeWithBody(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateEnvironmentTypeRequestWithBody(c.Server, orgId, envTypeId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateEnvironmentType(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateEnvironmentTypeRequest(c.Server, orgId, envTypeId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2458,6 +2557,30 @@ func (c *Client) GetProject(ctx context.Context, orgId OrgIdPathParam, projectId
 	return c.Client.Do(req)
 }
 
+func (c *Client) UpdateProjectWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectRequestWithBody(c.Server, orgId, projectId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, body UpdateProjectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateProjectRequest(c.Server, orgId, projectId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListEnvironments(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *ListEnvironmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListEnvironmentsRequest(c.Server, orgId, projectId, params)
 	if err != nil {
@@ -2508,6 +2631,30 @@ func (c *Client) DeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, pr
 
 func (c *Client) GetEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetEnvironmentRequest(c.Server, orgId, projectId, envId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateEnvironmentRequestWithBody(c.Server, orgId, projectId, envId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateEnvironmentRequest(c.Server, orgId, projectId, envId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3270,6 +3417,33 @@ func NewInternalUpdateResourceTypeRequestWithBody(server string, typeId Resource
 	return req, nil
 }
 
+// NewCreateOrganizationRequest generates requests for CreateOrganization
+func NewCreateOrganizationRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListEnvironmentTypesRequest generates requests for ListEnvironmentTypes
 func NewListEnvironmentTypesRequest(server string, orgId OrgIdPathParam, params *ListEnvironmentTypesParams) (*http.Request, error) {
 	var err error
@@ -3467,6 +3641,60 @@ func NewGetEnvironmentTypeRequest(server string, orgId OrgIdPathParam, envTypeId
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewUpdateEnvironmentTypeRequest calls the generic UpdateEnvironmentType builder with application/json body
+func NewUpdateEnvironmentTypeRequest(server string, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateEnvironmentTypeRequestWithBody(server, orgId, envTypeId, "application/json", bodyReader)
+}
+
+// NewUpdateEnvironmentTypeRequestWithBody generates requests for UpdateEnvironmentType with any type of body
+func NewUpdateEnvironmentTypeRequestWithBody(server string, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "envTypeId", runtime.ParamLocationPath, envTypeId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/env-types/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -4468,6 +4696,60 @@ func NewGetProjectRequest(server string, orgId OrgIdPathParam, projectId Project
 	return req, nil
 }
 
+// NewUpdateProjectRequest calls the generic UpdateProject builder with application/json body
+func NewUpdateProjectRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, body UpdateProjectJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateProjectRequestWithBody(server, orgId, projectId, "application/json", bodyReader)
+}
+
+// NewUpdateProjectRequestWithBody generates requests for UpdateProject with any type of body
+func NewUpdateProjectRequestWithBody(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectId", runtime.ParamLocationPath, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/projects/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListEnvironmentsRequest generates requests for ListEnvironments
 func NewListEnvironmentsRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *ListEnvironmentsParams) (*http.Request, error) {
 	var err error
@@ -4709,6 +4991,67 @@ func NewGetEnvironmentRequest(server string, orgId OrgIdPathParam, projectId Pro
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewUpdateEnvironmentRequest calls the generic UpdateEnvironment builder with application/json body
+func NewUpdateEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateEnvironmentRequestWithBody(server, orgId, projectId, envId, "application/json", bodyReader)
+}
+
+// NewUpdateEnvironmentRequestWithBody generates requests for UpdateEnvironment with any type of body
+func NewUpdateEnvironmentRequestWithBody(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectId", runtime.ParamLocationPath, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "envId", runtime.ParamLocationPath, envId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/projects/%s/envs/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -5807,6 +6150,9 @@ type ClientWithResponsesInterface interface {
 
 	InternalUpdateResourceTypeWithResponse(ctx context.Context, typeId ResourceTypeIdPathParam, body InternalUpdateResourceTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*InternalUpdateResourceTypeResponse, error)
 
+	// CreateOrganizationWithResponse request
+	CreateOrganizationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateOrganizationResponse, error)
+
 	// ListEnvironmentTypesWithResponse request
 	ListEnvironmentTypesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentTypesParams, reqEditors ...RequestEditorFn) (*ListEnvironmentTypesResponse, error)
 
@@ -5820,6 +6166,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetEnvironmentTypeWithResponse request
 	GetEnvironmentTypeWithResponse(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, reqEditors ...RequestEditorFn) (*GetEnvironmentTypeResponse, error)
+
+	// UpdateEnvironmentTypeWithBodyWithResponse request with any body
+	UpdateEnvironmentTypeWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateEnvironmentTypeResponse, error)
+
+	UpdateEnvironmentTypeWithResponse(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEnvironmentTypeResponse, error)
 
 	// ListModuleProvidersWithResponse request
 	ListModuleProvidersWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*ListModuleProvidersResponse, error)
@@ -5887,6 +6238,11 @@ type ClientWithResponsesInterface interface {
 	// GetProjectWithResponse request
 	GetProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*GetProjectResponse, error)
 
+	// UpdateProjectWithBodyWithResponse request with any body
+	UpdateProjectWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectResponse, error)
+
+	UpdateProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, body UpdateProjectJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectResponse, error)
+
 	// ListEnvironmentsWithResponse request
 	ListEnvironmentsWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *ListEnvironmentsParams, reqEditors ...RequestEditorFn) (*ListEnvironmentsResponse, error)
 
@@ -5900,6 +6256,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetEnvironmentWithResponse request
 	GetEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*GetEnvironmentResponse, error)
+
+	// UpdateEnvironmentWithBodyWithResponse request with any body
+	UpdateEnvironmentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateEnvironmentResponse, error)
+
+	UpdateEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEnvironmentResponse, error)
 
 	// ForceDeleteEnvironmentWithResponse request
 	ForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*ForceDeleteEnvironmentResponse, error)
@@ -5966,7 +6327,7 @@ type ClientWithResponsesInterface interface {
 type ListInternalOrganizationsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InternalOrganizationPage
+	JSON200      *OrganizationPage
 }
 
 // Status returns HTTPResponse.Status
@@ -5988,7 +6349,7 @@ func (r ListInternalOrganizationsResponse) StatusCode() int {
 type CreateInternalOrganizationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *InternalOrganization
+	JSON201      *Organization
 	JSON400      *N400BadRequest
 	JSON409      *N409Conflict
 }
@@ -6012,7 +6373,7 @@ func (r CreateInternalOrganizationResponse) StatusCode() int {
 type GetInternalOrganizationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *InternalOrganization
+	JSON200      *Organization
 	JSON404      *N404NotFound
 }
 
@@ -6196,6 +6557,31 @@ func (r InternalUpdateResourceTypeResponse) StatusCode() int {
 	return 0
 }
 
+type CreateOrganizationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *Organization
+	JSON401      *N401Unauthorized
+	JSON403      *N403Forbidden
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateOrganizationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateOrganizationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListEnvironmentTypesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6283,6 +6669,29 @@ func (r GetEnvironmentTypeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetEnvironmentTypeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateEnvironmentTypeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentType
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateEnvironmentTypeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateEnvironmentTypeResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6711,6 +7120,29 @@ func (r GetProjectResponse) StatusCode() int {
 	return 0
 }
 
+type UpdateProjectResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Project
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateProjectResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateProjectResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListEnvironmentsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6799,6 +7231,29 @@ func (r GetEnvironmentResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateEnvironmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Environment
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateEnvironmentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7333,6 +7788,15 @@ func (c *ClientWithResponses) InternalUpdateResourceTypeWithResponse(ctx context
 	return ParseInternalUpdateResourceTypeResponse(rsp)
 }
 
+// CreateOrganizationWithResponse request returning *CreateOrganizationResponse
+func (c *ClientWithResponses) CreateOrganizationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateOrganizationResponse, error) {
+	rsp, err := c.CreateOrganization(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateOrganizationResponse(rsp)
+}
+
 // ListEnvironmentTypesWithResponse request returning *ListEnvironmentTypesResponse
 func (c *ClientWithResponses) ListEnvironmentTypesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentTypesParams, reqEditors ...RequestEditorFn) (*ListEnvironmentTypesResponse, error) {
 	rsp, err := c.ListEnvironmentTypes(ctx, orgId, params, reqEditors...)
@@ -7375,6 +7839,23 @@ func (c *ClientWithResponses) GetEnvironmentTypeWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseGetEnvironmentTypeResponse(rsp)
+}
+
+// UpdateEnvironmentTypeWithBodyWithResponse request with arbitrary body returning *UpdateEnvironmentTypeResponse
+func (c *ClientWithResponses) UpdateEnvironmentTypeWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateEnvironmentTypeResponse, error) {
+	rsp, err := c.UpdateEnvironmentTypeWithBody(ctx, orgId, envTypeId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateEnvironmentTypeResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateEnvironmentTypeWithResponse(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEnvironmentTypeResponse, error) {
+	rsp, err := c.UpdateEnvironmentType(ctx, orgId, envTypeId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateEnvironmentTypeResponse(rsp)
 }
 
 // ListModuleProvidersWithResponse request returning *ListModuleProvidersResponse
@@ -7587,6 +8068,23 @@ func (c *ClientWithResponses) GetProjectWithResponse(ctx context.Context, orgId 
 	return ParseGetProjectResponse(rsp)
 }
 
+// UpdateProjectWithBodyWithResponse request with arbitrary body returning *UpdateProjectResponse
+func (c *ClientWithResponses) UpdateProjectWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateProjectResponse, error) {
+	rsp, err := c.UpdateProjectWithBody(ctx, orgId, projectId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, body UpdateProjectJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateProjectResponse, error) {
+	rsp, err := c.UpdateProject(ctx, orgId, projectId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateProjectResponse(rsp)
+}
+
 // ListEnvironmentsWithResponse request returning *ListEnvironmentsResponse
 func (c *ClientWithResponses) ListEnvironmentsWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *ListEnvironmentsParams, reqEditors ...RequestEditorFn) (*ListEnvironmentsResponse, error) {
 	rsp, err := c.ListEnvironments(ctx, orgId, projectId, params, reqEditors...)
@@ -7629,6 +8127,23 @@ func (c *ClientWithResponses) GetEnvironmentWithResponse(ctx context.Context, or
 		return nil, err
 	}
 	return ParseGetEnvironmentResponse(rsp)
+}
+
+// UpdateEnvironmentWithBodyWithResponse request with arbitrary body returning *UpdateEnvironmentResponse
+func (c *ClientWithResponses) UpdateEnvironmentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateEnvironmentResponse, error) {
+	rsp, err := c.UpdateEnvironmentWithBody(ctx, orgId, projectId, envId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateEnvironmentResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEnvironmentResponse, error) {
+	rsp, err := c.UpdateEnvironment(ctx, orgId, projectId, envId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateEnvironmentResponse(rsp)
 }
 
 // ForceDeleteEnvironmentWithResponse request returning *ForceDeleteEnvironmentResponse
@@ -7839,7 +8354,7 @@ func ParseListInternalOrganizationsResponse(rsp *http.Response) (*ListInternalOr
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InternalOrganizationPage
+		var dest OrganizationPage
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7865,7 +8380,7 @@ func ParseCreateInternalOrganizationResponse(rsp *http.Response) (*CreateInterna
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest InternalOrganization
+		var dest Organization
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -7905,7 +8420,7 @@ func ParseGetInternalOrganizationResponse(rsp *http.Response) (*GetInternalOrgan
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InternalOrganization
+		var dest Organization
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -8175,6 +8690,53 @@ func ParseInternalUpdateResourceTypeResponse(rsp *http.Response) (*InternalUpdat
 	return response, nil
 }
 
+// ParseCreateOrganizationResponse parses an HTTP response from a CreateOrganizationWithResponse call
+func ParseCreateOrganizationResponse(rsp *http.Response) (*CreateOrganizationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateOrganizationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Organization
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest N401Unauthorized
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest N403Forbidden
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListEnvironmentTypesResponse parses an HTTP response from a ListEnvironmentTypesWithResponse call
 func ParseListEnvironmentTypesResponse(rsp *http.Response) (*ListEnvironmentTypesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -8290,6 +8852,39 @@ func ParseGetEnvironmentTypeResponse(rsp *http.Response) (*GetEnvironmentTypeRes
 	}
 
 	response := &GetEnvironmentTypeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentType
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateEnvironmentTypeResponse parses an HTTP response from a UpdateEnvironmentTypeWithResponse call
+func ParseUpdateEnvironmentTypeResponse(rsp *http.Response) (*UpdateEnvironmentTypeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateEnvironmentTypeResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -8964,6 +9559,39 @@ func ParseGetProjectResponse(rsp *http.Response) (*GetProjectResponse, error) {
 	return response, nil
 }
 
+// ParseUpdateProjectResponse parses an HTTP response from a UpdateProjectWithResponse call
+func ParseUpdateProjectResponse(rsp *http.Response) (*UpdateProjectResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateProjectResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Project
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListEnvironmentsResponse parses an HTTP response from a ListEnvironmentsWithResponse call
 func ParseListEnvironmentsResponse(rsp *http.Response) (*ListEnvironmentsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -9086,6 +9714,39 @@ func ParseGetEnvironmentResponse(rsp *http.Response) (*GetEnvironmentResponse, e
 	}
 
 	response := &GetEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Environment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateEnvironmentResponse parses an HTTP response from a UpdateEnvironmentWithResponse call
+func ParseUpdateEnvironmentResponse(rsp *http.Response) (*UpdateEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateEnvironmentResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

@@ -37,6 +37,13 @@ const (
 	HUM_DEFAULT_API_URL = "https://api.humanitec.dev"
 )
 
+// isBase64Encoded checks if a string is base64 encoded.
+func isBase64Encoded(s string) bool {
+	// Try to decode the string as base64
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
+}
+
 // Ensure HumanitecProvider satisfies various provider interfaces.
 var _ provider.Provider = &HumanitecProvider{}
 var _ provider.ProviderWithFunctions = &HumanitecProvider{}
@@ -133,7 +140,11 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 	extraHeaders := make(http.Header)
 	if authToken != "" {
 		// For now we support temporary Basic authentication with OrgId as a username and the token as a password
-		extraHeaders.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(orgId+":"+authToken)))
+		if isBase64Encoded(authToken) {
+			extraHeaders.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(orgId+":"+authToken)))
+		} else {
+			extraHeaders.Set("Authorization", "Bearer "+authToken)
+		}
 	} else if u.Hostname() == "localhost" {
 		// For the local version, our auth is to just set the 'From' header directly.
 		extraHeaders.Set("From", uuid.Nil.String())

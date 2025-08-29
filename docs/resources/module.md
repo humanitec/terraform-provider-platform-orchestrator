@@ -53,6 +53,7 @@ resource "platform-orchestrator_module" "minio" {
 ### Required
 
 - `id` (String) The unique identifier for a module
+- `module_source` (String) The source of the OpenTofu module backing this module. Required. Must be set to 'inline' if module_source_code is set.
 - `resource_type` (String) The resource type that this module provisions. Changing this will force a recreation of the resource.
 
 ### Optional
@@ -61,7 +62,6 @@ resource "platform-orchestrator_module" "minio" {
 - `dependencies` (Attributes Map) A mapping of alias to resource dependencies that must be provisioned with this module (see [below for nested schema](#nestedatt--dependencies))
 - `description` (String) An optional text description for this module
 - `module_inputs` (String) The JSON encoded string which represents the inputs to the module. These may contain expressions referencing the modules context.
-- `module_source` (String) The source of the OpenTofu module backing this module. Required, if module source code is not defined.
 - `module_source_code` (String) The source code of the OpenTofu module backing this module. Required, if module source is not defined.
 - `provider_mapping` (Map of String) A mapping of module providers to use when provisioning using this module.
 

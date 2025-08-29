@@ -263,9 +263,9 @@ type InternalModuleCatalogueModule struct {
 	ModuleInputs map[string]interface{} `json:"module_inputs"`
 
 	// ModuleSource The source of the OpenTofu module backing this module.
-	ModuleSource *string `json:"module_source,omitempty"`
+	ModuleSource string `json:"module_source"`
 
-	// ModuleSourceCode The source code of the OpenTofu module backing this module.
+	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
 
 	// OrgId The Organization ID
@@ -515,9 +515,9 @@ type Module struct {
 	ModuleInputs map[string]interface{} `json:"module_inputs"`
 
 	// ModuleSource The source of the OpenTofu module backing this module.
-	ModuleSource *string `json:"module_source,omitempty"`
+	ModuleSource string `json:"module_source"`
 
-	// ModuleSourceCode The source code of the OpenTofu module backing this module.
+	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
 
 	// OrgId The Organization ID
@@ -575,10 +575,10 @@ type ModuleCreateBody struct {
 	// ModuleInputs The inputs to the module. These may contain expressions referencing the modules context.
 	ModuleInputs map[string]interface{} `json:"module_inputs,omitempty"`
 
-	// ModuleSource The source of the OpenTofu module backing this module. Required, if module source code is not defined.
-	ModuleSource *string `json:"module_source,omitempty"`
+	// ModuleSource The source of the OpenTofu module backing this module.
+	ModuleSource string `json:"module_source"`
 
-	// ModuleSourceCode The source code of the OpenTofu module backing this module. Required, if module source is not defined.
+	// ModuleSourceCode The source code of the OpenTofu module backing this module. Required, if module_source is 'inline'.
 	ModuleSourceCode *string `json:"module_source_code,omitempty"`
 
 	// ProviderMapping A mapping of module providers to use when provisioning using this module.
@@ -717,10 +717,7 @@ type ModuleSummary struct {
 	Id ModuleId `json:"id"`
 
 	// ModuleSource The source of the OpenTofu module backing this module.
-	ModuleSource *string `json:"module_source,omitempty"`
-
-	// ModuleSourceCode The source code of the OpenTofu module backing this module.
-	ModuleSourceCode *string `json:"module_source_code,omitempty"`
+	ModuleSource string `json:"module_source"`
 
 	// OrgId The Organization ID
 	OrgId string `json:"org_id"`

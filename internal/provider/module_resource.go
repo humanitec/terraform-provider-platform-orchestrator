@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
@@ -123,9 +124,8 @@ func (r *ModuleResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			"module_source": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				MarkdownDescription: "The source of the OpenTofu module backing this module. Required, if module source code is not defined.",
+				Required:            true,
+				MarkdownDescription: "The source of the OpenTofu module backing this module. Required. Must be set to 'inline' if module_source_code is set.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 200),
 				},
@@ -312,7 +312,7 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 		Description:      ref.RefStringEmptyNil(data.Description.ValueString()),
 		Coprovisioned:    coprovisioned,
 		Dependencies:     dependencies,
-		ModuleSource:     fromStringValueToStringPointer(data.ModuleSource),
+		ModuleSource:     data.ModuleSource.ValueString(),
 		ModuleSourceCode: fromStringValueToStringPointer(data.ModuleSourceCode),
 		ModuleInputs:     inputs,
 		ProviderMapping:  providerMappings,
@@ -627,7 +627,7 @@ func toModuleResourceModel(ctx context.Context, item canyoncp.Module) (ModuleRes
 		Id:               types.StringValue(item.Id),
 		Description:      types.StringPointerValue(item.Description),
 		ResourceType:     types.StringValue(item.ResourceType),
-		ModuleSource:     toStringValueOrNil(item.ModuleSource),
+		ModuleSource:     types.StringValue(item.ModuleSource),
 		ModuleSourceCode: toStringValueOrNil(item.ModuleSourceCode),
 		ModuleInputs:     inputs,
 		ProviderMapping:  providerMapping,

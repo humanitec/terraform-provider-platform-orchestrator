@@ -515,7 +515,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"          
+        - $ref: "#/components/parameters/envIdPathParam"
       responses:
         "200":
           description: Successful get response.
@@ -581,7 +581,7 @@ paths:
       summary: An internal API for updating fields on an environment
       tags:
         - Environment
-        - internal     
+        - internal
       security:
         - userIdHeader: []
       parameters:
@@ -742,7 +742,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ResourceType"
         "404":
-          $ref: "#/components/responses/404NotFound"                
+          $ref: "#/components/responses/404NotFound"
     patch:
       operationId: updateResourceType
       summary: Update a resource type
@@ -944,7 +944,7 @@ paths:
         "400":
           $ref: "#/components/responses/400BadRequest"
         "409":
-          $ref: "#/components/responses/409Conflict"          
+          $ref: "#/components/responses/409Conflict"
 
   /orgs/{orgId}/runners/{runnerId}:
     get:
@@ -1038,7 +1038,7 @@ paths:
           in: query
           schema:
             type: string
-          description: Filter the list by the given runner id          
+          description: Filter the list by the given runner id
       responses:
         "200":
           description: Successful list response
@@ -1047,7 +1047,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RunnerRulePage"
         "404":
-          $ref: "#/components/responses/404NotFound"    
+          $ref: "#/components/responses/404NotFound"
     post:
       operationId: createRunnerRuleInOrg
       tags:
@@ -1505,7 +1505,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'            
+            $ref: '#/components/schemas/Error'
     404NotFound:
       description: The request was valid, but the target resource or relation does not exist.
       content:
@@ -1622,7 +1622,7 @@ components:
           description: Unique uid for the project to identify a unique lifecycle
           example: 00000000-0000-0000-0000-000000000000
           type: string
-          format: uuid          
+          format: uuid
         display_name:
           description: Project human readable name
           type: string
@@ -2003,7 +2003,7 @@ components:
           example: {}
           additionalProperties: true
         is_developer_accessible:
-          description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest. 
+          description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest.
           type: boolean
 
 
@@ -2032,7 +2032,7 @@ components:
         options:
           type: array
           description: A list of available options for the resource type
-          items: 
+          items:
             $ref: "#/components/schemas/AvailableResourceTypeOption"
           example: []
 
@@ -2059,7 +2059,7 @@ components:
           type: string
           description: The unique identifier for the module that this option belongs to
           example: my-s3-module
-      
+
 
     AvailableResourceTypePage:
       type: object
@@ -2250,7 +2250,7 @@ components:
       maxLength: 63
       pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
       x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
-  
+
     RunnerType:
       description: The Runner type.
       type: string
@@ -2276,6 +2276,7 @@ components:
         - version_id
         - resource_type
         - provider_mapping
+        - module_source
       properties:
         org_id:
           description: The Organization ID
@@ -2309,9 +2310,6 @@ components:
           description: The source of the OpenTofu module backing this module.
           type: string
           format: uri
-        module_source_code:
-          description: The source code of the OpenTofu module backing this module.
-          type: string
         provider_mapping:
           description: A mapping of module providers to use when provisioning using this module
           type: object
@@ -2349,6 +2347,9 @@ components:
               description: The inputs to the module. These may contain expressions referencing the modules context.
               type: object
               additionalProperties: true
+            module_source_code:
+              description: The source code of the OpenTofu module backing this module if the module_source is 'inline'.
+              type: string
             dependencies:
               description: A mapping of alias to resource dependencies that must be provisioned with this module
               type: object
@@ -2429,6 +2430,7 @@ components:
       required:
         - id
         - resource_type
+        - module_source
       properties:
         id:
           $ref: "#/components/schemas/ModuleId"
@@ -2443,12 +2445,12 @@ components:
           minLength: 2
           example: s3
         module_source:
-          description: The source of the OpenTofu module backing this module. Required, if module source code is not defined.
+          description: The source of the OpenTofu module backing this module.
           type: string
           minLength: 2
           maxLength: 200
         module_source_code:
-          description: The source code of the OpenTofu module backing this module. Required, if module source is not defined.
+          description: The source code of the OpenTofu module backing this module. Required, if module_source is 'inline'.
           type: string
           minLength: 2
           maxLength: 2000
@@ -2559,7 +2561,7 @@ components:
         id:
           description: The unique identifier for the runner under the organization.
           type: string
-          example: my-k8s-runner          
+          example: my-k8s-runner
         description:
           description: An optional text description for this runner.
           type: string
@@ -2573,7 +2575,7 @@ components:
           description: The date and time when the runner was updated.
           example: "2023-01-01T00:00:00Z"
           type: string
-          format: date-time          
+          format: date-time
         runner_configuration:
           $ref: "#/components/schemas/RunnerConfigurationSummary"
         state_storage_configuration:
@@ -2595,14 +2597,14 @@ components:
               $ref: "#/components/schemas/RunnerConfiguration"
             state_storage_configuration:
               $ref: "#/components/schemas/StateStorageConfiguration"
-    
+
     RunnerConfiguration:
       description: The data needed to configure the runner.
       oneOf:
         - $ref: "#/components/schemas/K8sRunnerConfiguration"
         - $ref: "#/components/schemas/K8sGkeRunnerConfiguration"
         - $ref: "#/components/schemas/K8sAgentRunnerConfiguration"
-      discriminator: 
+      discriminator:
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sRunnerConfiguration"
@@ -2615,7 +2617,7 @@ components:
         - $ref: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
         - $ref: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
         - $ref: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
-      discriminator: 
+      discriminator:
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
@@ -2648,7 +2650,7 @@ components:
       required:
         - path
         - version
-            
+
     K8sRunnerJobConfig:
       description: Properties of the Kubernetes Runner Job.
       type: object
@@ -2660,14 +2662,14 @@ components:
           type: string
           description: Service Account the Job runs with.
         pod_template:
-          description: | 
+          description: |
             The Pod Template Spec manifest which defines the runner job pod in the target cluster. It will be merged with the default Job Pod Template Spec.
           type: object
           additionalProperties: true
       required:
         - namespace
         - service_account
-    
+
     K8sRunnerGkeCluster:
       description: Configuration to access a GKE cluster.
       type: object
@@ -2691,10 +2693,10 @@ components:
         auth:
           $ref: "#/components/schemas/K8sRunnerGcpTemporaryAuth"
       required:
-      - name
-      - project_id
-      - location
-      - auth
+        - name
+        - project_id
+        - location
+        - auth
 
     K8sRunnerGcpTemporaryAuth:
       description: Configuration to obtain temporary access token to access a GKE cluster.
@@ -2737,7 +2739,7 @@ components:
         service_account_token:
           description: Service account token.
           type: string
-    
+
     K8sRunnerK8sClusterClusterData:
       description: Cluster data to access Kubernetes cluster.
       type: object
@@ -2753,8 +2755,8 @@ components:
           description: 'Kubeconfig Field: cluster.server'
           type: string
       required:
-      - certificate_authority_data
-      - server
+        - certificate_authority_data
+        - server
 
     K8sAgentRunnerKey:
       description: A public ed25519 key in PEM format. The caller must hold the matching private key.
@@ -2767,12 +2769,12 @@ components:
       x-pattern-error: "key: does not look like an ed25519 public key in PEM format"
       minLength: 1
       maxLength: 200
-    
+
     StateStorageConfiguration:
       description: Configuration for the Terraform Backend used by the runner.
       oneOf:
         - $ref: "#/components/schemas/K8sStorageConfiguration"
-      discriminator: 
+      discriminator:
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sStorageConfiguration"
@@ -2795,9 +2797,9 @@ components:
         type:
           $ref: "#/components/schemas/StateStorageType"
       required:
-       - namespace
-       - type
-  
+        - namespace
+        - type
+
     RunnerCreateBody:
       type: object
       description: A request to create a new runner.
@@ -2811,7 +2813,7 @@ components:
           type: string
           example: my-k8s-runner
           pattern: ^[a-z][a-z0-9_-]+$
-          x-pattern-error: id must be a valid identifier                    
+          x-pattern-error: id must be a valid identifier
         description:
           description: An optional text description for this runner.
           type: string
@@ -2820,12 +2822,12 @@ components:
           $ref: "#/components/schemas/RunnerConfiguration"
         state_storage_configuration:
           $ref: "#/components/schemas/StateStorageConfiguration"
-    
+
     RunnerConfigurationSummary:
       description: A summary of the runner configuration.
       type: object
       properties:
-        type: 
+        type:
           $ref: "#/components/schemas/RunnerType"
       required:
         - type
@@ -2834,9 +2836,9 @@ components:
       description: Runner configuration for a Kubernetes cluster.
       type: object
       properties:
-        type: 
+        type:
           $ref: "#/components/schemas/RunnerType"
-        job: 
+        job:
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         cluster:
           $ref: "#/components/schemas/K8sRunnerK8sCluster"
@@ -2844,13 +2846,13 @@ components:
         - type
         - job
         - cluster
-    
+
     K8sGkeRunnerConfiguration:
       description: Runner configuration for a GKE cluster.
       type: object
       properties:
-        type: 
-          $ref: "#/components/schemas/RunnerType"        
+        type:
+          $ref: "#/components/schemas/RunnerType"
         job:
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         cluster:
@@ -2859,14 +2861,14 @@ components:
         - type
         - job
         - cluster
-    
+
     K8sAgentRunnerConfiguration:
       description: Runner configuration for a Kubernetes Agent.
       type: object
       properties:
-        type: 
-          $ref: "#/components/schemas/RunnerType"        
-        job: 
+        type:
+          $ref: "#/components/schemas/RunnerType"
+        job:
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         key:
           $ref: "#/components/schemas/K8sAgentRunnerKey"
@@ -2892,7 +2894,7 @@ components:
       description: Object to update an existing runner configuration for a Kubernetes cluster.
       type: object
       properties:
-        job: 
+        job:
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         cluster:
           $ref: "#/components/schemas/K8sRunnerK8sCluster"
@@ -2905,7 +2907,7 @@ components:
       description: Object to update an existing runner configuration for a GKE cluster.
       type: object
       properties:
-        job: 
+        job:
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         cluster:
           $ref: "#/components/schemas/K8sRunnerGkeCluster"
@@ -2918,7 +2920,7 @@ components:
       description: Object to update an existing runner configuration for a Kubernetes Agent.
       type: object
       properties:
-        job: 
+        job:
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         type:
           $ref: "#/components/schemas/RunnerType"
@@ -3049,13 +3051,13 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
-    
+
     RunnerRule:
       type: object
       description: The full details of a rule that matches resource requests against a module
       allOf:
         - $ref: "#/components/schemas/RunnerRuleSummary"
-    
+
     RunnerRuleCreateBody:
       type: object
       description: The properties required to create a new rule that matches runners
@@ -3073,7 +3075,7 @@ components:
           example: development
         project_id:
           description: |
-             Project identifier to match this rule. This project must exist in the org.
+            Project identifier to match this rule. This project must exist in the org.
           type: string
           example: sample-project
 
@@ -3156,7 +3158,7 @@ components:
         env_id:
           description: The optional environment id that this rule matches.
           type: string
-          example: my-env          
+          example: my-env
 
     InternalModuleCatalogueModule:
       type: object

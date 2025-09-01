@@ -42,3 +42,13 @@ resource "platform-orchestrator_environment" "example" {
 - `status_message` (String) An optional message associated with the status.
 - `updated_at` (String) The date and time when the environment was updated.
 - `uuid` (String) The UUID of the Environment.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+terraform import platform-orchestrator_environment.environment "my-project/my-environment"
+```

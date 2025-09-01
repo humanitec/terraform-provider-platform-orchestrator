@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -54,6 +56,17 @@ func projectDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The status of the Project.",
 			Computed:            true,
 		},
+	}
+}
+
+func projectDataSourceAttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":           types.StringType,
+		"display_name": types.StringType,
+		"uuid":         types.StringType,
+		"created_at":   types.StringType,
+		"updated_at":   types.StringType,
+		"status":       types.StringType,
 	}
 }
 

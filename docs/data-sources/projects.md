@@ -3,12 +3,12 @@
 page_title: "platform-orchestrator_projects Data Source - platform-orchestrator"
 subcategory: ""
 description: |-
-  Project data source
+  Projects data source
 ---
 
 # platform-orchestrator_projects (Data Source)
 
-Project data source
+Projects data source
 
 ## Example Usage
 

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -23,7 +26,7 @@ type ProjectsDataSource struct {
 }
 
 type ProjectsDataSourceModel struct {
-	Projects []ProjectModel `tfsdk:"projects"`
+	Projects types.List `tfsdk:"projects"`
 }
 
 func (d *ProjectsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -32,7 +35,7 @@ func (d *ProjectsDataSource) Metadata(ctx context.Context, req datasource.Metada
 
 func (d *ProjectsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Project data source",
+		MarkdownDescription: "Projects data source",
 
 		Attributes: map[string]schema.Attribute{
 			"projects": schema.ListNestedAttribute{
@@ -75,7 +78,9 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	var items []ProjectModel
+	projectAttributeTypes := projectDataSourceAttributeTypes()
+
+	var items []attr.Value
 	var pageCursor *string
 	for {
 		httpResp, err := d.cpClient.ListProjectsWithResponse(ctx, d.orgId, &canyoncp.ListProjectsParams{
@@ -89,8 +94,15 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 			resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 			return
 		}
+
 		for _, item := range httpResp.JSON200.Items {
-			items = append(items, toProjectModel(item))
+			if pm, err := types.ObjectValueFrom(ctx, projectAttributeTypes, toProjectModel(item)); err != nil {
+				resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert project response to model: %s", err))
+				return
+			} else {
+				items = append(items, pm)
+			}
+
 		}
 		if httpResp.JSON200.NextPageToken == nil {
 			break
@@ -98,7 +110,12 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		pageCursor = httpResp.JSON200.NextPageToken
 	}
 
-	data.Projects = items
+	itemsValue, diags := types.ListValue(types.ObjectType{AttrTypes: projectAttributeTypes}, items)
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+	data.Projects = itemsValue
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

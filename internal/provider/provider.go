@@ -217,6 +217,7 @@ func (p *HumanitecProvider) EphemeralResources(ctx context.Context) []func() eph
 func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewProjectDataSource,
+		NewProjectsDataSource,
 		NewEnvironmentTypeDataSource,
 		NewKubernetesRunnerDataSource,
 		NewKubernetesGkeRunnerDataSource,

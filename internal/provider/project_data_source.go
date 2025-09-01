@@ -28,36 +28,39 @@ func (d *ProjectDataSource) Metadata(ctx context.Context, req datasource.Metadat
 	resp.TypeName = req.ProviderTypeName + "_project"
 }
 
+func projectDataSourceAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "The unique identifier for the Project within the Organization.",
+			Required:            true,
+		},
+		"display_name": schema.StringAttribute{
+			MarkdownDescription: "The display name of the Project.",
+			Computed:            true,
+		},
+		"uuid": schema.StringAttribute{
+			MarkdownDescription: "The UUID of the Project.",
+			Computed:            true,
+		},
+		"created_at": schema.StringAttribute{
+			MarkdownDescription: "The Created At timestamp of the Project in RFC3339 format.",
+			Computed:            true,
+		},
+		"updated_at": schema.StringAttribute{
+			MarkdownDescription: "The Updated At timestamp of the Project in RFC3339 format.",
+			Computed:            true,
+		},
+		"status": schema.StringAttribute{
+			MarkdownDescription: "The status of the Project.",
+			Computed:            true,
+		},
+	}
+}
+
 func (d *ProjectDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Project data source",
-
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				MarkdownDescription: "The unique identifier for the Project within the Organization.",
-				Required:            true,
-			},
-			"display_name": schema.StringAttribute{
-				MarkdownDescription: "The display name of the Project.",
-				Computed:            true,
-			},
-			"uuid": schema.StringAttribute{
-				MarkdownDescription: "The UUID of the Project.",
-				Computed:            true,
-			},
-			"created_at": schema.StringAttribute{
-				MarkdownDescription: "The Created At timestamp of the Project in RFC3339 format.",
-				Computed:            true,
-			},
-			"updated_at": schema.StringAttribute{
-				MarkdownDescription: "The Updated At timestamp of the Project in RFC3339 format.",
-				Computed:            true,
-			},
-			"status": schema.StringAttribute{
-				MarkdownDescription: "The status of the Project.",
-				Computed:            true,
-			},
-		},
+		Attributes:          projectDataSourceAttributes(),
 	}
 }
 

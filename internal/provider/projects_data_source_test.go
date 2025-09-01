@@ -37,7 +37,7 @@ data "platform-orchestrator_projects" "all" {
 				Config: cfg2,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"data.platform-orchestrator_projects.test",
+						"data.platform-orchestrator_projects.all",
 						tfjsonpath.New("projects"),
 						knownvalue.ListPartial(map[int]knownvalue.Check{
 							0: knownvalue.NotNull(),

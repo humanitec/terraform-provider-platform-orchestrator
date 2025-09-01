@@ -3,12 +3,12 @@
 page_title: "platform-orchestrator_project Resource - platform-orchestrator"
 subcategory: ""
 description: |-
-  Environment Type resource
+  Project resource
 ---
 
 # platform-orchestrator_project (Resource)
 
-Environment Type resource
+Project resource
 
 ## Example Usage
 

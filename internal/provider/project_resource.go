@@ -46,7 +46,7 @@ func (r *ProjectResource) Metadata(ctx context.Context, req resource.MetadataReq
 
 func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Environment Type resource",
+		MarkdownDescription: "Project resource",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

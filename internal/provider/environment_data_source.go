@@ -138,7 +138,6 @@ func (d *EnvironmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	// Convert API response to data source model
 	environment := *httpResp.JSON200
-	
 	displayName := types.StringValue(environment.Id)
 	if environment.DisplayName != "" {
 		displayName = types.StringValue(environment.DisplayName)

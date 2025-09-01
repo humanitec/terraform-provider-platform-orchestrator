@@ -287,7 +287,7 @@ func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.Impo
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), importParts[2])...)
 }
 
-// toEnvironmentModel converts the API Environment object to the Terraform model
+// toEnvironmentModel converts the API Environment object to the Terraform model.
 func toEnvironmentModel(environment canyoncp.Environment) EnvironmentResourceModel {
 	displayName := types.StringValue(environment.Id)
 	if environment.DisplayName != "" {

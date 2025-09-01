@@ -21,7 +21,9 @@ func TestAccProjectsDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.platform-orchestrator_projects.test",
 						tfjsonpath.New("projects"),
-						knownvalue.NotNull(),
+						knownvalue.ListPartial(map[int]knownvalue.Check{
+							0: knownvalue.NotNull(),
+						}),
 					),
 				},
 			},

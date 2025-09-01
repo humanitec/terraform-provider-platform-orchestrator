@@ -1,6 +1,10 @@
 # Terraform Provider Humanitec V2
 
-TODO: Add some description
+This repo holds the source code for the Platform Orchestrator terraform provider by Humanitec. This allows organizations to configure all platform engineering concerns through infrastructure as code.
+
+## License
+
+MIT Licensed.
 
 ## Requirements
 
@@ -33,7 +37,7 @@ Then commit the changes to `go.mod` and `go.sum`.
 
 ## Using the provider
 
-TODO: Fill this in for each provider
+See [humanitec/platform-orchestrator](https://registry.terraform.io/providers/humanitec/platform-orchestrator/latest) in the Terraform Registry or [humanitec/platform-orchestrator](https://search.opentofu.org/provider/humanitec/platform-orchestrator/latest) in the OpenTofu registry. 
 
 ## Developing the Provider
 

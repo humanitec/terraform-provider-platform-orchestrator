@@ -378,6 +378,7 @@ resource "platform-orchestrator_resource_type" "custom_type" {
 resource "platform-orchestrator_module" "test" {
   id                 = "` + id + `"
   resource_type      = platform-orchestrator_resource_type.custom_type.id
+  module_source      = "inline"
   module_source_code =<<EOT
 ` + sourceCode + `
 EOT
@@ -403,6 +404,7 @@ resource "platform-orchestrator_resource_type" "postgres" {
 resource "platform-orchestrator_module" "test" {
   id                 = "` + id + `"
   resource_type      = platform-orchestrator_resource_type.custom_type.id
+  module_source      = "inline"
   module_source_code =<<EOT
 ` + sourceCode + `
 EOT

@@ -135,6 +135,7 @@ resource "platform-orchestrator_module" "test_source_code" {
   description = "Test Module with source code for data source"
   resource_type = platform-orchestrator_resource_type.aws_rds.id
 
+  module_source = "inline"
   module_source_code = <<-EOT
 resource "aws_db_instance" "example" {
   identifier = var.identifier

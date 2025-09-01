@@ -43,11 +43,38 @@ resource "platform-orchestrator_environment_type" "test_env_type" {
   display_name = "Test Environment Type"
 }
 
+resource "platform-orchestrator_kubernetes_agent_runner" "test_runner" {
+  id = "test-runner-env-data"
+  runner_configuration = {
+    key = <<EOT
+-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
+-----END PUBLIC KEY-----
+EOT
+    job = {
+      namespace = "default"
+      service_account = "humanitec-runner"
+    }
+  }
+  state_storage_configuration = {
+    type = "kubernetes"
+    kubernetes_configuration = {
+      namespace = "humanitec-runner"
+    }
+  }
+}
+
+resource "platform-orchestrator_runner_rule" "test_runner_rule" {
+  runner_id   = platform-orchestrator_kubernetes_agent_runner.test_runner.id
+  env_type_id = platform-orchestrator_environment_type.test_env_type.id
+}
+
 resource "platform-orchestrator_environment" "test" {
   id           = %[1]q
   project_id   = platform-orchestrator_project.test_project.id
   env_type_id  = platform-orchestrator_environment_type.test_env_type.id
   display_name = %[4]q
+  depends_on   = [platform-orchestrator_runner_rule.test_runner_rule]
 }
 
 data "platform-orchestrator_environment" "test" {

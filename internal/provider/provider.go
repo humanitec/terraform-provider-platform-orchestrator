@@ -207,6 +207,7 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 		NewModuleResource,
 		NewModuleRuleResource,
 		NewRunnerRuleResource,
+		NewEnvironmentResource,
 	}
 }
 
@@ -227,6 +228,7 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 		NewModuleDataSource,
 		NewModuleRuleDataSource,
 		NewRunnerRuleDataSource,
+		NewEnvironmentDataSource,
 	}
 }
 

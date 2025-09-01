@@ -53,7 +53,7 @@ func TestAccModuleDataSourceWithSourceCode(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.platform-orchestrator_module.test_source_code",
 						tfjsonpath.New("module_source"),
-						knownvalue.Null(),
+						knownvalue.StringExact("inline"),
 					),
 				},
 			},

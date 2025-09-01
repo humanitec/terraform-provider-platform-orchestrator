@@ -87,16 +87,10 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"updated_at": schema.StringAttribute{
 				MarkdownDescription: "The Updated At timestamp of the Project in RFC3339 format.",
 				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"status": schema.StringAttribute{
 				MarkdownDescription: "The status of the Project.",
 				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 	}

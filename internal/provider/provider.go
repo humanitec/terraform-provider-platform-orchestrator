@@ -8,9 +8,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	canyondp "terraform-provider-humanitec-v2/internal/clients/canyon-dp"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -196,6 +197,7 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 
 func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewProjectResource,
 		NewEnvironmentTypeResource,
 		NewKubernetesRunnerResource,
 		NewKubernetesGkeRunnerResource,

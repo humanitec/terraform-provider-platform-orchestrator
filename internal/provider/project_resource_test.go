@@ -85,7 +85,7 @@ func TestAccProjectResource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_project.test",
 						tfjsonpath.New("status"),
-						knownvalue.StringExact("foo"),
+						knownvalue.StringExact("active"),
 					),
 				},
 			},

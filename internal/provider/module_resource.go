@@ -344,6 +344,12 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
+	moduleParams, err := toModuleParamsFromModel(ctx, data.ModuleParams)
+	if err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
+		return
+	}
+
 	httpResp, err := r.cpClient.CreateModuleWithResponse(ctx, r.orgId, canyoncp.CreateModuleJSONRequestBody{
 		Id:               data.Id.ValueString(),
 		Description:      ref.RefStringEmptyNil(data.Description.ValueString()),
@@ -352,6 +358,7 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 		ModuleSource:     data.ModuleSource.ValueString(),
 		ModuleSourceCode: fromStringValueToStringPointer(data.ModuleSourceCode),
 		ModuleInputs:     inputs,
+		ModuleParams:     moduleParams,
 		ProviderMapping:  providerMappings,
 		ResourceType:     data.ResourceType.ValueString(),
 	})
@@ -442,12 +449,19 @@ func (r *ModuleResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
+	moduleParams, err := toModuleParamsFromModel(ctx, data.ModuleParams)
+	if err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
+		return
+	}
+
 	id := state.Id.ValueString()
 
 	var updateBody = canyoncp.UpdateModuleJSONRequestBody{
 		Description:      ref.RefStringEmptyNil(data.Description.ValueString()),
 		Dependencies:     ref.Ref(dependencies),
 		ModuleInputs:     ref.Ref(inputs),
+		ModuleParams:     ref.Ref(moduleParams),
 		ProviderMapping:  ref.Ref(providerMappings),
 		ModuleSource:     fromStringValueToStringPointer(data.ModuleSource),
 		ModuleSourceCode: fromStringValueToStringPointer(data.ModuleSourceCode),
@@ -571,6 +585,30 @@ func toDependenciesFromModel(ctx context.Context, dependencies basetypes.MapValu
 				Class:  ref.RefStringEmptyNil(depModel.Class.ValueString()),
 				Id:     ref.RefStringEmptyNil(depModel.Id.ValueString()),
 				Params: params,
+			}
+		}
+	}
+	return result, nil
+}
+
+func toModuleParamsFromModel(ctx context.Context, moduleParams basetypes.MapValue) (map[string]canyoncp.ModuleParamItem, error) {
+	result := make(map[string]canyoncp.ModuleParamItem)
+	if !moduleParams.IsNull() && !moduleParams.IsUnknown() {
+		for key, value := range moduleParams.Elements() {
+			paramObj, ok := value.(basetypes.ObjectValue)
+			if !ok {
+				return nil, fmt.Errorf("expected object value for module param %s", key)
+			}
+
+			var paramModel ModuleParamModel
+			if diags := paramObj.As(ctx, &paramModel, basetypes.ObjectAsOptions{}); diags.HasError() {
+				return nil, fmt.Errorf("failed to convert module param model: %v", diags.Errors())
+			}
+
+			result[key] = canyoncp.ModuleParamItem{
+				Description: paramModel.Description.ValueStringPointer(),
+				IsOptional:  paramModel.IsOptional.ValueBool(),
+				Type:        canyoncp.ModuleParamItemType(paramModel.Type.ValueString()),
 			}
 		}
 	}

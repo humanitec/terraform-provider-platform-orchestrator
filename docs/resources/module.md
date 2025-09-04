@@ -62,6 +62,7 @@ resource "platform-orchestrator_module" "minio" {
 - `dependencies` (Attributes Map) A mapping of alias to resource dependencies that must be provisioned with this module (see [below for nested schema](#nestedatt--dependencies))
 - `description` (String) An optional text description for this module
 - `module_inputs` (String) The JSON encoded string which represents the inputs to the module. These may contain expressions referencing the modules context.
+- `module_params` (Attributes Map) A mapping of module parameters available when provisioning using this module. (see [below for nested schema](#nestedatt--module_params))
 - `module_source_code` (String) The source code of the OpenTofu module backing this module. Required, if module source is not defined.
 - `provider_mapping` (Map of String) A mapping of module providers to use when provisioning using this module.
 
@@ -94,6 +95,19 @@ Optional:
 - `class` (String) A resource class requested by the resource graph. 'default' is the default value.
 - `id` (String) A specific resource id requested by the resource graph
 - `params` (String) A JSON encoded string representing the parameters to pass for provisioning.
+
+
+<a id="nestedatt--module_params"></a>
+### Nested Schema for `module_params`
+
+Required:
+
+- `type` (String) The type of the module parameter. string, number, bool, map, list, or any
+
+Optional:
+
+- `description` (String) An optional text description for this module parameter
+- `is_optional` (Boolean) If true, this module parameter is optional
 
 ## Import
 

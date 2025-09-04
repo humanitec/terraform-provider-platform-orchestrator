@@ -31,6 +31,7 @@ data "platform-orchestrator_module" "my_s3" {
 - `dependencies` (Attributes Map) A mapping of alias to resource dependencies that must be provisioned with this module (see [below for nested schema](#nestedatt--dependencies))
 - `description` (String) An optional text description for this module
 - `module_inputs` (String) The JSON encoded string which represents the inputs to the module. These may contain expressions referencing the modules context.
+- `module_params` (Attributes Map) A mapping of module parameters available when provisioning using this module. (see [below for nested schema](#nestedatt--module_params))
 - `module_source` (String) The source of the OpenTofu module backing this module
 - `module_source_code` (String) The source code of the OpenTofu module backing this module
 - `provider_mapping` (Map of String) A mapping of module providers to use when provisioning using this module.
@@ -59,3 +60,13 @@ Read-Only:
 - `id` (String) A specific resource id requested by the resource graph
 - `params` (String) A JSON encoded string representing the parameters to pass for provisioning.
 - `type` (String) The resource type to provision
+
+
+<a id="nestedatt--module_params"></a>
+### Nested Schema for `module_params`
+
+Read-Only:
+
+- `description` (String) An optional text description for this module parameter
+- `is_optional` (Boolean) If true, this module parameter is optional
+- `type` (String) The type of the module parameter. string, number, bool, map, list, or any

@@ -11,7 +11,7 @@ paths:
         - internal
       summary: List internal state for Organizations
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/perPageQueryParam"
         - $ref: "#/components/parameters/pageTokenQueryParam"
@@ -29,7 +29,7 @@ paths:
         - internal
       summary: Create the internal state for an Organization
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       requestBody:
         required: true
         content:
@@ -55,7 +55,7 @@ paths:
         - internal
       summary: Get internal state for Organization
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       responses:
@@ -76,7 +76,7 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/perPageQueryParam"
         - $ref: "#/components/parameters/pageTokenQueryParam"
@@ -94,8 +94,8 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: []
-      parameters: []
+        - userIdHeader: [ ]
+      parameters: [ ]
       requestBody:
         required: true
         content:
@@ -121,7 +121,7 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
       responses:
@@ -138,7 +138,7 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
       requestBody:
@@ -158,7 +158,7 @@ paths:
           $ref: "#/components/responses/400BadRequest"
         "404":
           $ref: "#/components/responses/404NotFound"
-  
+
   /internal/orgs/{orgId}/runners/{runnerId}:
     get:
       operationId: getInternalRunner
@@ -178,7 +178,7 @@ paths:
                 $ref: "#/components/schemas/InternalRunner"
         "404":
           $ref: "#/components/responses/404NotFound"
-  
+
   /orgs:
     post:
       operationId: createOrganization
@@ -186,7 +186,7 @@ paths:
       tags:
         - Organization
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       responses:
         "201":
           description: Successful create response.
@@ -208,7 +208,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -228,7 +228,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -255,7 +255,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/envTypeIdPathParam"
@@ -274,7 +274,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/envTypeIdPathParam"
@@ -291,7 +291,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/envTypeIdPathParam"
@@ -318,7 +318,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -338,7 +338,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -365,7 +365,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -382,7 +382,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -401,7 +401,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -427,7 +427,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -457,7 +457,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -487,7 +487,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -511,7 +511,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -531,7 +531,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -562,7 +562,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -583,7 +583,7 @@ paths:
         - Environment
         - internal
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -615,7 +615,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -641,7 +641,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -666,7 +666,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -686,7 +686,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -713,7 +713,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
@@ -730,7 +730,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
@@ -749,7 +749,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
@@ -778,7 +778,7 @@ paths:
         - Providers
       summary: List module providers in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -803,7 +803,7 @@ paths:
         - Providers
       summary: Create a new module provider in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -830,7 +830,7 @@ paths:
         - Providers
       summary: Get an existing module provider in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/providerTypePathParam"
@@ -880,7 +880,7 @@ paths:
         - Providers
       summary: Delete an existing module provider in the org if it is unused
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/providerTypePathParam"
@@ -899,7 +899,7 @@ paths:
         - Runner
       summary: List runners in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -918,14 +918,14 @@ paths:
                 $ref: "#/components/schemas/RunnerPage"
         "404":
           $ref: "#/components/responses/404NotFound"
-    
+
     post:
       operationId: createRunner
       tags:
         - Runner
       summary: Create a runner in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -953,7 +953,7 @@ paths:
         - Runner
       summary: Get runner in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/runnerIdPathParam"
@@ -972,7 +972,7 @@ paths:
         - Runner
       summary: Update runner in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/runnerIdPathParam"
@@ -1001,7 +1001,7 @@ paths:
         - Runner
       summary: Delete runner in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/runnerIdPathParam"
@@ -1019,7 +1019,7 @@ paths:
         - Runner
       summary: List runner rules in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -1054,7 +1054,7 @@ paths:
         - Runner
       summary: Create a new runner rule in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -1100,7 +1100,7 @@ paths:
         - Runner
       summary: Delete an existing runner rule in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/ruleIdPathParam"
@@ -1119,7 +1119,7 @@ paths:
         - Modules
       summary: List modules in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -1144,7 +1144,7 @@ paths:
         - Modules
       summary: Create a new modules in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -1171,7 +1171,7 @@ paths:
         - Modules
       summary: Get an existing module in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/moduleIdPathParam"
@@ -1219,7 +1219,7 @@ paths:
         - Modules
       summary: Delete an existing module in the org if it is unused
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/moduleIdPathParam"
@@ -1238,7 +1238,7 @@ paths:
         - Rules
       summary: List module rules in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -1268,7 +1268,7 @@ paths:
         - Rules
       summary: Create a new module rule in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -1314,7 +1314,7 @@ paths:
         - Rules
       summary: Delete an existing module rule in the org
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/ruleIdPathParam"
@@ -1333,7 +1333,7 @@ paths:
         - internal
       summary: An internal API to get all of the modules, rules, and providers that match an environment as well as any declared pinned versions.
       security:
-        - userIdHeader: []
+        - userIdHeader: [ ]
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -1659,7 +1659,7 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-    
+
     ProjectCreateBody:
       type: object
       description: A request to create a new project.
@@ -1677,7 +1677,7 @@ components:
           type: string
           example: Sample Project
           maxLength: 60
-    
+
     ProjectUpdateBody:
       type: object
       description: A request to update a project.
@@ -1769,7 +1769,7 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
-    
+
     EnvironmentCreateBody:
       type: object
       description: A request to create a new environment.
@@ -1794,7 +1794,7 @@ components:
           type: string
           example: My Sample Environment
           maxLength: 60
-    
+
     EnvironmentUpdateBody:
       type: object
       description: A request to update an environment.
@@ -1930,7 +1930,7 @@ components:
         output_schema:
           description: Schema for output parameters
           type: object
-          example: {}
+          example: { }
           additionalProperties: true
         created_at:
           description: The date and time when the resource type was created
@@ -1981,7 +1981,7 @@ components:
         output_schema:
           description: Schema for output parameters
           type: object
-          example: {}
+          example: { }
           additionalProperties: true
         is_developer_accessible:
           description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest. If omitted, this property defaults to true.
@@ -2000,7 +2000,7 @@ components:
         output_schema:
           description: Schema for output parameters
           type: object
-          example: {}
+          example: { }
           additionalProperties: true
         is_developer_accessible:
           description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest.
@@ -2027,14 +2027,14 @@ components:
         output_schema:
           type: object
           description: The schema for output parameters of the resource type
-          example: {}
+          example: { }
           additionalProperties: true
         options:
           type: array
           description: A list of available options for the resource type
           items:
             $ref: "#/components/schemas/AvailableResourceTypeOption"
-          example: []
+          example: [ ]
 
     AvailableResourceTypeOption:
       type: object
@@ -2042,6 +2042,7 @@ components:
         - resource_class
         - rule_id
         - module_id
+        - module_params
       properties:
         resource_id:
           type: string
@@ -2059,7 +2060,13 @@ components:
           type: string
           description: The unique identifier for the module that this option belongs to
           example: my-s3-module
-
+        module_params:
+          description: |
+            The parameters supported by the matched module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ModuleParamItem"
 
     AvailableResourceTypePage:
       type: object
@@ -2132,7 +2139,7 @@ components:
               example: "~> 1.0"
             configuration:
               description: Any required configuration for this provider when used.
-              example: {}
+              example: { }
               type: object
               additionalProperties: true
               x-go-type-skip-optional-pointer: true
@@ -2192,11 +2199,11 @@ components:
           type: string
           pattern: ^((=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))(, (=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))*$
           maxLength: 100
-          x-pattern-error: version_constraint must be a valid provider version constraint
+          x-pattern-error: version_constraint must be a valid provider version constraint such as = 1.2.3, >= 1.2.2, < 2.0.0, ~> 1.2.2
           example: "~> 1.0"
         configuration:
           description: Any required configuration for this provider when used.
-          example: {}
+          example: { }
           type: object
           maxItems: 20
           additionalProperties: true
@@ -2216,11 +2223,11 @@ components:
           type: string
           pattern: ^((=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))(, (=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))*$
           maxLength: 100
-          x-pattern-error: version constraint must be a valid provider version constraint
+          x-pattern-error: version_constraint must be a valid provider version constraint such as = 1.2.3, >= 1.2.2, < 2.0.0, ~> 1.2.2
           example: "~> 1.0"
         configuration:
           description: Any required configuration for this provider when used.
-          example: {}
+          example: { }
           type: object
           maxItems: 20
           additionalProperties: true
@@ -2258,7 +2265,7 @@ components:
         - kubernetes
         - kubernetes-gke
         - kubernetes-agent
-    
+
     StateStorageType:
       description: Type of the Terraform Backend used by the runner.
       type: string
@@ -2339,12 +2346,20 @@ components:
       allOf:
         - $ref: "#/components/schemas/ModuleSummary"
         - required:
+            - module_params
             - module_inputs
             - dependencies
             - coprovisioned
           properties:
+            module_params:
+              description: |
+                The parameters supported by this module. The orchestrator enforces that any required parameters are
+                provided and that they keys do not overlap with the 'module_inputs'.
+              type: object
+              additionalProperties:
+                $ref: "#/components/schemas/ModuleParamItem"
             module_inputs:
-              description: The inputs to the module. These may contain expressions referencing the modules context.
+              description: The fixed inputs to this module. These may contain expressions referencing the modules context.
               type: object
               additionalProperties: true
             module_source_code:
@@ -2424,6 +2439,35 @@ components:
           example: false
           x-go-type-skip-optional-pointer: true
 
+    ModuleParamItem:
+      description: The definition of a parameter that can be provided when using this module.
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          description: |
+            The type of input supported for this parameter. This will be enforced by the orchestrator at graph creation
+            time when values are known ahead of time. Use 'any' to indicate no type constraint.
+          type: string
+          enum:
+            - string
+            - number
+            - bool
+            - list
+            - map
+            - any
+          example: string
+        is_optional:
+          description: Whether this parameter is optional. Defaults to false.
+          type: boolean
+          example: false
+          x-go-type-skip-optional-pointer: true
+        description:
+          description: An optional description that helps a user define the correct value.
+          type: string
+          example: The input string value
+
     ModuleCreateBody:
       type: object
       description: A request to create a new module
@@ -2454,8 +2498,16 @@ components:
           type: string
           minLength: 2
           maxLength: 2000
+        module_params:
+          description: |
+            The parameters supported by this module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ModuleParamItem"
+          x-go-type-skip-optional-pointer: true
         module_inputs:
-          description: The inputs to the module. These may contain expressions referencing the modules context.
+          description: The fixed inputs to this module. These may contain expressions referencing the modules context.
           type: object
           maxItems: 20
           additionalProperties: true
@@ -2504,6 +2556,13 @@ components:
           type: string
           minLength: 2
           maxLength: 2000
+        module_params:
+          description: |
+            The parameters supported by this module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ModuleParamItem"
         module_inputs:
           description: The inputs to the module. These may contain expressions referencing the modules context.
           type: object

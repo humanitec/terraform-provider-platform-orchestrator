@@ -30,6 +30,16 @@ const (
 	EnvironmentStatusDeleting     EnvironmentStatus = "deleting"
 )
 
+// Defines values for ModuleParamItemType.
+const (
+	Any    ModuleParamItemType = "any"
+	Bool   ModuleParamItemType = "bool"
+	List   ModuleParamItemType = "list"
+	Map    ModuleParamItemType = "map"
+	Number ModuleParamItemType = "number"
+	String ModuleParamItemType = "string"
+)
+
 // Defines values for OrganizationSource.
 const (
 	Internal OrganizationSource = "internal"
@@ -73,6 +83,10 @@ type AvailableResourceType struct {
 type AvailableResourceTypeOption struct {
 	// ModuleId The unique identifier for the module that this option belongs to
 	ModuleId string `json:"module_id"`
+
+	// ModuleParams The parameters supported by the matched module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params"`
 
 	// ResourceClass The class of the resource, which can be used to categorize it
 	ResourceClass string `json:"resource_class"`
@@ -259,8 +273,12 @@ type InternalModuleCatalogueModule struct {
 	// Id The unique identifier for a module
 	Id ModuleId `json:"id"`
 
-	// ModuleInputs The inputs to the module. These may contain expressions referencing the modules context.
+	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
 	ModuleInputs map[string]interface{} `json:"module_inputs"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params"`
 
 	// ModuleSource The source of the OpenTofu module backing this module.
 	ModuleSource string `json:"module_source"`
@@ -511,8 +529,12 @@ type Module struct {
 	// Id The unique identifier for a module
 	Id ModuleId `json:"id"`
 
-	// ModuleInputs The inputs to the module. These may contain expressions referencing the modules context.
+	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
 	ModuleInputs map[string]interface{} `json:"module_inputs"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params"`
 
 	// ModuleSource The source of the OpenTofu module backing this module.
 	ModuleSource string `json:"module_source"`
@@ -572,8 +594,12 @@ type ModuleCreateBody struct {
 	// Id The unique identifier for a module
 	Id ModuleId `json:"id"`
 
-	// ModuleInputs The inputs to the module. These may contain expressions referencing the modules context.
+	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
 	ModuleInputs map[string]interface{} `json:"module_inputs,omitempty"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params,omitempty"`
 
 	// ModuleSource The source of the OpenTofu module backing this module.
 	ModuleSource string `json:"module_source"`
@@ -614,6 +640,23 @@ type ModulePage struct {
 	// NextPageToken The page token to use to request the next page of items
 	NextPageToken *string `json:"next_page_token,omitempty"`
 }
+
+// ModuleParamItem The definition of a parameter that can be provided when using this module.
+type ModuleParamItem struct {
+	// Description An optional description that helps a user define the correct value.
+	Description *string `json:"description,omitempty"`
+
+	// IsOptional Whether this parameter is optional. Defaults to false.
+	IsOptional bool `json:"is_optional,omitempty"`
+
+	// Type The type of input supported for this parameter. This will be enforced by the orchestrator at graph creation
+	// time when values are known ahead of time. Use 'any' to indicate no type constraint.
+	Type ModuleParamItemType `json:"type"`
+}
+
+// ModuleParamItemType The type of input supported for this parameter. This will be enforced by the orchestrator at graph creation
+// time when values are known ahead of time. Use 'any' to indicate no type constraint.
+type ModuleParamItemType string
 
 // ModuleProvider defines model for ModuleProvider.
 type ModuleProvider struct {
@@ -748,6 +791,10 @@ type ModuleUpdateBody struct {
 
 	// ModuleInputs The inputs to the module. These may contain expressions referencing the modules context.
 	ModuleInputs *map[string]interface{} `json:"module_inputs,omitempty"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams *map[string]ModuleParamItem `json:"module_params,omitempty"`
 
 	// ModuleSource The source of the OpenTofu module backing this module.
 	ModuleSource *string `json:"module_source,omitempty"`

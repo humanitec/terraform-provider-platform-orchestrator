@@ -45,6 +45,7 @@ type ModuleResourceModel struct {
 	ModuleSource     types.String         `tfsdk:"module_source"`
 	ModuleSourceCode types.String         `tfsdk:"module_source_code"`
 	ModuleInputs     jsontypes.Normalized `tfsdk:"module_inputs"`
+	ModuleParams     basetypes.MapValue   `tfsdk:"module_params"`
 	ProviderMapping  basetypes.MapValue   `tfsdk:"provider_mapping"`
 	Coprovisioned    types.List           `tfsdk:"coprovisioned"`
 	Dependencies     basetypes.MapValue   `tfsdk:"dependencies"`
@@ -66,6 +67,12 @@ type ModuleDependenciesModel struct {
 	Type   types.String         `tfsdk:"type"`
 }
 
+type ModuleParamModel struct {
+	Type        types.String `tfsdk:"type"`
+	IsOptional  types.Bool   `tfsdk:"is_optional"`
+	Description types.String `tfsdk:"description"`
+}
+
 func ModuleCoprovisionedModelAttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"class":                        types.StringType,
@@ -83,6 +90,14 @@ func ModuleDependenciesModelAttributeTypes() map[string]attr.Type {
 		"id":     types.StringType,
 		"params": types.StringType,
 		"type":   types.StringType,
+	}
+}
+
+func ModuleParamsModelAttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"type":        types.StringType,
+		"is_optional": types.BoolType,
+		"description": types.StringType,
 	}
 }
 
@@ -146,6 +161,28 @@ func (r *ModuleResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional:   true,
 				Computed:   true,
 				CustomType: jsontypes.NormalizedType{},
+			},
+			"module_params": schema.MapNestedAttribute{
+				Computed:            true,
+				Optional:            true,
+				MarkdownDescription: "A mapping of module parameters available when provisioning using this module.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							Required:            true,
+							MarkdownDescription: "The type of the module parameter. string, number, bool, map, list, or any",
+						},
+						"is_optional": schema.BoolAttribute{
+							Computed:            true,
+							Optional:            true,
+							MarkdownDescription: "If true, this module parameter is optional",
+						},
+						"description": schema.StringAttribute{
+							Optional:            true,
+							MarkdownDescription: "An optional text description for this module parameter",
+						},
+					},
+				},
 			},
 			"provider_mapping": schema.MapAttribute{
 				ElementType:         types.StringType,
@@ -307,6 +344,12 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
+	moduleParams, err := toModuleParamsFromModel(ctx, data.ModuleParams)
+	if err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
+		return
+	}
+
 	httpResp, err := r.cpClient.CreateModuleWithResponse(ctx, r.orgId, canyoncp.CreateModuleJSONRequestBody{
 		Id:               data.Id.ValueString(),
 		Description:      ref.RefStringEmptyNil(data.Description.ValueString()),
@@ -315,6 +358,7 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 		ModuleSource:     data.ModuleSource.ValueString(),
 		ModuleSourceCode: fromStringValueToStringPointer(data.ModuleSourceCode),
 		ModuleInputs:     inputs,
+		ModuleParams:     moduleParams,
 		ProviderMapping:  providerMappings,
 		ResourceType:     data.ResourceType.ValueString(),
 	})
@@ -405,12 +449,19 @@ func (r *ModuleResource) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
+	moduleParams, err := toModuleParamsFromModel(ctx, data.ModuleParams)
+	if err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
+		return
+	}
+
 	id := state.Id.ValueString()
 
 	var updateBody = canyoncp.UpdateModuleJSONRequestBody{
 		Description:      ref.RefStringEmptyNil(data.Description.ValueString()),
 		Dependencies:     ref.Ref(dependencies),
 		ModuleInputs:     ref.Ref(inputs),
+		ModuleParams:     ref.Ref(moduleParams),
 		ProviderMapping:  ref.Ref(providerMappings),
 		ModuleSource:     fromStringValueToStringPointer(data.ModuleSource),
 		ModuleSourceCode: fromStringValueToStringPointer(data.ModuleSourceCode),
@@ -540,6 +591,30 @@ func toDependenciesFromModel(ctx context.Context, dependencies basetypes.MapValu
 	return result, nil
 }
 
+func toModuleParamsFromModel(ctx context.Context, moduleParams basetypes.MapValue) (map[string]canyoncp.ModuleParamItem, error) {
+	result := make(map[string]canyoncp.ModuleParamItem)
+	if !moduleParams.IsNull() && !moduleParams.IsUnknown() {
+		for key, value := range moduleParams.Elements() {
+			paramObj, ok := value.(basetypes.ObjectValue)
+			if !ok {
+				return nil, fmt.Errorf("expected object value for module param %s", key)
+			}
+
+			var paramModel ModuleParamModel
+			if diags := paramObj.As(ctx, &paramModel, basetypes.ObjectAsOptions{}); diags.HasError() {
+				return nil, fmt.Errorf("failed to convert module param model: %v", diags.Errors())
+			}
+
+			result[key] = canyoncp.ModuleParamItem{
+				Description: paramModel.Description.ValueStringPointer(),
+				IsOptional:  paramModel.IsOptional.ValueBool(),
+				Type:        canyoncp.ModuleParamItemType(paramModel.Type.ValueString()),
+			}
+		}
+	}
+	return result, nil
+}
+
 func toModuleResourceModel(ctx context.Context, item canyoncp.Module) (ModuleResourceModel, error) {
 	var coprovisioned basetypes.ListValue
 	var diags diag.Diagnostics
@@ -603,6 +678,26 @@ func toModuleResourceModel(ctx context.Context, item canyoncp.Module) (ModuleRes
 		}
 	}
 
+	var moduleParams basetypes.MapValue
+	if item.ModuleParams != nil {
+		moduleParamsMap := make(map[string]attr.Value)
+		for key, def := range item.ModuleParams {
+			objectValue, diags := types.ObjectValueFrom(ctx, ModuleParamsModelAttributeTypes(), ModuleParamModel{
+				Type:        types.StringValue(string(def.Type)),
+				IsOptional:  types.BoolValue(def.IsOptional),
+				Description: toStringValueOrNil(def.Description),
+			})
+			if diags.HasError() {
+				return ModuleResourceModel{}, fmt.Errorf("failed to build dependencies model model parsing API response: %v", diags.Errors())
+			}
+			moduleParamsMap[key] = objectValue
+		}
+		moduleParams, diags = types.MapValue(types.ObjectType{AttrTypes: ModuleParamsModelAttributeTypes()}, moduleParamsMap)
+		if diags.HasError() {
+			return ModuleResourceModel{}, fmt.Errorf("failed to build module params map model parsing API response: %v", diags.Errors())
+		}
+	}
+
 	var inputs jsontypes.Normalized
 	if item.ModuleInputs != nil {
 		inputsJson, _ := json.Marshal(item.ModuleInputs)
@@ -630,6 +725,7 @@ func toModuleResourceModel(ctx context.Context, item canyoncp.Module) (ModuleRes
 		ModuleSource:     types.StringValue(item.ModuleSource),
 		ModuleSourceCode: toStringValueOrNil(item.ModuleSourceCode),
 		ModuleInputs:     inputs,
+		ModuleParams:     moduleParams,
 		ProviderMapping:  providerMapping,
 		Coprovisioned:    coprovisioned,
 		Dependencies:     dependencies,

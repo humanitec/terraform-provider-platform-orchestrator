@@ -104,6 +104,11 @@ func TestAccModuleDataSourceWithComplexStructure(t *testing.T) {
 						tfjsonpath.New("coprovisioned").AtSliceIndex(0).AtMapKey("is_dependent_on_current"),
 						knownvalue.Bool(true),
 					),
+					statecheck.ExpectKnownValue(
+						"data.platform-orchestrator_module.test_complex",
+						tfjsonpath.New("module_params").AtMapKey("animal").AtMapKey("type"),
+						knownvalue.StringExact(`string`),
+					),
 					// Verify dependencies structure
 					statecheck.ExpectKnownValue(
 						"data.platform-orchestrator_module.test_complex",
@@ -188,6 +193,14 @@ resource "platform-orchestrator_module" "test_complex" {
     instance_class = "db.t3.micro"
     allocated_storage = 20
   })
+
+  module_params = {
+    animal = {
+      type = "string"
+      is_optional = true
+      description = "Animal type"
+    }
+  }
 
   provider_mapping = {
     aws = "${platform-orchestrator_provider.test_aws.provider_type}.${platform-orchestrator_provider.test_aws.id}"

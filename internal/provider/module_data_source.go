@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
@@ -36,6 +37,7 @@ type ModuleDataSourceModel struct {
 	ResourceType     types.String         `tfsdk:"resource_type"`
 	ModuleSource     types.String         `tfsdk:"module_source"`
 	ModuleSourceCode types.String         `tfsdk:"module_source_code"`
+	ModuleParams     basetypes.MapValue   `tfsdk:"module_params"`
 	ModuleInputs     jsontypes.Normalized `tfsdk:"module_inputs"`
 	ProviderMapping  basetypes.MapValue   `tfsdk:"provider_mapping"`
 	Coprovisioned    types.List           `tfsdk:"coprovisioned"`
@@ -80,6 +82,26 @@ func (d *ModuleDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 				MarkdownDescription: "The JSON encoded string which represents the inputs to the module. These may contain expressions referencing the modules context.",
 				Computed:            true,
 				CustomType:          jsontypes.NormalizedType{},
+			},
+			"module_params": schema.MapNestedAttribute{
+				Computed:            true,
+				MarkdownDescription: "A mapping of module parameters available when provisioning using this module.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "The type of the module parameter. string, number, bool, map, list, or any",
+						},
+						"is_optional": schema.BoolAttribute{
+							Computed:            true,
+							MarkdownDescription: "If true, this module parameter is optional",
+						},
+						"description": schema.StringAttribute{
+							Computed:            true,
+							MarkdownDescription: "An optional text description for this module parameter",
+						},
+					},
+				},
 			},
 			"provider_mapping": schema.MapAttribute{
 				ElementType:         types.StringType,
@@ -203,6 +225,7 @@ func (d *ModuleDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.ModuleSource = moduleModel.ModuleSource
 	data.ModuleSourceCode = moduleModel.ModuleSourceCode
 	data.ModuleInputs = moduleModel.ModuleInputs
+	data.ModuleParams = moduleModel.ModuleParams
 	data.ProviderMapping = moduleModel.ProviderMapping
 	data.Coprovisioned = moduleModel.Coprovisioned
 	data.Dependencies = moduleModel.Dependencies

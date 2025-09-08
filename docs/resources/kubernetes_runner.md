@@ -14,7 +14,7 @@ Kubernetes Runner resource
 
 ```terraform
 resource "platform-orchestrator_kubernetes_runner" "my_runner" {
-  id          = "my_runner"
+  id          = "my-runner"
   description = "Development Kubernetes Runner"
   runner_configuration = {
     cluster = {
@@ -38,9 +38,9 @@ resource "platform-orchestrator_kubernetes_runner" "my_runner" {
       })
     }
   }
-  state_storage_configuration {
+  state_storage_configuration = {
     type = "kubernetes"
-    kubernetes_configuration {
+    kubernetes_configuration = {
       namespace = "humanitec"
     }
   }

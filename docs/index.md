@@ -12,6 +12,15 @@ description: |-
 ## Example Usage
 
 ```terraform
+terraform {
+  required_providers {
+    platform-orchestrator = {
+      source  = "humanitec/platform-orchestrator"
+      version = "~> 2.0"
+    }
+  }
+}
+
 provider "platform-orchestrator" {
   org_id = "organization"
 }
@@ -22,6 +31,7 @@ provider "platform-orchestrator" {
 
 ### Optional
 
-- `api_url` (String) Humanitec API URL prefix
-- `auth_token` (String, Sensitive) Humanitec Auth Token
-- `org_id` (String) Humanitec Organization ID
+- `api_url` (String) Humanitec API URL prefix. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_API_PREFIX environment variable.
+- `auth_token` (String, Sensitive) Humanitec Auth Token. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_AUTH_TOKEN environment variable.
+- `hctl_config_file_path` (String) Path to the hctl config file path. Takes precedences over the HUMANITEC_ environment variables.
+- `org_id` (String) Humanitec Organization ID. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_ORG environment variable.

@@ -8,7 +8,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
+	"path/filepath"
 	"time"
+
+	"gopkg.in/yaml.v3"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	canyondp "terraform-provider-humanitec-v2/internal/clients/canyon-dp"
@@ -60,9 +64,10 @@ type HumanitecProvider struct {
 
 // HumanitecProvider describes the provider data model.
 type HumanitecProviderModel struct {
-	ApiUrl    types.String `tfsdk:"api_url"`
-	OrgId     types.String `tfsdk:"org_id"`
-	AuthToken types.String `tfsdk:"auth_token"`
+	ConfigFilePath types.String `tfsdk:"config_file_path"`
+	ApiUrl         types.String `tfsdk:"api_url"`
+	OrgId          types.String `tfsdk:"org_id"`
+	AuthToken      types.String `tfsdk:"auth_token"`
 }
 
 type HumanitecProviderData struct {
@@ -80,21 +85,56 @@ func (p *HumanitecProvider) Metadata(ctx context.Context, req provider.MetadataR
 func (p *HumanitecProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"hctl_config_file_path": schema.StringAttribute{
+				MarkdownDescription: "Path to the hctl config file path. Takes precedences over the HUMANITEC_ environment variables.",
+				Optional:            true,
+			},
 			"api_url": schema.StringAttribute{
-				MarkdownDescription: "Humanitec API URL prefix",
+				MarkdownDescription: "Humanitec API URL prefix. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_API_PREFIX environment variable.",
 				Optional:            true,
 			},
 			"org_id": schema.StringAttribute{
-				MarkdownDescription: "Humanitec Organization ID",
+				MarkdownDescription: "Humanitec Organization ID. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_ORG environment variable.",
 				Optional:            true,
 			},
 			"auth_token": schema.StringAttribute{
-				MarkdownDescription: "Humanitec Auth Token",
+				MarkdownDescription: "Humanitec Auth Token. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_AUTH_TOKEN environment variable.",
 				Sensitive:           true,
 				Optional:            true,
 			},
 		},
 	}
+}
+
+type Config struct {
+	HctlConfigFilePath string `yaml:"hctl_config_file_path" json:"hctl_config_file_path"`
+	ApiUrl             string `yaml:"api_url" json:"api_url"`
+	DefaultOrg         string `yaml:"default_org_id" json:"default_org_id"`
+	Token              string `yaml:"token" json:"token"`
+}
+
+func readConfigFile(path string) (Config, error) {
+	var cfg Config
+	f, err := os.ReadFile(filepath.Clean(path))
+	if err != nil {
+		if os.IsNotExist(err) {
+			// If the file does not exist, return an empty config
+			return cfg, nil
+		}
+		return cfg, fmt.Errorf("failed to read config file: %w", err)
+	}
+	if err := yaml.Unmarshal(f, &cfg); err != nil {
+		return cfg, fmt.Errorf("failed to parse config file: %w", err)
+	}
+	return cfg, nil
+}
+
+func getConfigFilePath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get user home directory: %w", err)
+	}
+	return path.Join(homeDir, ".config", "hctl", "config.yaml"), nil
 }
 
 func (p *HumanitecProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -106,17 +146,55 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
+	// FIRST - we configure based on hardcoded configuration
 	apiUrl := data.ApiUrl.ValueString()
+	orgId := data.OrgId.ValueString()
+	authToken := data.AuthToken.ValueString()
+	// the config file counts as hard coded if set specifically
+	if p := data.ConfigFilePath.ValueString(); p != "" {
+		if cfg, err := readConfigFile(p); err != nil {
+			resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+		} else {
+			if cfg.ApiUrl != "" {
+				apiUrl = cfg.ApiUrl
+			} else if cfg.DefaultOrg != "" {
+				orgId = cfg.DefaultOrg
+			} else if cfg.Token != "" {
+				authToken = cfg.Token
+			}
+		}
+	}
+
+	// SECOND - we fall back to environment variables
 	if v := os.Getenv(HUM_API_URL_ENV_VAR); apiUrl == "" && v != "" {
 		apiUrl = v
 	}
-	if apiUrl == "" {
-		apiUrl = HUM_DEFAULT_API_URL
-	}
-
-	orgId := data.OrgId.ValueString()
 	if v := os.Getenv(HUM_ORG_ID_ENV_VAR); orgId == "" && v != "" {
 		orgId = v
+	}
+	if v := os.Getenv(HUM_AUTH_TOKEN_ENV_VAR); authToken == "" && v != "" {
+		authToken = v
+	}
+
+	// THIRD - we fall back to shared implicit config file
+	if data.ConfigFilePath.IsNull() {
+		if p, err := getConfigFilePath(); err != nil {
+			resp.Diagnostics.AddWarning(HUM_PROVIDER_ERR, err.Error())
+		} else if cfg, err := readConfigFile(p); err != nil {
+			resp.Diagnostics.AddWarning(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+		} else {
+			if cfg.ApiUrl != "" {
+				apiUrl = cfg.ApiUrl
+			} else if cfg.DefaultOrg != "" {
+				orgId = cfg.DefaultOrg
+			} else if cfg.Token != "" {
+				authToken = cfg.Token
+			}
+		}
+	}
+
+	if apiUrl == "" {
+		apiUrl = HUM_DEFAULT_API_URL
 	}
 	if orgId == "" {
 		resp.Diagnostics.AddError(
@@ -125,11 +203,6 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 				"the HUMANITEC_ORG_ID environment variable or provider "+
 				"configuration block org_id attribute.",
 		)
-	}
-
-	authToken := data.AuthToken.ValueString()
-	if v := os.Getenv(HUM_AUTH_TOKEN_ENV_VAR); authToken == "" && v != "" {
-		authToken = v
 	}
 
 	u, err := url.Parse(apiUrl)

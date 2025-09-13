@@ -11,7 +11,7 @@ paths:
         - internal
       summary: List internal state for Organizations
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/perPageQueryParam"
         - $ref: "#/components/parameters/pageTokenQueryParam"
@@ -29,7 +29,7 @@ paths:
         - internal
       summary: Create the internal state for an Organization
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       requestBody:
         required: true
         content:
@@ -55,7 +55,7 @@ paths:
         - internal
       summary: Get internal state for Organization
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       responses:
@@ -76,7 +76,7 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/perPageQueryParam"
         - $ref: "#/components/parameters/pageTokenQueryParam"
@@ -94,8 +94,8 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: [ ]
-      parameters: [ ]
+        - userIdHeader: []
+      parameters: []
       requestBody:
         required: true
         content:
@@ -121,7 +121,7 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
       responses:
@@ -138,7 +138,7 @@ paths:
         - ResourceType
         - internal
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
       requestBody:
@@ -186,7 +186,7 @@ paths:
       tags:
         - Organization
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       responses:
         "201":
           description: Successful create response.
@@ -208,7 +208,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -228,7 +228,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -255,7 +255,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/envTypeIdPathParam"
@@ -274,7 +274,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/envTypeIdPathParam"
@@ -291,7 +291,7 @@ paths:
       tags:
         - EnvironmentType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/envTypeIdPathParam"
@@ -318,7 +318,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -338,7 +338,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -365,7 +365,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -382,7 +382,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -401,7 +401,7 @@ paths:
       tags:
         - Project
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -427,7 +427,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -457,7 +457,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -487,7 +487,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -511,7 +511,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -531,7 +531,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -562,7 +562,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -583,7 +583,7 @@ paths:
         - Environment
         - internal
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -615,7 +615,7 @@ paths:
       tags:
         - Environment
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -641,7 +641,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -666,7 +666,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -686,7 +686,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -713,7 +713,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
@@ -730,7 +730,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
@@ -749,7 +749,7 @@ paths:
       tags:
         - ResourceType
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/resourceTypeIdPathParam"
@@ -778,7 +778,7 @@ paths:
         - Providers
       summary: List module providers in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -803,7 +803,7 @@ paths:
         - Providers
       summary: Create a new module provider in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -830,7 +830,7 @@ paths:
         - Providers
       summary: Get an existing module provider in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/providerTypePathParam"
@@ -850,7 +850,7 @@ paths:
         - Providers
       summary: Update an existing module provider
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/providerTypePathParam"
@@ -880,7 +880,7 @@ paths:
         - Providers
       summary: Delete an existing module provider in the org if it is unused
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/providerTypePathParam"
@@ -899,7 +899,7 @@ paths:
         - Runner
       summary: List runners in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -925,7 +925,7 @@ paths:
         - Runner
       summary: Create a runner in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -953,7 +953,7 @@ paths:
         - Runner
       summary: Get runner in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/runnerIdPathParam"
@@ -972,7 +972,7 @@ paths:
         - Runner
       summary: Update runner in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/runnerIdPathParam"
@@ -1001,7 +1001,7 @@ paths:
         - Runner
       summary: Delete runner in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/runnerIdPathParam"
@@ -1019,7 +1019,7 @@ paths:
         - Runner
       summary: List runner rules in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -1054,7 +1054,7 @@ paths:
         - Runner
       summary: Create a new runner rule in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -1081,7 +1081,7 @@ paths:
         - Runner
       summary: Get an existing runner rule in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/ruleIdPathParam"
@@ -1100,7 +1100,7 @@ paths:
         - Runner
       summary: Delete an existing runner rule in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/ruleIdPathParam"
@@ -1119,7 +1119,7 @@ paths:
         - Modules
       summary: List modules in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -1144,7 +1144,7 @@ paths:
         - Modules
       summary: Create a new modules in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -1171,7 +1171,7 @@ paths:
         - Modules
       summary: Get an existing module in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/moduleIdPathParam"
@@ -1190,7 +1190,7 @@ paths:
         - Modules
       summary: Update an existing module
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/moduleIdPathParam"
@@ -1219,7 +1219,7 @@ paths:
         - Modules
       summary: Delete an existing module in the org if it is unused
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/moduleIdPathParam"
@@ -1238,7 +1238,7 @@ paths:
         - Rules
       summary: List module rules in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -1268,7 +1268,7 @@ paths:
         - Rules
       summary: Create a new module rule in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -1295,7 +1295,7 @@ paths:
         - Rules
       summary: Get an existing module rule in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/ruleIdPathParam"
@@ -1314,7 +1314,7 @@ paths:
         - Rules
       summary: Delete an existing module rule in the org
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/ruleIdPathParam"
@@ -1333,7 +1333,7 @@ paths:
         - internal
       summary: An internal API to get all of the modules, rules, and providers that match an environment as well as any declared pinned versions.
       security:
-        - userIdHeader: [ ]
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
@@ -1499,13 +1499,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     403Forbidden:
       description: Server understands the request but refuses to authorize it.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     404NotFound:
       description: The request was valid, but the target resource or relation does not exist.
       content:
@@ -1930,7 +1930,7 @@ components:
         output_schema:
           description: Schema for output parameters
           type: object
-          example: { }
+          example: {}
           additionalProperties: true
         created_at:
           description: The date and time when the resource type was created
@@ -1981,7 +1981,7 @@ components:
         output_schema:
           description: Schema for output parameters
           type: object
-          example: { }
+          example: {}
           additionalProperties: true
         is_developer_accessible:
           description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest. If omitted, this property defaults to true.
@@ -2000,12 +2000,11 @@ components:
         output_schema:
           description: Schema for output parameters
           type: object
-          example: { }
+          example: {}
           additionalProperties: true
         is_developer_accessible:
           description: Indicates if this resource type is for developers to use in the manifest. Resource types with this flag set to false, will not be available as types of resources in a manifest.
           type: boolean
-
 
     AvailableResourceType:
       type: object
@@ -2027,14 +2026,14 @@ components:
         output_schema:
           type: object
           description: The schema for output parameters of the resource type
-          example: { }
+          example: {}
           additionalProperties: true
         options:
           type: array
           description: A list of available options for the resource type
           items:
             $ref: "#/components/schemas/AvailableResourceTypeOption"
-          example: [ ]
+          example: []
 
     AvailableResourceTypeOption:
       type: object
@@ -2139,7 +2138,7 @@ components:
               example: "~> 1.0"
             configuration:
               description: Any required configuration for this provider when used.
-              example: { }
+              example: {}
               type: object
               additionalProperties: true
               x-go-type-skip-optional-pointer: true
@@ -2203,7 +2202,7 @@ components:
           example: "~> 1.0"
         configuration:
           description: Any required configuration for this provider when used.
-          example: { }
+          example: {}
           type: object
           maxItems: 20
           additionalProperties: true
@@ -2227,7 +2226,7 @@ components:
           example: "~> 1.0"
         configuration:
           description: Any required configuration for this provider when used.
-          example: { }
+          example: {}
           type: object
           maxItems: 20
           additionalProperties: true
@@ -2265,6 +2264,7 @@ components:
         - kubernetes
         - kubernetes-gke
         - kubernetes-agent
+        - kubernetes-eks
 
     StateStorageType:
       description: Type of the Terraform Backend used by the runner.
@@ -2662,12 +2662,14 @@ components:
       oneOf:
         - $ref: "#/components/schemas/K8sRunnerConfiguration"
         - $ref: "#/components/schemas/K8sGkeRunnerConfiguration"
+        - $ref: "#/components/schemas/K8sEksRunnerConfiguration"
         - $ref: "#/components/schemas/K8sAgentRunnerConfiguration"
       discriminator:
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sRunnerConfiguration"
           kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfiguration"
+          kubernetes-eks: "#/components/schemas/K8sEksRunnerConfiguration"
           kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfiguration"
 
     RunnerConfigurationUpdate:
@@ -2675,14 +2677,15 @@ components:
       oneOf:
         - $ref: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
         - $ref: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
+        - $ref: "#/components/schemas/K8sEksRunnerConfigurationUpdateBody"
         - $ref: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
       discriminator:
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
           kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
+          kubernetes-eks: "#/components/schemas/K8sEksRunnerConfigurationUpdateBody"
           kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
-
 
     InternalRunner:
       type: object
@@ -2772,6 +2775,46 @@ components:
         - gcp_audience
         - gcp_service_account
 
+    K8sRunnerEksCluster:
+      description: Configuration to access an EKS cluster.
+      type: object
+      properties:
+        name:
+          description: Name of the EKS cluster.
+          type: string
+        region:
+          description: AWS region where the EKS cluster is located.
+          type: string
+        auth:
+          $ref: "#/components/schemas/K8sRunnerAwsTemporaryAuth"
+      required:
+        - name
+        - region
+        - auth
+
+    K8sRunnerAwsTemporaryAuth:
+      description: Configuration to obtain temporary access token to access an EKS cluster.
+      x-go-type-skip-optional-pointer: true
+      type: object
+      properties:
+        role_arn:
+          description: The ARN of the role to assume.
+          type: string
+          pattern: ^arn:aws:iam::[0-9]{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
+          x-pattern-error: role_arn is not a valid IAM Role ARN
+        session_name:
+          description: Optional session name to be used when assuming the role.
+          type: string
+          minLength: 3
+          maxLength: 64
+        sts_region:
+          description: Optional AWS STS region to use instead of the global endpoint.
+          type: string
+          pattern: ^[a-z]{2}-[a-z]+-\d$
+          x-pattern-error: sts_region is not a valid AWS STS region
+      required:
+        - role_arn
+
     K8sRunnerK8sCluster:
       description: Configuration to obtain access token to a generic K8s cluster with auth
       type: object
@@ -2790,10 +2833,10 @@ components:
       type: object
       properties:
         client_certificate_data:
-          description: 'Kubeconfig Field: user.client-certificate-data'
+          description: "Kubeconfig Field: user.client-certificate-data"
           type: string
         client_key_data:
-          description: 'Kubeconfig Field: user.client-key-data'
+          description: "Kubeconfig Field: user.client-key-data"
           type: string
         service_account_token:
           description: Service account token.
@@ -2805,13 +2848,13 @@ components:
       x-go-type-skip-optional-pointer: true
       properties:
         certificate_authority_data:
-          description: 'Kubeconfig Field: cluster.certificate-authority-data'
+          description: "Kubeconfig Field: cluster.certificate-authority-data"
           type: string
         proxy_url:
-          description: 'Kubeconfig Field: cluster.proxy-url'
+          description: "Kubeconfig Field: cluster.proxy-url"
           type: string
         server:
-          description: 'Kubeconfig Field: cluster.server'
+          description: "Kubeconfig Field: cluster.server"
           type: string
       required:
         - certificate_authority_data
@@ -2921,6 +2964,21 @@ components:
         - job
         - cluster
 
+    K8sEksRunnerConfiguration:
+      description: Runner configuration for an EKS cluster.
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/RunnerType"
+        job:
+          $ref: "#/components/schemas/K8sRunnerJobConfig"
+        cluster:
+          $ref: "#/components/schemas/K8sRunnerEksCluster"
+      required:
+        - type
+        - job
+        - cluster
+
     K8sAgentRunnerConfiguration:
       description: Runner configuration for a Kubernetes Agent.
       type: object
@@ -2970,6 +3028,19 @@ components:
           $ref: "#/components/schemas/K8sRunnerJobConfig"
         cluster:
           $ref: "#/components/schemas/K8sRunnerGkeCluster"
+        type:
+          $ref: "#/components/schemas/RunnerType"
+      required:
+        - type
+
+    K8sEksRunnerConfigurationUpdateBody:
+      description: Object to update an existing runner configuration for an EKS cluster.
+      type: object
+      properties:
+        job:
+          $ref: "#/components/schemas/K8sRunnerJobConfig"
+        cluster:
+          $ref: "#/components/schemas/K8sRunnerEksCluster"
         type:
           $ref: "#/components/schemas/RunnerType"
       required:

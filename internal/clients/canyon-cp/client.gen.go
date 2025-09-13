@@ -56,6 +56,7 @@ const (
 const (
 	RunnerTypeKubernetes      RunnerType = "kubernetes"
 	RunnerTypeKubernetesAgent RunnerType = "kubernetes-agent"
+	RunnerTypeKubernetesEks   RunnerType = "kubernetes-eks"
 	RunnerTypeKubernetesGke   RunnerType = "kubernetes-gke"
 )
 
@@ -382,6 +383,30 @@ type K8sAgentRunnerConfigurationUpdateBody struct {
 // K8sAgentRunnerKey A public ed25519 key in PEM format. The caller must hold the matching private key.
 type K8sAgentRunnerKey = string
 
+// K8sEksRunnerConfiguration Runner configuration for an EKS cluster.
+type K8sEksRunnerConfiguration struct {
+	// Cluster Configuration to access an EKS cluster.
+	Cluster K8sRunnerEksCluster `json:"cluster"`
+
+	// Job Properties of the Kubernetes Runner Job.
+	Job K8sRunnerJobConfig `json:"job"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
+// K8sEksRunnerConfigurationUpdateBody Object to update an existing runner configuration for an EKS cluster.
+type K8sEksRunnerConfigurationUpdateBody struct {
+	// Cluster Configuration to access an EKS cluster.
+	Cluster *K8sRunnerEksCluster `json:"cluster,omitempty"`
+
+	// Job Properties of the Kubernetes Runner Job.
+	Job *K8sRunnerJobConfig `json:"job,omitempty"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
 // K8sGkeRunnerConfiguration Runner configuration for a GKE cluster.
 type K8sGkeRunnerConfiguration struct {
 	// Cluster Configuration to access a GKE cluster.
@@ -406,6 +431,18 @@ type K8sGkeRunnerConfigurationUpdateBody struct {
 	Type RunnerType `json:"type"`
 }
 
+// K8sRunnerAwsTemporaryAuth Configuration to obtain temporary access token to access an EKS cluster.
+type K8sRunnerAwsTemporaryAuth struct {
+	// RoleArn The ARN of the role to assume.
+	RoleArn string `json:"role_arn"`
+
+	// SessionName Optional session name to be used when assuming the role.
+	SessionName *string `json:"session_name,omitempty"`
+
+	// StsRegion Optional AWS STS region to use instead of the global endpoint.
+	StsRegion *string `json:"sts_region,omitempty"`
+}
+
 // K8sRunnerConfiguration Runner configuration for a Kubernetes cluster.
 type K8sRunnerConfiguration struct {
 	// Cluster Configuration to obtain access token to a generic K8s cluster with auth
@@ -428,6 +465,18 @@ type K8sRunnerConfigurationUpdateBody struct {
 
 	// Type The Runner type.
 	Type RunnerType `json:"type"`
+}
+
+// K8sRunnerEksCluster Configuration to access an EKS cluster.
+type K8sRunnerEksCluster struct {
+	// Auth Configuration to obtain temporary access token to access an EKS cluster.
+	Auth K8sRunnerAwsTemporaryAuth `json:"auth"`
+
+	// Name Name of the EKS cluster.
+	Name string `json:"name"`
+
+	// Region AWS region where the EKS cluster is located.
+	Region string `json:"region"`
 }
 
 // K8sRunnerGcpTemporaryAuth Configuration to obtain temporary access token to access a GKE cluster.
@@ -1509,6 +1558,34 @@ func (t *RunnerConfiguration) MergeK8sGkeRunnerConfiguration(v K8sGkeRunnerConfi
 	return err
 }
 
+// AsK8sEksRunnerConfiguration returns the union data inside the RunnerConfiguration as a K8sEksRunnerConfiguration
+func (t RunnerConfiguration) AsK8sEksRunnerConfiguration() (K8sEksRunnerConfiguration, error) {
+	var body K8sEksRunnerConfiguration
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromK8sEksRunnerConfiguration overwrites any union data inside the RunnerConfiguration as the provided K8sEksRunnerConfiguration
+func (t *RunnerConfiguration) FromK8sEksRunnerConfiguration(v K8sEksRunnerConfiguration) error {
+	v.Type = "kubernetes-eks"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeK8sEksRunnerConfiguration performs a merge with any union data inside the RunnerConfiguration, using the provided K8sEksRunnerConfiguration
+func (t *RunnerConfiguration) MergeK8sEksRunnerConfiguration(v K8sEksRunnerConfiguration) error {
+	v.Type = "kubernetes-eks"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsK8sAgentRunnerConfiguration returns the union data inside the RunnerConfiguration as a K8sAgentRunnerConfiguration
 func (t RunnerConfiguration) AsK8sAgentRunnerConfiguration() (K8sAgentRunnerConfiguration, error) {
 	var body K8sAgentRunnerConfiguration
@@ -1555,6 +1632,8 @@ func (t RunnerConfiguration) ValueByDiscriminator() (interface{}, error) {
 		return t.AsK8sRunnerConfiguration()
 	case "kubernetes-agent":
 		return t.AsK8sAgentRunnerConfiguration()
+	case "kubernetes-eks":
+		return t.AsK8sEksRunnerConfiguration()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfiguration()
 	default:
@@ -1628,6 +1707,34 @@ func (t *RunnerConfigurationUpdate) MergeK8sGkeRunnerConfigurationUpdateBody(v K
 	return err
 }
 
+// AsK8sEksRunnerConfigurationUpdateBody returns the union data inside the RunnerConfigurationUpdate as a K8sEksRunnerConfigurationUpdateBody
+func (t RunnerConfigurationUpdate) AsK8sEksRunnerConfigurationUpdateBody() (K8sEksRunnerConfigurationUpdateBody, error) {
+	var body K8sEksRunnerConfigurationUpdateBody
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromK8sEksRunnerConfigurationUpdateBody overwrites any union data inside the RunnerConfigurationUpdate as the provided K8sEksRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) FromK8sEksRunnerConfigurationUpdateBody(v K8sEksRunnerConfigurationUpdateBody) error {
+	v.Type = "kubernetes-eks"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeK8sEksRunnerConfigurationUpdateBody performs a merge with any union data inside the RunnerConfigurationUpdate, using the provided K8sEksRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) MergeK8sEksRunnerConfigurationUpdateBody(v K8sEksRunnerConfigurationUpdateBody) error {
+	v.Type = "kubernetes-eks"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsK8sAgentRunnerConfigurationUpdateBody returns the union data inside the RunnerConfigurationUpdate as a K8sAgentRunnerConfigurationUpdateBody
 func (t RunnerConfigurationUpdate) AsK8sAgentRunnerConfigurationUpdateBody() (K8sAgentRunnerConfigurationUpdateBody, error) {
 	var body K8sAgentRunnerConfigurationUpdateBody
@@ -1674,6 +1781,8 @@ func (t RunnerConfigurationUpdate) ValueByDiscriminator() (interface{}, error) {
 		return t.AsK8sRunnerConfigurationUpdateBody()
 	case "kubernetes-agent":
 		return t.AsK8sAgentRunnerConfigurationUpdateBody()
+	case "kubernetes-eks":
+		return t.AsK8sEksRunnerConfigurationUpdateBody()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfigurationUpdateBody()
 	default:

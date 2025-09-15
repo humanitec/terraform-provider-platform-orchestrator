@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -134,7 +133,11 @@ func getConfigFilePath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get user home directory: %w", err)
 	}
-	return path.Join(homeDir, ".config", "hctl", "config.yaml"), nil
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		configDir = filepath.Join(homeDir, ".config")
+	}
+	return filepath.Join(configDir, "hctl", "config.yaml"), nil
 }
 
 func (p *HumanitecProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {

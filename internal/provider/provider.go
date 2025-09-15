@@ -64,7 +64,7 @@ type HumanitecProvider struct {
 
 // HumanitecProvider describes the provider data model.
 type HumanitecProviderModel struct {
-	ConfigFilePath types.String `tfsdk:"config_file_path"`
+	ConfigFilePath types.String `tfsdk:"hctl_config_file"`
 	ApiUrl         types.String `tfsdk:"api_url"`
 	OrgId          types.String `tfsdk:"org_id"`
 	AuthToken      types.String `tfsdk:"auth_token"`
@@ -85,20 +85,20 @@ func (p *HumanitecProvider) Metadata(ctx context.Context, req provider.MetadataR
 func (p *HumanitecProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"hctl_config_file_path": schema.StringAttribute{
+			"hctl_config_file": schema.StringAttribute{
 				MarkdownDescription: "Path to the hctl config file path. Takes precedences over the HUMANITEC_ environment variables.",
 				Optional:            true,
 			},
 			"api_url": schema.StringAttribute{
-				MarkdownDescription: "Humanitec API URL prefix. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_API_PREFIX environment variable.",
+				MarkdownDescription: "Humanitec API URL prefix. Takes precedence over the contents of hctl_config_file but overridden by the HUMANITEC_API_PREFIX environment variable.",
 				Optional:            true,
 			},
 			"org_id": schema.StringAttribute{
-				MarkdownDescription: "Humanitec Organization ID. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_ORG environment variable.",
+				MarkdownDescription: "Humanitec Organization ID. Takes precedence over the contents of hctl_config_file but overridden by the HUMANITEC_ORG environment variable.",
 				Optional:            true,
 			},
 			"auth_token": schema.StringAttribute{
-				MarkdownDescription: "Humanitec Auth Token. Takes precedence over the contents of hctl_config_file_path but overridden by the HUMANITEC_AUTH_TOKEN environment variable.",
+				MarkdownDescription: "Humanitec Auth Token. Takes precedence over the contents of hctl_config_file but overridden by the HUMANITEC_AUTH_TOKEN environment variable.",
 				Sensitive:           true,
 				Optional:            true,
 			},
@@ -107,10 +107,10 @@ func (p *HumanitecProvider) Schema(ctx context.Context, req provider.SchemaReque
 }
 
 type Config struct {
-	HctlConfigFilePath string `yaml:"hctl_config_file_path" json:"hctl_config_file_path"`
-	ApiUrl             string `yaml:"api_url" json:"api_url"`
-	DefaultOrg         string `yaml:"default_org_id" json:"default_org_id"`
-	Token              string `yaml:"token" json:"token"`
+	HctlConfigFile string `yaml:"hctl_config_file" json:"hctl_config_file"`
+	ApiUrl         string `yaml:"api_url" json:"api_url"`
+	DefaultOrg     string `yaml:"default_org_id" json:"default_org_id"`
+	Token          string `yaml:"token" json:"token"`
 }
 
 func readConfigFile(path string) (Config, error) {

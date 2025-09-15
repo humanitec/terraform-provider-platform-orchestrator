@@ -184,7 +184,9 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 		if p, err := getConfigFilePath(); err != nil {
 			resp.Diagnostics.AddWarning(HUM_PROVIDER_ERR, err.Error())
 		} else if cfg, err := readConfigFile(p); err != nil {
-			resp.Diagnostics.AddWarning(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+			if !os.IsNotExist(err) {
+				resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+			}
 		} else {
 			if cfg.ApiUrl != "" {
 				apiUrl = cfg.ApiUrl

@@ -196,7 +196,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	data = toEnvironmentModel(*httpResp.JSON201)
+	data = toEnvironmentModel(data, *httpResp.JSON201)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -229,7 +229,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	data = toEnvironmentModel(*httpResp.JSON200)
+	data = toEnvironmentModel(data, *httpResp.JSON200)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -263,7 +263,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(toEnvironmentModel(*httpResp.JSON200)))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(toEnvironmentModel(data, *httpResp.JSON200)))...)
 }
 
 func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -335,7 +335,7 @@ func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.Impo
 }
 
 // toEnvironmentModel converts the API Environment object to the Terraform model.
-func toEnvironmentModel(environment canyoncp.Environment) EnvironmentResourceModel {
+func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.Environment) EnvironmentResourceModel {
 	displayName := types.StringValue(environment.Id)
 	if environment.DisplayName != "" {
 		displayName = types.StringValue(environment.DisplayName)
@@ -357,5 +357,6 @@ func toEnvironmentModel(environment canyoncp.Environment) EnvironmentResourceMod
 		Status:        types.StringValue(string(environment.Status)),
 		StatusMessage: statusMessage,
 		RunnerId:      types.StringValue(environment.RunnerId),
+		Timeouts:      previous.Timeouts,
 	}
 }

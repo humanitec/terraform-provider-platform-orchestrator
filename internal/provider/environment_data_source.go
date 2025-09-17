@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/datasource/timeouts"
-
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -38,8 +36,6 @@ type EnvironmentDataSourceModel struct {
 	Status        types.String `tfsdk:"status"`
 	StatusMessage types.String `tfsdk:"status_message"`
 	RunnerId      types.String `tfsdk:"runner_id"`
-
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (d *EnvironmentDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -92,9 +88,6 @@ func (d *EnvironmentDataSource) Schema(ctx context.Context, req datasource.Schem
 				MarkdownDescription: "The ID of the runner to be used to deploy this environment.",
 				Computed:            true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.BlockWithOpts(ctx, timeouts.Opts{}),
 		},
 	}
 }

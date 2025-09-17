@@ -285,7 +285,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		resp.State.RemoveResource(ctx)
 	} else if httpResp.StatusCode() == http.StatusAccepted {
 
-		deleteTimeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
+		deleteTimeout, diags := data.Timeouts.Create(ctx, DefaultAsyncPollInterval)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -298,7 +298,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 			case <-ctx.Done():
 				resp.Diagnostics.AddError(HUM_API_ERR, "Unable to delete environment, context canceled")
 				return
-			case <-time.After(3 * time.Second):
+			case <-time.After(DefaultAsyncPollInterval):
 				tflog.Info(ctx, "Checking if environment has been successfully deleted...")
 				if httpResp, err := r.cpClient.GetEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString()); err != nil {
 					resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to get environment, got error: %s", err))

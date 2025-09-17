@@ -39,6 +39,9 @@ const (
 	HUM_AUTH_TOKEN_ENV_VAR = "HUMANITEC_AUTH_TOKEN"
 
 	HUM_DEFAULT_API_URL = "https://api.humanitec.dev"
+
+	DefaultAsyncPollInterval = time.Second * 3
+	DefaultAsyncTimeout      = time.Minute * 20
 )
 
 // isBase64Encoded checks if a string is base64 encoded.

@@ -287,7 +287,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 				tflog.Info(ctx, "Checking if environment has been successfully deleted...")
 				if httpResp, err := r.cpClient.GetEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString()); err != nil {
 					resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to get environment, got error: %s", err))
-				} else if httpResp.StatusCode() == http.StatusNotFound || httpResp.StatusCode() == http.StatusNoContent {
+				} else if httpResp.StatusCode() == http.StatusNotFound {
 					resp.State.RemoveResource(ctx)
 				} else if httpResp.StatusCode() != http.StatusOK {
 					resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to get environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))

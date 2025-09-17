@@ -3,7 +3,12 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
@@ -241,6 +246,12 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	if httpResp.StatusCode() == 404 {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if httpResp.StatusCode() != 200 {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
@@ -259,16 +270,37 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString())
-	if err != nil {
+	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString()); err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete environment, got error: %s", err))
-		return
-	}
-
-	// Environment deletion can return 202 (accepted for async delete) or 204 (immediate delete)
-	if httpResp.StatusCode() != 202 && httpResp.StatusCode() != 204 {
+	} else if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s no longer found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+		resp.State.RemoveResource(ctx)
+	} else if httpResp.StatusCode() == http.StatusNoContent {
+		resp.State.RemoveResource(ctx)
+	} else if httpResp.StatusCode() == http.StatusAccepted {
+		for {
+			select {
+			case <-ctx.Done():
+				resp.Diagnostics.AddError(HUM_API_ERR, "Unable to delete environment, context canceled")
+				return
+			case <-time.After(3 * time.Second):
+				tflog.Info(ctx, "Checking if environment has been successfully deleted...")
+				if httpResp, err := r.cpClient.GetEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString()); err != nil {
+					resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to get environment, got error: %s", err))
+				} else if httpResp.StatusCode() == http.StatusNotFound || httpResp.StatusCode() == http.StatusNoContent {
+					resp.State.RemoveResource(ctx)
+				} else if httpResp.StatusCode() != http.StatusOK {
+					resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to get environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+				} else if httpResp.JSON200.Status == "delete_failed" {
+					resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment, got status: %s (%s)", httpResp.JSON200.Status, ref.DerefOr(httpResp.JSON200.StatusMessage, "")))
+				} else {
+					continue
+				}
+			}
+			return
+		}
+	} else {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
-		return
 	}
 }
 

@@ -13,6 +13,8 @@ require (
 
 )
 
+require github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 // indirect
+
 require (
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect

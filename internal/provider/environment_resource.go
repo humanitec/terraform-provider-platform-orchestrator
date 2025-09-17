@@ -12,6 +12,7 @@ import (
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -48,6 +49,8 @@ type EnvironmentResourceModel struct {
 	Status        types.String `tfsdk:"status"`
 	StatusMessage types.String `tfsdk:"status_message"`
 	RunnerId      types.String `tfsdk:"runner_id"`
+
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -137,6 +140,9 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The ID of the runner to be used to deploy this environment.",
 				Computed:            true,
 			},
+		},
+		Blocks: map[string]schema.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{Delete: true}),
 		},
 	}
 }
@@ -278,6 +284,15 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 	} else if httpResp.StatusCode() == http.StatusNoContent {
 		resp.State.RemoveResource(ctx)
 	} else if httpResp.StatusCode() == http.StatusAccepted {
+
+		deleteTimeout, diags := data.Timeouts.Create(ctx, 20*time.Minute)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
+		defer cancel()
+
 		for {
 			select {
 			case <-ctx.Done():

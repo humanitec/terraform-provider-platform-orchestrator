@@ -27,10 +27,6 @@ data "platform-orchestrator_environment" "example" {
 - `id` (String) The unique identifier for the Environment.
 - `project_id` (String) The ID of the project this environment belongs to.
 
-### Optional
-
-- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
-
 ### Read-Only
 
 - `created_at` (String) The date and time when the environment was created.
@@ -41,10 +37,3 @@ data "platform-orchestrator_environment" "example" {
 - `status_message` (String) An optional message associated with the status.
 - `updated_at` (String) The date and time when the environment was updated.
 - `uuid` (String) The UUID of the Environment.
-
-<a id="nestedblock--timeouts"></a>
-### Nested Schema for `timeouts`
-
-Optional:
-
-- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).

@@ -285,7 +285,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		resp.State.RemoveResource(ctx)
 	} else if httpResp.StatusCode() == http.StatusAccepted {
 
-		deleteTimeout, diags := data.Timeouts.Create(ctx, DefaultAsyncPollInterval)
+		deleteTimeout, diags := data.Timeouts.Create(ctx, DefaultAsyncTimeout)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return

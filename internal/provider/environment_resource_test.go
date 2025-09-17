@@ -122,6 +122,10 @@ resource "platform-orchestrator_environment" "test" {
   env_type_id  = platform-orchestrator_environment_type.test_env_type.id
   display_name = %[4]q
   depends_on   = [platform-orchestrator_runner_rule.test_runner_rule]
+
+  timeouts {
+    delete = "1m"
+  }
 }
 `, id, projectId, envTypeId, displayName)
 }

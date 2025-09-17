@@ -3,10 +3,16 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -43,6 +49,8 @@ type EnvironmentResourceModel struct {
 	Status        types.String `tfsdk:"status"`
 	StatusMessage types.String `tfsdk:"status_message"`
 	RunnerId      types.String `tfsdk:"runner_id"`
+
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -133,6 +141,9 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:            true,
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{Delete: true}),
+		},
 	}
 }
 
@@ -185,7 +196,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	data = toEnvironmentModel(*httpResp.JSON201)
+	data = toEnvironmentModel(data, *httpResp.JSON201)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -218,7 +229,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	data = toEnvironmentModel(*httpResp.JSON200)
+	data = toEnvironmentModel(data, *httpResp.JSON200)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -241,12 +252,18 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	if httpResp.StatusCode() == 404 {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if httpResp.StatusCode() != 200 {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(toEnvironmentModel(*httpResp.JSON200)))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(toEnvironmentModel(data, *httpResp.JSON200)))...)
 }
 
 func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -259,16 +276,46 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString())
-	if err != nil {
+	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString()); err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete environment, got error: %s", err))
-		return
-	}
+	} else if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s no longer found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+		resp.State.RemoveResource(ctx)
+	} else if httpResp.StatusCode() == http.StatusNoContent {
+		resp.State.RemoveResource(ctx)
+	} else if httpResp.StatusCode() == http.StatusAccepted {
 
-	// Environment deletion can return 202 (accepted for async delete) or 204 (immediate delete)
-	if httpResp.StatusCode() != 202 && httpResp.StatusCode() != 204 {
+		deleteTimeout, diags := data.Timeouts.Create(ctx, DefaultAsyncTimeout)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
+		defer cancel()
+
+		for {
+			select {
+			case <-ctx.Done():
+				resp.Diagnostics.AddError(HUM_API_ERR, "Unable to delete environment, context canceled")
+				return
+			case <-time.After(DefaultAsyncPollInterval):
+				tflog.Info(ctx, "Checking if environment has been successfully deleted...")
+				if httpResp, err := r.cpClient.GetEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString()); err != nil {
+					resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to get environment, got error: %s", err))
+				} else if httpResp.StatusCode() == http.StatusNotFound {
+					resp.State.RemoveResource(ctx)
+				} else if httpResp.StatusCode() != http.StatusOK {
+					resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to get environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+				} else if httpResp.JSON200.Status == "delete_failed" {
+					resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment, got status: %s (%s)", httpResp.JSON200.Status, ref.DerefOr(httpResp.JSON200.StatusMessage, "")))
+				} else {
+					continue
+				}
+			}
+			return
+		}
+	} else {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
-		return
 	}
 }
 
@@ -288,7 +335,7 @@ func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.Impo
 }
 
 // toEnvironmentModel converts the API Environment object to the Terraform model.
-func toEnvironmentModel(environment canyoncp.Environment) EnvironmentResourceModel {
+func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.Environment) EnvironmentResourceModel {
 	displayName := types.StringValue(environment.Id)
 	if environment.DisplayName != "" {
 		displayName = types.StringValue(environment.DisplayName)
@@ -310,5 +357,6 @@ func toEnvironmentModel(environment canyoncp.Environment) EnvironmentResourceMod
 		Status:        types.StringValue(string(environment.Status)),
 		StatusMessage: statusMessage,
 		RunnerId:      types.StringValue(environment.RunnerId),
+		Timeouts:      previous.Timeouts,
 	}
 }

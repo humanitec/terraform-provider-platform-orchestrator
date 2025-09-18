@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"cmp"
 	"context"
 	"net/http"
 	"os"
@@ -32,11 +33,7 @@ func checkEnvVar(t *testing.T, name string) {
 }
 
 func NewPlatformOrchestratorControlPlaneClient(t *testing.T) *canyoncp.ClientWithResponses {
-	var apiUrl = HUM_DEFAULT_API_URL
-	if os.Getenv(HUM_API_URL_ENV_VAR) != "" {
-		apiUrl = os.Getenv(HUM_API_URL_ENV_VAR)
-	}
-	cpc, err := canyoncp.NewClientWithResponses(apiUrl, canyoncp.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+	cpc, err := canyoncp.NewClientWithResponses(cmp.Or(os.Getenv(HUM_API_URL_ENV_VAR), HUM_DEFAULT_API_URL), canyoncp.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+os.Getenv(HUM_AUTH_TOKEN_ENV_VAR))
 		return nil
 	}), canyoncp.WithHTTPClient(&http.Client{

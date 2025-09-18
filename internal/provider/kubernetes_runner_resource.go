@@ -460,14 +460,26 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 	// If API returns the placeholder but the model has a real value, we should use the model value otherwise placeholder is fine.
 	if k8sRunnerConfiguration.Cluster.Auth.ClientCertificateData == nil {
 		runnerConfig.Cluster.Auth.ClientCertificateData = types.StringNull()
+	} else {
+		if runnerConfig.Cluster.Auth.ClientCertificateData.IsNull() || runnerConfig.Cluster.Auth.ClientCertificateData.IsUnknown() {
+			runnerConfig.Cluster.Auth.ClientCertificateData = types.StringValue(*k8sRunnerConfiguration.Cluster.Auth.ClientCertificateData)
+		}
 	}
 
 	if k8sRunnerConfiguration.Cluster.Auth.ClientKeyData == nil {
 		runnerConfig.Cluster.Auth.ClientKeyData = types.StringNull()
+	} else {
+		if runnerConfig.Cluster.Auth.ClientKeyData.IsNull() || runnerConfig.Cluster.Auth.ClientKeyData.IsUnknown() {
+			runnerConfig.Cluster.Auth.ClientKeyData = types.StringValue(*k8sRunnerConfiguration.Cluster.Auth.ClientKeyData)
+		}
 	}
 
 	if k8sRunnerConfiguration.Cluster.Auth.ServiceAccountToken == nil {
 		runnerConfig.Cluster.Auth.ServiceAccountToken = types.StringNull()
+	} else {
+		if runnerConfig.Cluster.Auth.ServiceAccountToken.IsNull() || runnerConfig.Cluster.Auth.ServiceAccountToken.IsUnknown() {
+			runnerConfig.Cluster.Auth.ServiceAccountToken = types.StringValue(*k8sRunnerConfiguration.Cluster.Auth.ServiceAccountToken)
+		}
 	}
 
 	// Update job config from API response

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -9,11 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func TestAccKubernetesRunnerResource(t *testing.T) {
 	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
+	cpClient := NewPlatformOrchestratorControlPlaneClient(t)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -62,6 +65,29 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 							}),
 						}),
 					),
+				},
+				Check: func(s *terraform.State) error {
+					res, err := cpClient.GetRunnerWithResponse(t.Context(), os.Getenv(HUM_ORG_ID_ENV_VAR), runnerId)
+					if err != nil {
+						return fmt.Errorf("error fetching runner from API: %s", err)
+					}
+					if res.StatusCode() != 200 {
+						return fmt.Errorf("unexpected status code fetching runner from API: %d - %s", res.StatusCode(), string(res.Body))
+					}
+					if runnerConfig, err := res.JSON200.RunnerConfiguration.AsK8sRunnerConfiguration(); err != nil {
+						return fmt.Errorf("error parsing runner configuration from API: %s", err)
+					} else {
+						if runnerConfig.Cluster.Auth.ClientCertificateData == nil || *runnerConfig.Cluster.Auth.ClientCertificateData != "SECRET" {
+							return fmt.Errorf("unexpected client certificate data from API: %v", runnerConfig.Cluster.Auth.ClientCertificateData)
+						}
+						if runnerConfig.Cluster.Auth.ClientKeyData != nil {
+							return fmt.Errorf("unexpected client key data from API: %v", runnerConfig.Cluster.Auth.ClientKeyData)
+						}
+						if runnerConfig.Cluster.Auth.ServiceAccountToken != nil {
+							return fmt.Errorf("unexpected service account token from API: %v", runnerConfig.Cluster.Auth.ServiceAccountToken)
+						}
+					}
+					return nil
 				},
 			},
 			// Update testing

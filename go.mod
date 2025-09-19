@@ -13,7 +13,7 @@ require (
 
 )
 
-require github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 // indirect
+require github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0
 
 require (
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
@@ -84,7 +84,7 @@ require (
 	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen

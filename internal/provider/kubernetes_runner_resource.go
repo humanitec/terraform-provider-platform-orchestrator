@@ -183,22 +183,21 @@ func (r *KubernetesRunnerResource) Schema(ctx context.Context, req resource.Sche
 							"auth": schema.SingleNestedAttribute{
 								MarkdownDescription: "The authentication configuration for the Kubernetes Runner cluster.",
 								Required:            true,
-								Sensitive:           true,
 								Attributes: map[string]schema.Attribute{
 									"client_certificate_data": schema.StringAttribute{
 										MarkdownDescription: "The client certificate data for the Kubernetes Runner cluster.",
 										Optional:            true,
-										Computed:            true,
+										Sensitive:           true,
 									},
 									"client_key_data": schema.StringAttribute{
 										MarkdownDescription: "The client key data for the Kubernetes Runner cluster.",
 										Optional:            true,
-										Computed:            true,
+										Sensitive:           true,
 									},
 									"service_account_token": schema.StringAttribute{
 										MarkdownDescription: "The service account token for the Kubernetes Runner cluster.",
 										Optional:            true,
-										Computed:            true,
+										Sensitive:           true,
 									},
 								},
 							},
@@ -456,29 +455,28 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 	runnerConfig.Cluster.ClusterData.Server = types.StringValue(k8sRunnerConfiguration.Cluster.ClusterData.Server)
 	runnerConfig.Cluster.ClusterData.ProxyUrl = types.StringPointerValue(k8sRunnerConfiguration.Cluster.ClusterData.ProxyUrl)
 
-	// Preserve auth fields from existing data (sensitive values are returned as placeholder by API)
-	// If API returns the placeholder but the model has a real value, we should use the model value otherwise placeholder is fine.
-	if k8sRunnerConfiguration.Cluster.Auth.ClientCertificateData == nil {
-		runnerConfig.Cluster.Auth.ClientCertificateData = types.StringNull()
-	} else {
-		if runnerConfig.Cluster.Auth.ClientCertificateData.IsNull() || runnerConfig.Cluster.Auth.ClientCertificateData.IsUnknown() {
+	// Handle auth fields: these are sensitive so preserve the user's configuration unless they are unknown
+	if runnerConfig.Cluster.Auth.ClientCertificateData.IsUnknown() || runnerConfig.Cluster.Auth.ClientCertificateData.IsNull() {
+		if k8sRunnerConfiguration.Cluster.Auth.ClientCertificateData != nil {
 			runnerConfig.Cluster.Auth.ClientCertificateData = types.StringValue(*k8sRunnerConfiguration.Cluster.Auth.ClientCertificateData)
+		} else {
+			runnerConfig.Cluster.Auth.ClientCertificateData = types.StringNull()
 		}
 	}
 
-	if k8sRunnerConfiguration.Cluster.Auth.ClientKeyData == nil {
-		runnerConfig.Cluster.Auth.ClientKeyData = types.StringNull()
-	} else {
-		if runnerConfig.Cluster.Auth.ClientKeyData.IsNull() || runnerConfig.Cluster.Auth.ClientKeyData.IsUnknown() {
+	if runnerConfig.Cluster.Auth.ClientKeyData.IsUnknown() || runnerConfig.Cluster.Auth.ClientKeyData.IsNull() {
+		if k8sRunnerConfiguration.Cluster.Auth.ClientKeyData != nil {
 			runnerConfig.Cluster.Auth.ClientKeyData = types.StringValue(*k8sRunnerConfiguration.Cluster.Auth.ClientKeyData)
+		} else {
+			runnerConfig.Cluster.Auth.ClientKeyData = types.StringNull()
 		}
 	}
 
-	if k8sRunnerConfiguration.Cluster.Auth.ServiceAccountToken == nil {
-		runnerConfig.Cluster.Auth.ServiceAccountToken = types.StringNull()
-	} else {
-		if runnerConfig.Cluster.Auth.ServiceAccountToken.IsNull() || runnerConfig.Cluster.Auth.ServiceAccountToken.IsUnknown() {
+	if runnerConfig.Cluster.Auth.ServiceAccountToken.IsUnknown() || runnerConfig.Cluster.Auth.ServiceAccountToken.IsNull() {
+		if k8sRunnerConfiguration.Cluster.Auth.ServiceAccountToken != nil {
 			runnerConfig.Cluster.Auth.ServiceAccountToken = types.StringValue(*k8sRunnerConfiguration.Cluster.Auth.ServiceAccountToken)
+		} else {
+			runnerConfig.Cluster.Auth.ServiceAccountToken = types.StringNull()
 		}
 	}
 

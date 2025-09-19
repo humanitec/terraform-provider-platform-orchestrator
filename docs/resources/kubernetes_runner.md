@@ -73,7 +73,7 @@ Required:
 
 Required:
 
-- `auth` (Attributes, Sensitive) The authentication configuration for the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration--cluster--auth))
+- `auth` (Attributes) The authentication configuration for the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration--cluster--auth))
 - `cluster_data` (Attributes) The cluster data for the Kubernetes Runner cluster. (see [below for nested schema](#nestedatt--runner_configuration--cluster--cluster_data))
 
 <a id="nestedatt--runner_configuration--cluster--auth"></a>
@@ -81,9 +81,9 @@ Required:
 
 Optional:
 
-- `client_certificate_data` (String) The client certificate data for the Kubernetes Runner cluster.
-- `client_key_data` (String) The client key data for the Kubernetes Runner cluster.
-- `service_account_token` (String) The service account token for the Kubernetes Runner cluster.
+- `client_certificate_data` (String, Sensitive) The client certificate data for the Kubernetes Runner cluster.
+- `client_key_data` (String, Sensitive) The client key data for the Kubernetes Runner cluster.
+- `service_account_token` (String, Sensitive) The service account token for the Kubernetes Runner cluster.
 
 
 <a id="nestedatt--runner_configuration--cluster--cluster_data"></a>

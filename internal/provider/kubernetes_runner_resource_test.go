@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -23,9 +22,11 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccKubernetesRunnerResource(runnerId, KubernetesRunnerClusterAuth{
-					ClientCertificateData: types.StringValue("client-certificate-data"),
-				}, ""),
+				Config: testAccKubernetesRunnerResource(runnerId, `
+					client_certificate_data = "client-certificate-data"
+					client_key_data = "client-key-data"
+					service_account_token = "service-account-token"
+				`, ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_kubernetes_runner.test",
@@ -44,8 +45,8 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 								}),
 								"auth": knownvalue.MapExact(map[string]knownvalue.Check{
 									"client_certificate_data": knownvalue.StringExact("client-certificate-data"),
-									"client_key_data":         knownvalue.Null(),
-									"service_account_token":   knownvalue.Null(),
+									"client_key_data":         knownvalue.StringExact("client-key-data"),
+									"service_account_token":   knownvalue.StringExact("service-account-token"),
 								}),
 							}),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
@@ -80,27 +81,21 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 						if runnerConfig.Cluster.Auth.ClientCertificateData == nil || *runnerConfig.Cluster.Auth.ClientCertificateData != "SECRET" {
 							return fmt.Errorf("unexpected client certificate data from API: %v", runnerConfig.Cluster.Auth.ClientCertificateData)
 						}
-						if runnerConfig.Cluster.Auth.ClientKeyData != nil {
+						if runnerConfig.Cluster.Auth.ClientKeyData == nil || *runnerConfig.Cluster.Auth.ClientKeyData != "SECRET" {
 							return fmt.Errorf("unexpected client key data from API: %v", runnerConfig.Cluster.Auth.ClientKeyData)
 						}
-						if runnerConfig.Cluster.Auth.ServiceAccountToken != nil {
+						if runnerConfig.Cluster.Auth.ServiceAccountToken == nil || *runnerConfig.Cluster.Auth.ClientKeyData != "SECRET" {
 							return fmt.Errorf("unexpected service account token from API: %v", runnerConfig.Cluster.Auth.ServiceAccountToken)
 						}
 					}
 					return nil
 				},
 			},
-			// Update testing
+			// Update only auth testing
 			{
-				Config: testAccKubernetesRunnerResource(runnerId, KubernetesRunnerClusterAuth{
-					ServiceAccountToken: types.StringValue("service-account-token"),
-				}, `pod_template = jsonencode({
-	metadata = {
-		labels = {
-			"app.kubernetes.io/name" = "humanitec-runner"
-		}
-	}	
-})`),
+				Config: testAccKubernetesRunnerResource(runnerId, `
+service_account_token = "service-account-token"
+				`, ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_kubernetes_runner.test",
@@ -126,6 +121,58 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
 								"service_account": knownvalue.StringExact("humanitec-runner"),
+								"pod_template":    knownvalue.Null(),
+							}),
+						}),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("kubernetes"),
+							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
+								"namespace": knownvalue.StringExact("humanitec-runner"),
+							}),
+						}),
+					),
+				},
+			},
+			// Update testing
+			{
+				Config: testAccKubernetesRunnerResource(runnerId, `
+service_account_token = "another-service-account-token"
+				`, `pod_template = jsonencode({
+	metadata = {
+		labels = {
+			"app.kubernetes.io/name" = "humanitec-runner"
+		}
+	}	
+})`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_runner.test",
+						tfjsonpath.New("runner_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"cluster": knownvalue.MapExact(map[string]knownvalue.Check{
+								"cluster_data": knownvalue.MapExact(map[string]knownvalue.Check{
+									"certificate_authority_data": knownvalue.StringExact("certificate-authority-data"),
+									"server":                     knownvalue.StringExact("10.0.1:6443"),
+									"proxy_url":                  knownvalue.Null(),
+								}),
+								"auth": knownvalue.MapExact(map[string]knownvalue.Check{
+									"client_certificate_data": knownvalue.Null(),
+									"client_key_data":         knownvalue.Null(),
+									"service_account_token":   knownvalue.StringExact("another-service-account-token"),
+								}),
+							}),
+							"job": knownvalue.MapExact(map[string]knownvalue.Check{
+								"namespace":       knownvalue.StringExact("default"),
+								"service_account": knownvalue.StringExact("humanitec-runner"),
 								"pod_template":    knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"humanitec-runner"}}}`),
 							}),
 						}),
@@ -146,6 +193,18 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 				ResourceName:      "platform-orchestrator_kubernetes_runner.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 imported state, got %d", len(s))
+					}
+					if s[0].ID != runnerId {
+						return fmt.Errorf("expected imported state ID to be %s, got %s", runnerId, s[0].ID)
+					}
+					if s[0].Attributes["runner_configuration.cluster.auth.service_account_token"] != "SECRET" {
+						return fmt.Errorf("expected imported state service_account_token to be SECRET, got %s", s[0].Attributes["runner_configuration.cluster.auth.service_account_token"])
+					}
+					return nil
+				},
 				ImportStateVerifyIgnore: []string{
 					"runner_configuration.cluster.auth.client_certificate_data",
 					"runner_configuration.cluster.auth.client_key_data",
@@ -157,16 +216,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 	})
 }
 
-func testAccKubernetesRunnerResource(id string, auth KubernetesRunnerClusterAuth, podTemplate string) string {
-	var authString string
-	if auth.ClientCertificateData.ValueString() != "" {
-		authString = `
-	  client_certificate_data = "` + auth.ClientCertificateData.ValueString() + `"`
-	} else {
-		authString = `
-	  service_account_token = "` + auth.ServiceAccountToken.ValueString() + `"`
-	}
-
+func testAccKubernetesRunnerResource(id string, auth, podTemplate string) string {
 	return `
 resource "platform-orchestrator_kubernetes_runner" "test" {
   id = "` + id + `"
@@ -177,7 +227,7 @@ resource "platform-orchestrator_kubernetes_runner" "test" {
         server = "10.0.1:6443"
       }
       auth = {
-` + authString + `
+` + auth + `
       }
    }
 	job = {

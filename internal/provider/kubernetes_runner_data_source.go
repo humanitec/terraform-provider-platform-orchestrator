@@ -197,21 +197,26 @@ func (d *KubernetesRunnerDataSource) Read(ctx context.Context, req datasource.Re
 	data.Id = types.StringValue(runner.Id)
 	data.Description = types.StringPointerValue(runner.Description)
 
-	// For the kubernetes_runner data source, we need to use a more generic approach
-	// since it could be any type of runner configuration. We'll create a temporary
-	// KubernetesRunnerResourceModel to extract the data.
-	dummyData := KubernetesRunnerResourceModel{
+	// Convert the runner configuration directly from API response for data source
+	k8sRunnerConfiguration, _ := runner.RunnerConfiguration.AsK8sRunnerConfiguration()
+	k8sStateStorageConfiguration, _ := runner.StateStorageConfiguration.AsK8sStorageConfiguration()
+
+	// For data sources, we always use the API response values directly
+	if runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(ctx, k8sRunnerConfiguration, &KubernetesRunnerResourceModel{
 		Id:          types.StringValue(runner.Id),
 		Description: types.StringPointerValue(runner.Description),
-	}
-
-	// Convert the runner using the existing resource model conversion
-	if convertedData, err := toKubernetesRunnerResourceModel(*runner, dummyData); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesRunnerDataSourceModel: %s", err))
+	}); err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from API response: %s", err))
 		return
 	} else {
-		data.RunnerConfiguration = convertedData.RunnerConfiguration
-		data.StateStorageConfiguration = convertedData.StateStorageConfiguration
+		data.RunnerConfiguration = runnerConfigurationModel
+	}
+
+	if stateStorageConfigurationModel := parseStateStorageConfigurationResponse(ctx, k8sStateStorageConfiguration); stateStorageConfigurationModel == nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, "Failed to parse state storage configuration from API response")
+		return
+	} else {
+		data.StateStorageConfiguration = *stateStorageConfigurationModel
 	}
 
 	// Save data into Terraform state

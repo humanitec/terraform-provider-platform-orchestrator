@@ -188,7 +188,7 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 	// THIRD - we fall back to shared implicit config file
 	if data.ConfigFilePath.IsNull() {
 		if p, err := getConfigFilePath(); err != nil {
-			diagnostics.AddWarning(HUM_PROVIDER_ERR, err.Error())
+			tflog.Debug(ctx, "skipping implicit hctl config file load: "+err.Error())
 		} else if cfg, err := readConfigFile(p); err != nil {
 			diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
 		} else {

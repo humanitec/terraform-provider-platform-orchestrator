@@ -54,7 +54,15 @@ func NewPlatformOrchestratorControlPlaneClient(t *testing.T) *canyoncp.ClientWit
 	return cpc
 }
 
+func clearEnv(t *testing.T) {
+	t.Helper()
+	t.Setenv(HUM_API_URL_ENV_VAR, "")
+	t.Setenv(HUM_ORG_ID_ENV_VAR, "")
+	t.Setenv(HUM_AUTH_TOKEN_ENV_VAR, "")
+}
+
 func TestLoadClientConfig_basic(t *testing.T) {
+	clearEnv(t)
 	d := new(diag.Diagnostics)
 	u, o, a := loadClientConfig(t.Context(), HumanitecProviderModel{
 		ApiUrl:    types.StringValue("https://some-api.com"),
@@ -69,6 +77,7 @@ func TestLoadClientConfig_basic(t *testing.T) {
 }
 
 func TestLoadClientConfig_with_file(t *testing.T) {
+	clearEnv(t)
 	tf := filepath.Join(t.TempDir(), "config.yaml")
 	require.NoError(t, os.WriteFile(tf, []byte(`{"default_org_id": "some-org", "token": "some-token"}`), 0600))
 
@@ -85,6 +94,7 @@ func TestLoadClientConfig_with_file(t *testing.T) {
 }
 
 func TestLoadClientConfig_with_env(t *testing.T) {
+	clearEnv(t)
 	t.Setenv(HUM_ORG_ID_ENV_VAR, "another-org")
 	t.Setenv(HUM_AUTH_TOKEN_ENV_VAR, "a-token")
 	d := new(diag.Diagnostics)
@@ -97,6 +107,7 @@ func TestLoadClientConfig_with_env(t *testing.T) {
 }
 
 func TestLoadClientConfig_with_fallback_file(t *testing.T) {
+	clearEnv(t)
 	td := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", "")
 	t.Setenv("HOME", td)

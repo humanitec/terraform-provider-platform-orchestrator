@@ -83,26 +83,9 @@ func TestLoadClientConfig_with_file(t *testing.T) {
 	assert.Empty(t, d.Warnings())
 }
 
-func overrideEnvVarForTest(t *testing.T, key, value string) {
-	t.Helper()
-	existing, existed := os.LookupEnv(key)
-	if value == "" {
-		require.NoError(t, os.Unsetenv(key))
-	} else {
-		require.NoError(t, os.Setenv(key, value))
-	}
-	t.Cleanup(func() {
-		if existed {
-			require.NoError(t, os.Setenv(key, existing))
-		} else {
-			require.NoError(t, os.Unsetenv(key))
-		}
-	})
-}
-
 func TestLoadClientConfig_with_env(t *testing.T) {
-	overrideEnvVarForTest(t, HUM_ORG_ID_ENV_VAR, "another-org")
-	overrideEnvVarForTest(t, HUM_AUTH_TOKEN_ENV_VAR, "a-token")
+	t.Setenv(HUM_ORG_ID_ENV_VAR, "another-org")
+	t.Setenv(HUM_AUTH_TOKEN_ENV_VAR, "a-token")
 	d := new(diag.Diagnostics)
 	u, o, a := loadClientConfig(t.Context(), HumanitecProviderModel{}, d)
 	assert.Equal(t, "https://api.humanitec.dev", u)
@@ -114,8 +97,8 @@ func TestLoadClientConfig_with_env(t *testing.T) {
 
 func TestLoadClientConfig_with_fallback_file(t *testing.T) {
 	td := t.TempDir()
-	overrideEnvVarForTest(t, "XDG_CONFIG_HOME", "")
-	overrideEnvVarForTest(t, "HOME", td)
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("HOME", td)
 	cd, _ := os.UserConfigDir()
 	require.NoError(t, os.MkdirAll(filepath.Join(cd, "hctl"), 0700))
 	tf := filepath.Join(cd, "hctl", "config.yaml")

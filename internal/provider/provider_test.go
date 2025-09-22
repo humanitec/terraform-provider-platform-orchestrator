@@ -5,9 +5,16 @@ import (
 	"context"
 	"net/http"
 	"os"
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -44,4 +51,80 @@ func NewPlatformOrchestratorControlPlaneClient(t *testing.T) *canyoncp.ClientWit
 		t.Fatalf("Error creating Platform Orchestrator Controlplane client: %s", err)
 	}
 	return cpc
+}
+
+func TestLoadClientConfig_basic(t *testing.T) {
+	d := new(diag.Diagnostics)
+	u, o, a := loadClientConfig(t.Context(), HumanitecProviderModel{
+		ApiUrl:    types.StringValue("https://some-api.com"),
+		OrgId:     types.StringValue("some-org"),
+		AuthToken: types.StringValue("some-token"),
+	}, d)
+	assert.Equal(t, "https://some-api.com", u)
+	assert.Equal(t, "some-org", o)
+	assert.Equal(t, "some-token", a)
+	assert.Empty(t, d.Errors())
+	assert.Empty(t, d.Warnings())
+}
+
+func TestLoadClientConfig_with_file(t *testing.T) {
+	tf := filepath.Join(t.TempDir(), "config.yaml")
+	require.NoError(t, os.WriteFile(tf, []byte(`{"default_org_id": "some-org", "token": "some-token"}`), 0600))
+
+	d := new(diag.Diagnostics)
+	u, o, a := loadClientConfig(t.Context(), HumanitecProviderModel{
+		ConfigFilePath: types.StringValue(tf),
+		ApiUrl:         types.StringValue("https://some-api.com"),
+	}, d)
+	assert.Equal(t, "https://some-api.com", u)
+	assert.Equal(t, "some-org", o)
+	assert.Equal(t, "some-token", a)
+	assert.Empty(t, d.Errors())
+	assert.Empty(t, d.Warnings())
+}
+
+func overrideEnvVarForTest(t *testing.T, key, value string) {
+	t.Helper()
+	existing, existed := os.LookupEnv(key)
+	if value == "" {
+		require.NoError(t, os.Unsetenv(key))
+	} else {
+		require.NoError(t, os.Setenv(key, value))
+	}
+	t.Cleanup(func() {
+		if existed {
+			require.NoError(t, os.Setenv(key, existing))
+		} else {
+			require.NoError(t, os.Unsetenv(key))
+		}
+	})
+}
+
+func TestLoadClientConfig_with_env(t *testing.T) {
+	overrideEnvVarForTest(t, HUM_ORG_ID_ENV_VAR, "another-org")
+	overrideEnvVarForTest(t, HUM_AUTH_TOKEN_ENV_VAR, "a-token")
+	d := new(diag.Diagnostics)
+	u, o, a := loadClientConfig(t.Context(), HumanitecProviderModel{}, d)
+	assert.Equal(t, "https://api.humanitec.dev", u)
+	assert.Equal(t, "another-org", o)
+	assert.Equal(t, "a-token", a)
+	assert.Empty(t, d.Errors())
+	assert.Empty(t, d.Warnings())
+}
+
+func TestLoadClientConfig_with_fallback_file(t *testing.T) {
+	td := t.TempDir()
+	overrideEnvVarForTest(t, "XDG_CONFIG_HOME", "")
+	overrideEnvVarForTest(t, "HOME", td)
+	cd, _ := os.UserConfigDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(cd, "hctl"), 0700))
+	tf := filepath.Join(cd, "hctl", "config.yaml")
+	require.NoError(t, os.WriteFile(tf, []byte(`{"default_org_id": "some-org", "token": "some-token"}`), 0600))
+	d := new(diag.Diagnostics)
+	u, o, a := loadClientConfig(t.Context(), HumanitecProviderModel{}, d)
+	assert.Equal(t, "https://api.humanitec.dev", u)
+	assert.Equal(t, "some-org", o)
+	assert.Equal(t, "some-token", a)
+	assert.Empty(t, d.Errors())
+	assert.Empty(t, d.Warnings())
 }

@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"gopkg.in/yaml.v3"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
@@ -132,15 +134,85 @@ func readConfigFile(path string) (Config, error) {
 }
 
 func getConfigFilePath() (string, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to get user home directory: %w", err)
+	homeDirPath, _ := os.UserHomeDir()
+	homeDirPath = filepath.Join(homeDirPath, ".config", "hctl", "config.yaml")
+	cfgDirPath, _ := os.UserConfigDir()
+	cfgDirPath = filepath.Join(cfgDirPath, "hctl", "config.yaml")
+	if _, err := os.Stat(cfgDirPath); err == nil {
+		return cfgDirPath, nil
+	} else if _, err = os.Stat(homeDirPath); err == nil {
+		return homeDirPath, nil
 	}
-	configDir, err := os.UserConfigDir()
-	if err != nil {
-		configDir = filepath.Join(homeDir, ".config")
+	return "", fmt.Errorf("failed to find hctl config file path: neither %s nor %s exists", cfgDirPath, homeDirPath)
+}
+
+func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnostics *diag.Diagnostics) (string, string, string) {
+	apiUrl := data.ApiUrl.ValueString()
+	orgId := data.OrgId.ValueString()
+	authToken := data.AuthToken.ValueString()
+
+	// the config file counts as hard coded if set specifically
+	if p := data.ConfigFilePath.ValueString(); p != "" {
+		if cfg, err := readConfigFile(p); err != nil {
+			diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+		} else {
+			if apiUrl == "" && cfg.ApiUrl != "" {
+				tflog.Debug(ctx, "using platform-orchestrator api url from explicit hctl config file", map[string]interface{}{"path": p})
+				apiUrl = cfg.ApiUrl
+			}
+			if orgId == "" && cfg.DefaultOrg != "" {
+				tflog.Debug(ctx, "using platform-orchestrator org id from explicit hctl config file", map[string]interface{}{"path": p})
+				orgId = cfg.DefaultOrg
+			}
+			if authToken == "" && cfg.Token != "" {
+				tflog.Debug(ctx, "using platform-orchestrator auth token from explicit hctl config file", map[string]interface{}{"path": p})
+				authToken = cfg.Token
+			}
+		}
 	}
-	return filepath.Join(configDir, "hctl", "config.yaml"), nil
+
+	// SECOND - we fall back to environment variables
+	if v := os.Getenv(HUM_API_URL_ENV_VAR); apiUrl == "" && v != "" {
+		tflog.Debug(ctx, "using platform-orchestrator api url from environment variable")
+		apiUrl = v
+	}
+	if v := os.Getenv(HUM_ORG_ID_ENV_VAR); orgId == "" && v != "" {
+		tflog.Debug(ctx, "using platform-orchestrator org id from environment variable")
+		orgId = v
+	}
+	if v := os.Getenv(HUM_AUTH_TOKEN_ENV_VAR); authToken == "" && v != "" {
+		tflog.Debug(ctx, "using platform-orchestrator auth token from environment variable")
+		authToken = v
+	}
+
+	// THIRD - we fall back to shared implicit config file
+	if data.ConfigFilePath.IsNull() {
+		if p, err := getConfigFilePath(); err != nil {
+			tflog.Debug(ctx, "skipping implicit hctl config file load: "+err.Error())
+		} else if cfg, err := readConfigFile(p); err != nil {
+			diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+		} else {
+			if apiUrl == "" && cfg.ApiUrl != "" {
+				tflog.Debug(ctx, "using platform-orchestrator api url from implicit hctl config file", map[string]interface{}{"path": p})
+				apiUrl = cfg.ApiUrl
+			}
+			if orgId == "" && cfg.DefaultOrg != "" {
+				tflog.Debug(ctx, "using platform-orchestrator org id from implicit hctl config file", map[string]interface{}{"path": p})
+				orgId = cfg.DefaultOrg
+			}
+			if authToken == "" && cfg.Token != "" {
+				tflog.Debug(ctx, "using platform-orchestrator auth token from implicit hctl config file", map[string]interface{}{"path": p})
+				authToken = cfg.Token
+			}
+		}
+	}
+
+	if apiUrl == "" {
+		tflog.Debug(ctx, "using default platform-orchestrator api url")
+		apiUrl = HUM_DEFAULT_API_URL
+	}
+
+	return apiUrl, orgId, authToken
 }
 
 func (p *HumanitecProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -152,58 +224,8 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 		return
 	}
 
-	// FIRST - we configure based on hardcoded configuration
-	apiUrl := data.ApiUrl.ValueString()
-	orgId := data.OrgId.ValueString()
-	authToken := data.AuthToken.ValueString()
-	// the config file counts as hard coded if set specifically
-	if p := data.ConfigFilePath.ValueString(); p != "" {
-		if cfg, err := readConfigFile(p); err != nil {
-			resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
-		} else {
-			if cfg.ApiUrl != "" {
-				apiUrl = cfg.ApiUrl
-			} else if cfg.DefaultOrg != "" {
-				orgId = cfg.DefaultOrg
-			} else if cfg.Token != "" {
-				authToken = cfg.Token
-			}
-		}
-	}
+	apiUrl, orgId, authToken := loadClientConfig(ctx, data, &resp.Diagnostics)
 
-	// SECOND - we fall back to environment variables
-	if v := os.Getenv(HUM_API_URL_ENV_VAR); apiUrl == "" && v != "" {
-		apiUrl = v
-	}
-	if v := os.Getenv(HUM_ORG_ID_ENV_VAR); orgId == "" && v != "" {
-		orgId = v
-	}
-	if v := os.Getenv(HUM_AUTH_TOKEN_ENV_VAR); authToken == "" && v != "" {
-		authToken = v
-	}
-
-	// THIRD - we fall back to shared implicit config file
-	if data.ConfigFilePath.IsNull() {
-		if p, err := getConfigFilePath(); err != nil {
-			resp.Diagnostics.AddWarning(HUM_PROVIDER_ERR, err.Error())
-		} else if cfg, err := readConfigFile(p); err != nil {
-			if !os.IsNotExist(err) {
-				resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
-			}
-		} else {
-			if cfg.ApiUrl != "" {
-				apiUrl = cfg.ApiUrl
-			} else if cfg.DefaultOrg != "" {
-				orgId = cfg.DefaultOrg
-			} else if cfg.Token != "" {
-				authToken = cfg.Token
-			}
-		}
-	}
-
-	if apiUrl == "" {
-		apiUrl = HUM_DEFAULT_API_URL
-	}
 	if orgId == "" {
 		resp.Diagnostics.AddError(
 			HUM_INPUT_ERR,

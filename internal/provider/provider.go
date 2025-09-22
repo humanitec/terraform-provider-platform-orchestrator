@@ -140,7 +140,7 @@ func getConfigFilePath() (string, error) {
 	cfgDirPath = filepath.Join(cfgDirPath, "hctl", "config.yaml")
 	if _, err := os.Stat(cfgDirPath); err == nil {
 		return cfgDirPath, nil
-	} else if _, err := os.Stat(homeDirPath); err == nil {
+	} else if _, err = os.Stat(homeDirPath); err == nil {
 		return homeDirPath, nil
 	}
 	return "", fmt.Errorf("failed to find hctl config file path: neither %s nor %s exists", cfgDirPath, homeDirPath)
@@ -208,6 +208,7 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 	}
 
 	if apiUrl == "" {
+		tflog.Debug(ctx, "using default platform-orchestrator api url")
 		apiUrl = HUM_DEFAULT_API_URL
 	}
 

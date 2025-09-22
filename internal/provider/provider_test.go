@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -100,11 +101,14 @@ func TestLoadClientConfig_with_fallback_file(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", "")
 	t.Setenv("HOME", td)
 	cd, _ := os.UserConfigDir()
+	require.Contains(t, cd, td)
 	require.NoError(t, os.MkdirAll(filepath.Join(cd, "hctl"), 0700))
 	tf := filepath.Join(cd, "hctl", "config.yaml")
 	require.NoError(t, os.WriteFile(tf, []byte(`{"default_org_id": "some-org", "token": "some-token"}`), 0600))
 	d := new(diag.Diagnostics)
-	u, o, a := loadClientConfig(t.Context(), HumanitecProviderModel{}, d)
+
+	ctx := tflogtest.RootLogger(t.Context(), os.Stdout)
+	u, o, a := loadClientConfig(ctx, HumanitecProviderModel{}, d)
 	assert.Equal(t, "https://api.humanitec.dev", u)
 	assert.Equal(t, "some-org", o)
 	assert.Equal(t, "some-token", a)

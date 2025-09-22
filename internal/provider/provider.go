@@ -157,15 +157,15 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 			diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
 		} else {
 			if apiUrl == "" && cfg.ApiUrl != "" {
-				tflog.Debug(ctx, "using platform-orchestrator api url from explicit hctl config file")
+				tflog.Debug(ctx, "using platform-orchestrator api url from explicit hctl config file", map[string]interface{}{"path": p})
 				apiUrl = cfg.ApiUrl
 			}
 			if orgId == "" && cfg.DefaultOrg != "" {
-				tflog.Debug(ctx, "using platform-orchestrator org id from explicit hctl config file")
+				tflog.Debug(ctx, "using platform-orchestrator org id from explicit hctl config file", map[string]interface{}{"path": p})
 				orgId = cfg.DefaultOrg
 			}
 			if authToken == "" && cfg.Token != "" {
-				tflog.Debug(ctx, "using platform-orchestrator auth token from explicit hctl config file")
+				tflog.Debug(ctx, "using platform-orchestrator auth token from explicit hctl config file", map[string]interface{}{"path": p})
 				authToken = cfg.Token
 			}
 		}
@@ -193,15 +193,15 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 			diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
 		} else {
 			if apiUrl == "" && cfg.ApiUrl != "" {
-				tflog.Debug(ctx, "using platform-orchestrator api url from implicit hctl config file")
+				tflog.Debug(ctx, "using platform-orchestrator api url from implicit hctl config file", map[string]interface{}{"path": p})
 				apiUrl = cfg.ApiUrl
 			}
 			if orgId == "" && cfg.DefaultOrg != "" {
-				tflog.Debug(ctx, "using platform-orchestrator org id from implicit hctl config file")
+				tflog.Debug(ctx, "using platform-orchestrator org id from implicit hctl config file", map[string]interface{}{"path": p})
 				orgId = cfg.DefaultOrg
 			}
 			if authToken == "" && cfg.Token != "" {
-				tflog.Debug(ctx, "using platform-orchestrator auth token from implicit hctl config file")
+				tflog.Debug(ctx, "using platform-orchestrator auth token from implicit hctl config file", map[string]interface{}{"path": p})
 				authToken = cfg.Token
 			}
 		}

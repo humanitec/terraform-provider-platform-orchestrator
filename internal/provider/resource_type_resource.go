@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
@@ -218,7 +219,7 @@ func (r *ResourceTypeResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	if httpResp.StatusCode() == 404 {
+	if httpResp.StatusCode() == http.StatusNotFound {
 		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Resource type with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
 		resp.State.RemoveResource(ctx)
 		return

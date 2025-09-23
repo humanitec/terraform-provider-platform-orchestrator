@@ -99,8 +99,8 @@ func (d *RunnerRuleDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	if httpResp.StatusCode() == 404 {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner rule with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner rule with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
 		resp.State.RemoveResource(ctx)
 		return
 	}

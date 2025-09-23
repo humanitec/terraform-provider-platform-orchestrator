@@ -205,6 +205,12 @@ func (d *ModuleDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if httpResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return

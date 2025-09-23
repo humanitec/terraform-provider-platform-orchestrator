@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
@@ -337,7 +339,7 @@ func (r *KubernetesEksRunnerResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	if httpResp.StatusCode() == 404 {
+	if httpResp.StatusCode() == http.StatusNotFound {
 		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 		resp.State.RemoveResource(ctx)
 		return
@@ -390,6 +392,12 @@ func (r *KubernetesEksRunnerResource) Update(ctx context.Context, req resource.U
 	httpResp, err := r.cpClient.UpdateRunnerWithResponse(ctx, r.orgId, id, updateBody)
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update runner, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", id))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

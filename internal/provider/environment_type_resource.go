@@ -3,7 +3,9 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
@@ -150,6 +152,12 @@ func (r *EnvironmentTypeResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment Type with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if httpResp.StatusCode() != 200 {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read environment type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
@@ -175,6 +183,12 @@ func (r *EnvironmentTypeResource) Update(ctx context.Context, req resource.Updat
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update environment type, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment Type with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 	"terraform-provider-humanitec-v2/internal/ref"
 
@@ -195,6 +197,12 @@ func (r *ProviderResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module provider with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if httpResp.StatusCode() != 200 {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read module provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
@@ -232,6 +240,12 @@ func (r *ProviderResource) Update(ctx context.Context, req resource.UpdateReques
 	httpResp, err := r.cpClient.UpdateModuleProviderWithResponse(ctx, r.orgId, providerType, id, updateBody)
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update module provider, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module provider with ID %s not found, assuming it has been deleted.", id))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

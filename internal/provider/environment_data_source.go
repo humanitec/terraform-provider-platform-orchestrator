@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
@@ -127,8 +128,9 @@ func (d *EnvironmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	if httpResp.StatusCode() == 404 {
+	if httpResp.StatusCode() == http.StatusNotFound {
 		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

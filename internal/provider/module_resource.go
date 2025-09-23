@@ -481,12 +481,6 @@ func (r *ModuleResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module with ID %s not found, assuming it has been deleted.", id))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
 	if httpResp.StatusCode() != 200 {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return

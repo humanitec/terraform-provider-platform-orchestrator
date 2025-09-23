@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
@@ -106,6 +107,12 @@ func (d *ResourceTypeDataSource) Read(ctx context.Context, req datasource.ReadRe
 	httpResp, err := d.cpClient.GetResourceTypeWithResponse(ctx, d.orgId, data.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read resource type, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == 404 {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Resource type with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

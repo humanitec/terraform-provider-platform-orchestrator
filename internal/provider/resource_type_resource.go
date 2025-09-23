@@ -173,7 +173,7 @@ func (r *ResourceTypeResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	if httpResp.StatusCode() == 404 {
+	if httpResp.StatusCode() == http.StatusNotFound {
 		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Resource type with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
 		resp.State.RemoveResource(ctx)
 		return

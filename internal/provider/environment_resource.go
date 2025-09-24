@@ -218,8 +218,8 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	if httpResp.StatusCode() == 404 {
-		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -249,12 +249,6 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update environment, got error: %s", err))
-		return
-	}
-
-	if httpResp.StatusCode() == 404 {
-		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
-		resp.State.RemoveResource(ctx)
 		return
 	}
 

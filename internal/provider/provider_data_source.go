@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
@@ -121,6 +122,12 @@ func (d *ProviderDataSource) Read(ctx context.Context, req datasource.ReadReques
 	httpResp, err := d.cpClient.GetModuleProviderWithResponse(ctx, d.orgId, data.ProviderType.ValueString(), data.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read provider, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Provider with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

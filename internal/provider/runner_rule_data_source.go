@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 
 	"github.com/google/uuid"
@@ -95,6 +96,12 @@ func (d *RunnerRuleDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	httpResp, err := d.cpClient.GetRunnerRuleInOrgWithResponse(ctx, d.orgId, uuid.MustParse(data.Id.ValueString()))
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read runner rule, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner rule with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

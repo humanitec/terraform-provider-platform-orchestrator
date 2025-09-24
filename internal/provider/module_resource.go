@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
@@ -395,6 +396,12 @@ func (r *ModuleResource) Read(ctx context.Context, req resource.ReadRequest, res
 	httpResp, err := r.cpClient.GetModuleWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read module, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

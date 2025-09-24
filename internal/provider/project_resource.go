@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"time"
 
@@ -163,6 +164,12 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 	httpResp, err := r.cpClient.GetProjectWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read project, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Project with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

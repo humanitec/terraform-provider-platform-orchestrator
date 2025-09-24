@@ -1,1 +1,1 @@
-terraform import platform-orchestrator_provider.my_provider "aws:my-aws-provider"
+terraform import platform-orchestrator_provider.my_provider "aws.my-aws-provider"

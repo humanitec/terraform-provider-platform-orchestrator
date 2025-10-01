@@ -229,25 +229,6 @@ func (r *KubernetesRunnerResource) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *KubernetesRunnerResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
-	if req.ProviderData == nil {
-		return
-	}
-
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-
-	r.cpClient = providerData.CpClient
-	r.orgId = providerData.OrgId
-}
-
 func (r *KubernetesRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data RunnerResourceModel
 

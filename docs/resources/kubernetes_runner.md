@@ -143,7 +143,7 @@ Required:
 
 Optional:
 
-- `prefix_path` (String) The prefix path for the S3 state storage configuration
+- `path_prefix` (String) The prefix path for the S3 state storage configuration
 
 ## Import
 

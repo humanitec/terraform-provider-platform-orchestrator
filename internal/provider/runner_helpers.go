@@ -198,7 +198,7 @@ var RunnerStateStorageResourceSchema = resschema.SingleNestedAttribute{
 					MarkdownDescription: "The bucket for the S3 state storage configuration",
 					Required:            true,
 				},
-				"prefix_path": dsschema.StringAttribute{
+				"path_prefix": dsschema.StringAttribute{
 					MarkdownDescription: "The prefix path for the S3 state storage configuration",
 					Optional:            true,
 				},

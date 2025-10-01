@@ -38,14 +38,6 @@ type KubernetesGkeRunnerResource struct {
 	orgId    string
 }
 
-// KubernetesGkeRunnerModel describes the resource data model.
-type KubernetesGkeRunnerResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
-}
-
 // KubernetesGkeRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
 type KubernetesGkeRunnerConfiguration struct {
 	Cluster KubernetesGkeRunnerCluster `tfsdk:"cluster"`
@@ -271,7 +263,7 @@ func (r *KubernetesGkeRunnerResource) Configure(ctx context.Context, req resourc
 }
 
 func (r *KubernetesGkeRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data KubernetesGkeRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -319,7 +311,7 @@ func (r *KubernetesGkeRunnerResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *KubernetesGkeRunnerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data KubernetesGkeRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -356,7 +348,7 @@ func (r *KubernetesGkeRunnerResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *KubernetesGkeRunnerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state KubernetesGkeRunnerResourceModel
+	var data, state RunnerResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -405,7 +397,7 @@ func (r *KubernetesGkeRunnerResource) Update(ctx context.Context, req resource.U
 }
 
 func (r *KubernetesGkeRunnerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data KubernetesGkeRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -471,21 +463,21 @@ func parseKubernetesGKERunnerConfigurationResponse(ctx context.Context, k8sGKERu
 	return objectValue, nil
 }
 
-func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner) (KubernetesGkeRunnerResourceModel, error) {
+func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner) (RunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sGkeRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesGKERunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
 	if err != nil {
-		return KubernetesGkeRunnerResourceModel{}, err
+		return RunnerResourceModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesGkeRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return RunnerResourceModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesGkeRunnerResourceModel{
+	return RunnerResourceModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,

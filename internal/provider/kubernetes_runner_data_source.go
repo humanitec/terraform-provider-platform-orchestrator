@@ -209,7 +209,7 @@ func (d *KubernetesRunnerDataSource) Read(ctx context.Context, req datasource.Re
 	k8sStateStorageConfiguration, _ := runner.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	// For data sources, we always use the API response values directly
-	if runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(ctx, k8sRunnerConfiguration, &KubernetesRunnerResourceModel{
+	if runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(ctx, k8sRunnerConfiguration, &RunnerResourceModel{
 		Id:          types.StringValue(runner.Id),
 		Description: types.StringPointerValue(runner.Description),
 	}); err != nil {

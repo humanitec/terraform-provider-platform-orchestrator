@@ -29,14 +29,6 @@ type KubernetesGkeRunnerDataSource struct {
 	orgId    string
 }
 
-// KubernetesGkeRunnerDataSourceModel describes the data source data model.
-type KubernetesGkeRunnerDataSourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
-}
-
 func (d *KubernetesGkeRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_kubernetes_gke_runner"
 }
@@ -171,7 +163,7 @@ func (d *KubernetesGkeRunnerDataSource) Configure(ctx context.Context, req datas
 }
 
 func (d *KubernetesGkeRunnerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data KubernetesGkeRunnerDataSourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

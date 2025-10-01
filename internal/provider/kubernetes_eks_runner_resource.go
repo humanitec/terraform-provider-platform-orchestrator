@@ -38,14 +38,6 @@ type KubernetesEksRunnerResource struct {
 	orgId    string
 }
 
-// KubernetesEksRunnerModel describes the resource data model.
-type KubernetesEksRunnerResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
-}
-
 // KubernetesEksRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
 type KubernetesEksRunnerConfiguration struct {
 	Cluster KubernetesEksRunnerCluster `tfsdk:"cluster"`
@@ -53,15 +45,9 @@ type KubernetesEksRunnerConfiguration struct {
 }
 
 type KubernetesEksRunnerCluster struct {
-	Name   types.String                   `tfsdk:"name"`
-	Region types.String                   `tfsdk:"region"`
-	Auth   KubernetesEksRunnerClusterAuth `tfsdk:"auth"`
-}
-
-type KubernetesEksRunnerClusterAuth struct {
-	RoleArn     types.String `tfsdk:"role_arn"`
-	SessionName types.String `tfsdk:"session_name"`
-	StsRegion   types.String `tfsdk:"sts_region"`
+	Name   types.String     `tfsdk:"name"`
+	Region types.String     `tfsdk:"region"`
+	Auth   AwsTemporaryAuth `tfsdk:"auth"`
 }
 
 type KubernetesEksRunnerJob struct {
@@ -276,7 +262,7 @@ func (r *KubernetesEksRunnerResource) Configure(ctx context.Context, req resourc
 }
 
 func (r *KubernetesEksRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data KubernetesEksRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -324,7 +310,7 @@ func (r *KubernetesEksRunnerResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *KubernetesEksRunnerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data KubernetesEksRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -361,7 +347,7 @@ func (r *KubernetesEksRunnerResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *KubernetesEksRunnerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state KubernetesEksRunnerResourceModel
+	var data, state RunnerResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -410,7 +396,7 @@ func (r *KubernetesEksRunnerResource) Update(ctx context.Context, req resource.U
 }
 
 func (r *KubernetesEksRunnerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data KubernetesEksRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -448,11 +434,7 @@ func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRu
 		Cluster: KubernetesEksRunnerCluster{
 			Name:   types.StringValue(k8sEksRunnerConfiguration.Cluster.Name),
 			Region: types.StringValue(k8sEksRunnerConfiguration.Cluster.Region),
-			Auth: KubernetesEksRunnerClusterAuth{
-				RoleArn:     types.StringValue(k8sEksRunnerConfiguration.Cluster.Auth.RoleArn),
-				SessionName: types.StringPointerValue(k8sEksRunnerConfiguration.Cluster.Auth.SessionName),
-				StsRegion:   types.StringPointerValue(k8sEksRunnerConfiguration.Cluster.Auth.StsRegion),
-			},
+			Auth:   NewAwsTemporaryAuth(k8sEksRunnerConfiguration.Cluster.Auth),
 		},
 		Job: KubernetesEksRunnerJob{
 			Namespace:      types.StringValue(k8sEksRunnerConfiguration.Job.Namespace),
@@ -474,21 +456,21 @@ func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRu
 	return objectValue, nil
 }
 
-func toKubernetesEksRunnerResourceModel(item canyoncp.Runner) (KubernetesEksRunnerResourceModel, error) {
+func toKubernetesEksRunnerResourceModel(item canyoncp.Runner) (RunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sEksRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesEksRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
 	if err != nil {
-		return KubernetesEksRunnerResourceModel{}, err
+		return RunnerResourceModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesEksRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return RunnerResourceModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesEksRunnerResourceModel{
+	return RunnerResourceModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,
@@ -515,11 +497,7 @@ func createKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj t
 		Cluster: canyoncp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.K8sRunnerAwsTemporaryAuth{
-				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
-				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
-				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),
-			},
+			Auth:   runnerConfig.Cluster.Auth.ToApiModel(),
 		},
 		Job: canyoncp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),
@@ -549,11 +527,7 @@ func updateKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj t
 		Cluster: &canyoncp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.K8sRunnerAwsTemporaryAuth{
-				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
-				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
-				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),
-			},
+			Auth:   runnerConfig.Cluster.Auth.ToApiModel(),
 		},
 		Job: &canyoncp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),

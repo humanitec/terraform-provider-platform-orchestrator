@@ -38,14 +38,6 @@ type KubernetesAgentRunnerResource struct {
 	orgId    string
 }
 
-// KubernetesAgentRunnerModel describes the resource data model.
-type KubernetesAgentRunnerResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
-}
-
 // KubernetesAgentRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
 type KubernetesAgentRunnerConfiguration struct {
 	Key types.String             `tfsdk:"key"`
@@ -201,7 +193,7 @@ func (r *KubernetesAgentRunnerResource) Configure(ctx context.Context, req resou
 }
 
 func (r *KubernetesAgentRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data KubernetesAgentRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -249,7 +241,7 @@ func (r *KubernetesAgentRunnerResource) Create(ctx context.Context, req resource
 }
 
 func (r *KubernetesAgentRunnerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data KubernetesAgentRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -286,7 +278,7 @@ func (r *KubernetesAgentRunnerResource) Read(ctx context.Context, req resource.R
 }
 
 func (r *KubernetesAgentRunnerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state KubernetesAgentRunnerResourceModel
+	var data, state RunnerResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -335,7 +327,7 @@ func (r *KubernetesAgentRunnerResource) Update(ctx context.Context, req resource
 }
 
 func (r *KubernetesAgentRunnerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data KubernetesAgentRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -391,21 +383,21 @@ func parseKubernetesAgentRunnerConfigurationResponse(ctx context.Context, k8sAge
 	return objectValue, nil
 }
 
-func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner) (KubernetesAgentRunnerResourceModel, error) {
+func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner) (RunnerResourceModel, error) {
 	k8sAgentRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sAgentRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesAgentRunnerConfigurationResponse(context.Background(), k8sAgentRunnerConfiguration)
 	if err != nil {
-		return KubernetesAgentRunnerResourceModel{}, err
+		return RunnerResourceModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesAgentRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return RunnerResourceModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesAgentRunnerResourceModel{
+	return RunnerResourceModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,

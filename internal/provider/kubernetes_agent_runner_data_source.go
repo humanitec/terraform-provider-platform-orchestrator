@@ -29,14 +29,6 @@ type KubernetesAgentRunnerDataSource struct {
 	orgId    string
 }
 
-// KubernetesAgentRunnerDataSourceModel describes the data source data model.
-type KubernetesAgentRunnerDataSourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
-}
-
 func (d *KubernetesAgentRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_kubernetes_agent_runner"
 }
@@ -134,7 +126,7 @@ func (d *KubernetesAgentRunnerDataSource) Configure(ctx context.Context, req dat
 }
 
 func (d *KubernetesAgentRunnerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data KubernetesAgentRunnerDataSourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

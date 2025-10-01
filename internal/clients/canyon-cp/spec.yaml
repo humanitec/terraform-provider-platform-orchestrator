@@ -492,6 +492,7 @@ paths:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
         - $ref: "#/components/parameters/envIdPathParam"
+        - $ref: "#/components/parameters/forceQueryParam"
       responses:
         "202":
           description: The environment is waiting for a destroy deployment to succeed.
@@ -552,14 +553,15 @@ paths:
         "404":
           $ref: "#/components/responses/404NotFound"
 
-  /orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/force_delete:
+  /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/force-delete:
     post:
-      operationId: forceDeleteEnvironment
+      operationId: internalForceDeleteEnvironment
       summary: Force delete the environment without a successful destroy deployment.
       description: |
-        This is an escape hatch that may be used by privileged users to destroy an environment that cannot be fully destroyed or is facing errors that cannot be worked around. 
+        This is an escape hatch that may be used by privileged users to destroy an environment that cannot be fully destroyed or is facing errors that cannot be worked around.
         This may leave infrastructure or state behind that must be cleaned up manually outside of the Orchestrator.
       tags:
+        - internal
         - Environment
       security:
         - userIdHeader: []
@@ -1353,6 +1355,8 @@ paths:
                 $ref: "#/components/schemas/InternalModuleCatalogue"
         "404":
           $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
 
 components:
   securitySchemes:
@@ -1482,6 +1486,14 @@ components:
       schema:
         type: boolean
         default: false
+    forceQueryParam:
+      name: force
+      in: query
+      description: If true, will perform force deletion, without destroying underlying infrastructure.
+      required: false
+      schema:
+        type: boolean
+        default: false
 
   responses:
     400BadRequest:
@@ -1591,17 +1603,23 @@ components:
     InternalOrganizationCreateBody:
       type: object
       description: A request to create a new organization state in the control plane.
-      required:
-        - id
       properties:
         id:
-          description: The unique identifier of the org
+          description: The unique identifier of the org. It will be auto-generated if not provided.
           type: string
           example: my-org123
           minLength: 5
           maxLength: 50
           pattern: ^[a-z](?:-?[a-z0-9]+)+$
           x-pattern-error: id must be lowercase alphanumeric including hyphens
+        id_prefix:
+          description: An id prefix for the org. If will be a prefix to the auto-generated id.
+          type: string
+          example: workshop-
+          minLength: 1
+          maxLength: 15
+          pattern: ^[a-z](?:-?[a-z0-9]+)+$
+          x-pattern-error: id_prefix must be lowercase alphanumeric including hyphens
 
     Project:
       type: object
@@ -1674,9 +1692,12 @@ components:
           x-pattern-error: id must be a valid identifier
         display_name:
           description: Project human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
           type: string
           example: Sample Project
-          maxLength: 60
 
     ProjectUpdateBody:
       type: object
@@ -1686,9 +1707,12 @@ components:
       properties:
         display_name:
           description: Project human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
           type: string
           example: Sample Project
-          maxLength: 60
 
     EnvironmentStatus:
       type: string
@@ -1791,9 +1815,12 @@ components:
           x-pattern-error: env_type_id must be a valid environment type identifier
         display_name:
           description: Environment human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
           type: string
           example: My Sample Environment
-          maxLength: 60
 
     EnvironmentUpdateBody:
       type: object
@@ -1803,9 +1830,12 @@ components:
       properties:
         display_name:
           description: Environment human readable name. The id is used if this is not specified.
+          minLength: 2
+          maxLength: 60
+          pattern: ^[^\p{Cc}\p{Cs}\p{Z}\n]( |[^\p{Cc}\p{Cs}\p{Z}\n])*[^\p{Cc}\p{Cs}\p{Z}\n]$
+          x-pattern-error: display_name contains invalid characters
           type: string
           example: My Sample Environment
-          maxLength: 60
 
     EnvironmentInternalUpdateBody:
       type: object
@@ -2254,7 +2284,7 @@ components:
       example: standard.common-postgres
       minLength: 1
       maxLength: 63
-      pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
+      pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
       x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
 
     RunnerType:
@@ -2265,12 +2295,14 @@ components:
         - kubernetes-gke
         - kubernetes-agent
         - kubernetes-eks
+        - serverless-ecs
 
     StateStorageType:
       description: Type of the Terraform Backend used by the runner.
       type: string
       enum:
         - kubernetes
+        - s3
 
     ModuleSummary:
       type: object
@@ -2664,6 +2696,7 @@ components:
         - $ref: "#/components/schemas/K8sGkeRunnerConfiguration"
         - $ref: "#/components/schemas/K8sEksRunnerConfiguration"
         - $ref: "#/components/schemas/K8sAgentRunnerConfiguration"
+        - $ref: "#/components/schemas/ServerlessEcsRunnerConfiguration"
       discriminator:
         propertyName: type
         mapping:
@@ -2671,6 +2704,7 @@ components:
           kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfiguration"
           kubernetes-eks: "#/components/schemas/K8sEksRunnerConfiguration"
           kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfiguration"
+          serverless-ecs: "#/components/schemas/ServerlessEcsRunnerConfiguration"
 
     RunnerConfigurationUpdate:
       description: The data needed to update the runner configuration.
@@ -2679,6 +2713,7 @@ components:
         - $ref: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
         - $ref: "#/components/schemas/K8sEksRunnerConfigurationUpdateBody"
         - $ref: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
+        - $ref: "#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody"
       discriminator:
         propertyName: type
         mapping:
@@ -2686,6 +2721,7 @@ components:
           kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
           kubernetes-eks: "#/components/schemas/K8sEksRunnerConfigurationUpdateBody"
           kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
+          serverless-ecs: "#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody"
 
     InternalRunner:
       type: object
@@ -2786,15 +2822,14 @@ components:
           description: AWS region where the EKS cluster is located.
           type: string
         auth:
-          $ref: "#/components/schemas/K8sRunnerAwsTemporaryAuth"
+          $ref: "#/components/schemas/AwsTemporaryAuth"
       required:
         - name
         - region
         - auth
 
-    K8sRunnerAwsTemporaryAuth:
-      description: Configuration to obtain temporary access token to access an EKS cluster.
-      x-go-type-skip-optional-pointer: true
+    AwsTemporaryAuth:
+      description: Configuration to obtain temporary AWS security credentials by assuming an IAM role.
       type: object
       properties:
         role_arn:
@@ -2803,12 +2838,14 @@ components:
           pattern: ^arn:aws:iam::[0-9]{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
           x-pattern-error: role_arn is not a valid IAM Role ARN
         session_name:
-          description: Optional session name to be used when assuming the role.
+          description: (Optional) Session name to be used when assuming the role. If not provided, a default session name will be "{org_id}-{runner_id}".
           type: string
+          pattern: ^[a-zA-Z0-9+=,.@\-_/]+$
           minLength: 3
           maxLength: 64
+          x-pattern-error: session_name must contain only valid characters (letters, digits, and +=,.@-_/)
         sts_region:
-          description: Optional AWS STS region to use instead of the global endpoint.
+          description: (Optional) The AWS region identifier for the Security Token Service (STS) endpoint. If not provided, the cluster region will be used.
           type: string
           pattern: ^[a-z]{2}-[a-z]+-\d$
           x-pattern-error: sts_region is not a valid AWS STS region
@@ -2876,10 +2913,12 @@ components:
       description: Configuration for the Terraform Backend used by the runner.
       oneOf:
         - $ref: "#/components/schemas/K8sStorageConfiguration"
+        - $ref: "#/components/schemas/S3StorageConfiguration"
       discriminator:
         propertyName: type
         mapping:
           kubernetes: "#/components/schemas/K8sStorageConfiguration"
+          s3: "#/components/schemas/S3StorageConfiguration"
 
     StateStorageConfigurationSummary:
       description: Summary of the state storage configuration.
@@ -2901,6 +2940,31 @@ components:
       required:
         - namespace
         - type
+
+    S3StorageConfiguration:
+      description: |-
+        Configuration to use an AWS S3 bucket as state storage backend of this runner. Authentication and other settings
+        can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/s3#state-storage>
+        for more details.
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/StateStorageType"
+        bucket:
+          type: string
+          description: Name of the S3 Bucket.
+          pattern: ^[a-z0-9][a-z0-9\-]*[a-z0-9]$
+          x-pattern-error: state storage bucket is not a valid S3 Bucket name.
+          example: example-bucket
+        path_prefix:
+          type: string
+          description: A prefix path for the state file. The environment uuid will be used as a unique key within this.
+          pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
+          x-pattern-error: state storage path_prefix is not a valid S3 prefix path.
+          example: path/to/state/directory
+      required:
+        - type
+        - bucket
 
     RunnerCreateBody:
       type: object
@@ -2994,6 +3058,101 @@ components:
         - job
         - key
 
+    ServerlessEcsRunnerConfiguration:
+      description: Runner configuration for executing on AWS ECS Fargate.
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/RunnerType"
+        auth:
+          $ref: "#/components/schemas/AwsTemporaryAuth"
+        job:
+          $ref: "#/components/schemas/ServerlessEcsRunnerJob"
+      required:
+        - type
+        - auth
+        - job
+
+    ServerlessEcsRunnerJob:
+      description: Job details for the AWS ECS Runner
+      required:
+        - region
+        - cluster
+        - subnets
+        - execution_role_arn
+      properties:
+        region:
+          description: AWS Region to run the ECS job in.
+          type: string
+          pattern: ^[a-z]{2}-[a-z]+-\d$
+          x-pattern-error: job region is not a valid AWS Region.
+          example: us-west-2
+          minLength: 1
+          maxLength: 24
+        cluster:
+          description: ECS Fargate cluster name
+          type: string
+          example: my-cluster
+          minLength: 1
+          maxLength: 255
+        subnets:
+          description: The IDs of the AWS subnets that the runner must be connected to. At least one is required.
+          type: array
+          items:
+            type: string
+            example: "subnet-12345"
+            minLength: 1
+            maxLength: 24
+          minItems: 1
+          maxItems: 16
+        security_groups:
+          description: An optional list of IDs for the AWS security groups that the runner should be associated with.
+          type: array
+          items:
+            type: string
+            example: "runner-security-group"
+            minLength: 1
+            maxLength: 255
+          maxItems: 5
+          x-go-type-skip-optional-pointer: true
+        is_public_ip_enabled:
+          description: |
+            Whether to assign a public ip to the ECS task. This is required if the target subnets use Internet Gateways 
+            instead of NAT Gateways to reach public networks. Defaults to false.
+          type: boolean
+          example: true
+          x-go-type-skip-optional-pointer: true
+        execution_role_arn:
+          description: The ARN of the role used to pull images, retrieve secrets and parameters, and execute the Runner.
+          type: string
+          pattern: ^arn:aws:iam::\d{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
+          x-pattern-error: job execution_role_arn is not a valid IAM Role ARN
+          example: arn:aws:iam::123456789012:role/ECSExecutionRole
+        task_role_arn:
+          description: An optional ARN for the role available inside the Runner.
+          type: string
+          pattern: ^arn:aws:iam::\d{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
+          x-pattern-error: job task_role_arn is not a valid IAM Role ARN
+          example: arn:aws:iam::123456789012:role/ECSTaskRole
+        environment:
+          description: Additional environment variables to pass to the ECS job.
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            description: The value of the variable.
+            type: string
+            maxLength: 1024
+        secrets:
+          description: A set of AWS Secrets Manager Secrets or Parameter Store Parameters to mount
+          type: object
+          x-go-type-skip-optional-pointer: true
+          additionalProperties:
+            description: The source ARN
+            type: string
+            pattern: ^arn:aws:((secretsmanager:[^:]+:[^:]+:secret:[^:]+-[a-zA-Z0-9]{6})|(ssm:[^:]+:[^:]+:parameter\/.+))$
+            x-pattern-error: job secrets value is not a valid AWS Secret or Parameter ARN
+            example: arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/database/credentials-AbCdEf
+
     RunnerUpdateBody:
       type: object
       description: A request to update a runner
@@ -3056,6 +3215,19 @@ components:
           $ref: "#/components/schemas/RunnerType"
         key:
           $ref: "#/components/schemas/K8sAgentRunnerKey"
+      required:
+        - type
+
+    ServerlessEcsRunnerConfigurationUpdateBody:
+      description: Runner configuration for executing on AWS ECS Fargate.
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/RunnerType"
+        auth:
+          $ref: "#/components/schemas/AwsTemporaryAuth"
+        job:
+          $ref: "#/components/schemas/ServerlessEcsRunnerJob"
       required:
         - type
 

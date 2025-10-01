@@ -38,14 +38,6 @@ type KubernetesRunnerResource struct {
 	orgId    string
 }
 
-// KubernetesRunnerModel describes the resource data model.
-type KubernetesRunnerResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
-}
-
 // KubernetesRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
 type KubernetesRunnerConfiguration struct {
 	Cluster KubernetesRunnerCluster `tfsdk:"cluster"`
@@ -280,7 +272,7 @@ func (r *KubernetesRunnerResource) Configure(ctx context.Context, req resource.C
 }
 
 func (r *KubernetesRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data KubernetesRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -328,7 +320,7 @@ func (r *KubernetesRunnerResource) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *KubernetesRunnerResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data KubernetesRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -365,7 +357,7 @@ func (r *KubernetesRunnerResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *KubernetesRunnerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state KubernetesRunnerResourceModel
+	var data, state RunnerResourceModel
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -414,7 +406,7 @@ func (r *KubernetesRunnerResource) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *KubernetesRunnerResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data KubernetesRunnerResourceModel
+	var data RunnerResourceModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -447,7 +439,7 @@ func (r *KubernetesRunnerResource) ImportState(ctx context.Context, req resource
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *KubernetesRunnerResourceModel) (basetypes.ObjectValue, error) {
+func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *RunnerResourceModel) (basetypes.ObjectValue, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	if data.RunnerConfiguration.IsUnknown() || data.RunnerConfiguration.IsNull() {
 		runnerConfig = KubernetesRunnerConfiguration{}
@@ -505,21 +497,21 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 	return objectValue, nil
 }
 
-func toKubernetesRunnerResourceModel(item canyoncp.Runner, data KubernetesRunnerResourceModel) (KubernetesRunnerResourceModel, error) {
+func toKubernetesRunnerResourceModel(item canyoncp.Runner, data RunnerResourceModel) (RunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
 	if err != nil {
-		return KubernetesRunnerResourceModel{}, err
+		return RunnerResourceModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return RunnerResourceModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesRunnerResourceModel{
+	return RunnerResourceModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,

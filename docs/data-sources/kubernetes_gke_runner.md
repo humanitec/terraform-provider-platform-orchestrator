@@ -78,6 +78,7 @@ Read-Only:
 Read-Only:
 
 - `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Kubernetes Runner (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
+- `s3_configuration` (Attributes) The S3 state storage configuration for the Kubernetes Runner (see [below for nested schema](#nestedatt--state_storage_configuration--s3_configuration))
 - `type` (String) The type of state storage configuration for the Kubernetes Runner
 
 <a id="nestedatt--state_storage_configuration--kubernetes_configuration"></a>
@@ -86,3 +87,12 @@ Read-Only:
 Read-Only:
 
 - `namespace` (String) The namespace for the Kubernetes state storage configuration
+
+
+<a id="nestedatt--state_storage_configuration--s3_configuration"></a>
+### Nested Schema for `state_storage_configuration.s3_configuration`
+
+Read-Only:
+
+- `bucket` (String) The bucket for the S3 state storage configuration
+- `prefix_path` (String) The prefix path for the S3 state storage configuration

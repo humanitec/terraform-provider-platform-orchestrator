@@ -47,7 +47,7 @@ var RunnerStateStorageResourceSchema = resschema.SingleNestedAttribute{
 		},
 		"kubernetes_configuration": resschema.SingleNestedAttribute{
 			MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner.",
-			Required:            true,
+			Optional:            true,
 			Attributes: map[string]resschema.Attribute{
 				"namespace": resschema.StringAttribute{
 					MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
@@ -55,6 +55,20 @@ var RunnerStateStorageResourceSchema = resschema.SingleNestedAttribute{
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(63),
 					},
+				},
+			},
+		},
+		"s3_configuration": dsschema.SingleNestedAttribute{
+			MarkdownDescription: "The S3 state storage configuration for the Kubernetes Runner",
+			Optional:            true,
+			Attributes: map[string]dsschema.Attribute{
+				"bucket": dsschema.StringAttribute{
+					MarkdownDescription: "The bucket for the S3 state storage configuration",
+					Required:            true,
+				},
+				"prefix_path": dsschema.StringAttribute{
+					MarkdownDescription: "The prefix path for the S3 state storage configuration",
+					Optional:            true,
 				},
 			},
 		},
@@ -79,6 +93,20 @@ var RunnerStateStorageDataSourceSchema = dsschema.SingleNestedAttribute{
 				},
 			},
 		},
+		"s3_configuration": dsschema.SingleNestedAttribute{
+			MarkdownDescription: "The S3 state storage configuration for the Kubernetes Runner",
+			Computed:            true,
+			Attributes: map[string]dsschema.Attribute{
+				"bucket": dsschema.StringAttribute{
+					MarkdownDescription: "The bucket for the S3 state storage configuration",
+					Computed:            true,
+				},
+				"prefix_path": dsschema.StringAttribute{
+					MarkdownDescription: "The prefix path for the S3 state storage configuration",
+					Computed:            true,
+				},
+			},
+		},
 	},
 }
 
@@ -87,6 +115,12 @@ var RunnerStateStorageAttributeTypes = map[string]attr.Type{
 	"kubernetes_configuration": types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"namespace": types.StringType,
+		},
+	},
+	"s3_configuration": types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"bucket":      types.StringType,
+			"path_prefix": types.StringType,
 		},
 	},
 }

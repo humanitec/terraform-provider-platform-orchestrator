@@ -157,9 +157,9 @@ type RunnerResourceModel struct {
 }
 
 type RunnerStateStorageConfigurationModel struct {
-	Type                    string                                         `tfsdk:"type"`
-	KubernetesConfiguration RunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-	S3Configuration         RunnerS3StateStorageConfigurationModel         `tfsdk:"s3_configuration"`
+	Type                    string                                          `tfsdk:"type"`
+	KubernetesConfiguration *RunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
+	S3Configuration         *RunnerS3StateStorageConfigurationModel         `tfsdk:"s3_configuration"`
 }
 
 type RunnerKubernetesStateStorageConfigurationModel struct {
@@ -290,12 +290,12 @@ func parseStateStorageConfigurationResponse(ctx context.Context, ssc canyoncp.St
 	switch canyoncp.StateStorageType(discriminator) {
 	case canyoncp.StateStorageTypeKubernetes:
 		k8sConfig, _ := ssc.AsK8sStorageConfiguration()
-		stateStorageConfig.KubernetesConfiguration = RunnerKubernetesStateStorageConfigurationModel{
+		stateStorageConfig.KubernetesConfiguration = &RunnerKubernetesStateStorageConfigurationModel{
 			Namespace: k8sConfig.Namespace,
 		}
 	case canyoncp.StateStorageTypeS3:
 		s3Config, _ := ssc.AsS3StorageConfiguration()
-		stateStorageConfig.S3Configuration = RunnerS3StateStorageConfigurationModel{
+		stateStorageConfig.S3Configuration = &RunnerS3StateStorageConfigurationModel{
 			Bucket:     s3Config.Bucket,
 			PathPrefix: ref.DerefOr(s3Config.PathPrefix, ""),
 		}

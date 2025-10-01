@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	resschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
@@ -16,6 +18,54 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
+
+type baseRunnerResource struct {
+	cpClient canyoncp.ClientWithResponsesInterface
+	orgId    string
+}
+
+func (r *baseRunnerResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	if !ok {
+		resp.Diagnostics.AddError(
+			HUM_PROVIDER_ERR,
+			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	r.cpClient = providerData.CpClient
+	r.orgId = providerData.OrgId
+}
+
+func (r *baseRunnerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+type baseRunnerDataSource struct {
+	cpClient canyoncp.ClientWithResponsesInterface
+	orgId    string
+}
+
+func (r *baseRunnerDataSource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	if !ok {
+		resp.Diagnostics.AddError(
+			HUM_PROVIDER_ERR,
+			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	r.cpClient = providerData.CpClient
+	r.orgId = providerData.OrgId
+}
 
 type RunnerResourceModel struct {
 	Id                        types.String `tfsdk:"id"`

@@ -33,8 +33,7 @@ func NewKubernetesRunnerResource() resource.Resource {
 
 // KubernetesRunner defines the resource implementation.
 type KubernetesRunnerResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
-	orgId    string
+	baseRunnerResource
 }
 
 // KubernetesRunnerConfiguration describes the runner configuration structure following SecretRef pattern.

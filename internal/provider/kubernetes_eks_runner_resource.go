@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -33,8 +32,7 @@ func NewKubernetesEksRunnerResource() resource.Resource {
 
 // KubernetesEksRunner defines the resource implementation.
 type KubernetesEksRunnerResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
-	orgId    string
+	baseRunnerResource
 }
 
 // KubernetesEksRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
@@ -194,25 +192,6 @@ func (r *KubernetesEksRunnerResource) Schema(ctx context.Context, req resource.S
 			"state_storage_configuration": RunnerStateStorageResourceSchema,
 		},
 	}
-}
-
-func (r *KubernetesEksRunnerResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
-	if req.ProviderData == nil {
-		return
-	}
-
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-
-	r.cpClient = providerData.CpClient
-	r.orgId = providerData.OrgId
 }
 
 func (r *KubernetesEksRunnerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -377,10 +356,6 @@ func (r *KubernetesEksRunnerResource) Delete(ctx context.Context, req resource.D
 	}
 
 	resp.State.RemoveResource(ctx)
-}
-
-func (r *KubernetesEksRunnerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRunnerConfiguration canyoncp.K8sEksRunnerConfiguration) (basetypes.ObjectValue, error) {

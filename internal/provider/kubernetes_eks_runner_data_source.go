@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"regexp"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -25,8 +23,7 @@ func NewKubernetesEksRunnerDataSource() datasource.DataSource {
 
 // KubernetesEksRunnerDataSource defines the data source implementation.
 type KubernetesEksRunnerDataSource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
-	orgId    string
+	baseRunnerDataSource
 }
 
 func (d *KubernetesEksRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -113,25 +110,6 @@ func (d *KubernetesEksRunnerDataSource) Schema(ctx context.Context, req datasour
 			"state_storage_configuration": RunnerStateStorageDataSourceSchema,
 		},
 	}
-}
-
-func (d *KubernetesEksRunnerDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	// Prevent panic if the provider has not been configured.
-	if req.ProviderData == nil {
-		return
-	}
-
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
-	if !ok {
-		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-
-	d.cpClient = providerData.CpClient
-	d.orgId = providerData.OrgId
 }
 
 func (d *KubernetesEksRunnerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

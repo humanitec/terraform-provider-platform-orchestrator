@@ -15,14 +15,14 @@ import (
 var _ datasource.DataSource = &KubernetesAgentRunnerDataSource{}
 
 func NewKubernetesAgentRunnerDataSource() datasource.DataSource {
-	return &KubernetesAgentRunnerDataSource{baseRunnerDataSource: baseRunnerDataSource{
+	return &KubernetesAgentRunnerDataSource{baseRunnerDataSource: &baseRunnerDataSource{
 		readApiResponseIntoModel: toKubernetesAgentRunnerResourceModel,
 	}}
 }
 
 // KubernetesAgentRunnerDataSource defines the data source implementation.
 type KubernetesAgentRunnerDataSource struct {
-	baseRunnerDataSource
+	*baseRunnerDataSource
 }
 
 func (d *KubernetesAgentRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

@@ -3,9 +3,11 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -78,6 +80,8 @@ func (r *baseRunnerResource) Delete(ctx context.Context, req resource.DeleteRequ
 type baseRunnerDataSource struct {
 	cpClient canyoncp.ClientWithResponsesInterface
 	orgId    string
+
+	readApiResponseIntoModel func(runner canyoncp.Runner, model *RunnerResourceModel) (RunnerResourceModel, error)
 }
 
 func (r *baseRunnerDataSource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -95,6 +99,54 @@ func (r *baseRunnerDataSource) Configure(ctx context.Context, req resource.Confi
 	}
 	r.cpClient = providerData.CpClient
 	r.orgId = providerData.OrgId
+}
+
+func (r *baseRunnerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data RunnerResourceModel
+
+	// Read Terraform configuration data into the model
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	httpResp, err := r.cpClient.GetRunnerWithResponse(ctx, r.orgId, data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read kubernetes agent runner, got error: %s", err))
+		return
+	}
+
+	if httpResp.StatusCode() == http.StatusNotFound {
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Kubernetes agent runner with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if httpResp.StatusCode() != http.StatusOK {
+		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read kubernetes agent runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		return
+	}
+
+	runner := httpResp.JSON200
+
+	data.Id = types.StringValue(runner.Id)
+	data.Description = types.StringPointerValue(runner.Description)
+
+	// Convert the runner to the data source model
+	if convertedData, err := r.readApiResponseIntoModel(*runner, &RunnerResourceModel{
+		Id:          types.StringValue(runner.Id),
+		Description: types.StringPointerValue(runner.Description),
+	}); err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesAgentRunnerDataSourceModel: %s", err))
+		return
+	} else {
+		data.RunnerConfiguration = convertedData.RunnerConfiguration
+		data.StateStorageConfiguration = convertedData.StateStorageConfiguration
+	}
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type RunnerResourceModel struct {

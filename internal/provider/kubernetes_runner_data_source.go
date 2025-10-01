@@ -2,8 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
@@ -18,7 +16,9 @@ import (
 var _ datasource.DataSource = &KubernetesRunnerDataSource{}
 
 func NewKubernetesRunnerDataSource() datasource.DataSource {
-	return &KubernetesRunnerDataSource{}
+	return &KubernetesRunnerDataSource{baseRunnerDataSource: baseRunnerDataSource{
+		readApiResponseIntoModel: toKubernetesRunnerResourceModel,
+	}}
 }
 
 // KubernetesRunnerDataSource defines the data source implementation.
@@ -129,61 +129,4 @@ func (d *KubernetesRunnerDataSource) Schema(ctx context.Context, req datasource.
 			"state_storage_configuration": RunnerStateStorageDataSourceSchema,
 		},
 	}
-}
-
-func (d *KubernetesRunnerDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data KubernetesRunnerDataSourceModel
-
-	// Read Terraform configuration data into the model
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	httpResp, err := d.cpClient.GetRunnerWithResponse(ctx, d.orgId, data.Id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read kubernetes runner, got error: %s", err))
-		return
-	}
-
-	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Kubernetes runner with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
-	if httpResp.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read kubernetes runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
-		return
-	}
-
-	runner := httpResp.JSON200
-
-	data.Id = types.StringValue(runner.Id)
-	data.Description = types.StringPointerValue(runner.Description)
-
-	// Convert the runner configuration directly from API response for data source
-	k8sRunnerConfiguration, _ := runner.RunnerConfiguration.AsK8sRunnerConfiguration()
-
-	// For data sources, we always use the API response values directly
-	if runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(ctx, k8sRunnerConfiguration, &RunnerResourceModel{
-		Id:          types.StringValue(runner.Id),
-		Description: types.StringPointerValue(runner.Description),
-	}); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from API response: %s", err))
-		return
-	} else {
-		data.RunnerConfiguration = runnerConfigurationModel
-	}
-
-	if stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(ctx, runner.StateStorageConfiguration); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, "Failed to parse state storage configuration from API response: "+err.Error())
-		return
-	} else {
-		data.StateStorageConfiguration = *stateStorageConfigurationModel
-	}
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

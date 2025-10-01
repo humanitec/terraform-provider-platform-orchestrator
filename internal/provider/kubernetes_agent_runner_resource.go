@@ -163,7 +163,7 @@ func (r *KubernetesAgentRunnerResource) Create(ctx context.Context, req resource
 		return
 	}
 
-	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON201); err != nil {
+	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON201, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesAgentRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -200,7 +200,7 @@ func (r *KubernetesAgentRunnerResource) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON200); err != nil {
+	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON200, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesAgentRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -250,7 +250,7 @@ func (r *KubernetesAgentRunnerResource) Update(ctx context.Context, req resource
 		return
 	}
 
-	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON200); err != nil {
+	if data, err = toKubernetesAgentRunnerResourceModel(*httpResp.JSON200, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesAgentRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -282,7 +282,7 @@ func parseKubernetesAgentRunnerConfigurationResponse(ctx context.Context, k8sAge
 	return objectValue, nil
 }
 
-func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner) (RunnerResourceModel, error) {
+func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner, data *RunnerResourceModel) (RunnerResourceModel, error) {
 	k8sAgentRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sAgentRunnerConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesAgentRunnerConfigurationResponse(context.Background(), k8sAgentRunnerConfiguration)

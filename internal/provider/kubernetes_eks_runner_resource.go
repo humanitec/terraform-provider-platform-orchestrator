@@ -232,7 +232,7 @@ func (r *KubernetesEksRunnerResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	if data, err = toKubernetesEksRunnerResourceModel(*httpResp.JSON201); err != nil {
+	if data, err = toKubernetesEksRunnerResourceModel(*httpResp.JSON201, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesGkeRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -269,7 +269,7 @@ func (r *KubernetesEksRunnerResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	if data, err = toKubernetesEksRunnerResourceModel(*httpResp.JSON200); err != nil {
+	if data, err = toKubernetesEksRunnerResourceModel(*httpResp.JSON200, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesGkeRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -319,7 +319,7 @@ func (r *KubernetesEksRunnerResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	if data, err = toKubernetesEksRunnerResourceModel(*httpResp.JSON200); err != nil {
+	if data, err = toKubernetesEksRunnerResourceModel(*httpResp.JSON200, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesGkeRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -355,7 +355,7 @@ func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRu
 	return objectValue, nil
 }
 
-func toKubernetesEksRunnerResourceModel(item canyoncp.Runner) (RunnerResourceModel, error) {
+func toKubernetesEksRunnerResourceModel(item canyoncp.Runner, data *RunnerResourceModel) (RunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sEksRunnerConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesEksRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)

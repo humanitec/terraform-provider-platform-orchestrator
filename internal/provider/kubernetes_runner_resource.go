@@ -199,32 +199,7 @@ func (r *KubernetesRunnerResource) Schema(ctx context.Context, req resource.Sche
 					},
 				},
 			},
-			"state_storage_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The state storage configuration for the Kubernetes Runner.",
-				Required:            true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of state storage configuration for the Kubernetes Runner.",
-						Required:            true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("kubernetes"),
-						},
-					},
-					"kubernetes_configuration": schema.SingleNestedAttribute{
-						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner.",
-						Required:            true,
-						Attributes: map[string]schema.Attribute{
-							"namespace": schema.StringAttribute{
-								MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
-								Required:            true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(63),
-								},
-							},
-						},
-					},
-				},
-			},
+			"state_storage_configuration": RunnerStateStorageResourceSchema,
 		},
 	}
 }
@@ -267,7 +242,7 @@ func (r *KubernetesRunnerResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	if data, err = toKubernetesRunnerResourceModel(*httpResp.JSON201, data); err != nil {
+	if data, err = toKubernetesRunnerResourceModel(*httpResp.JSON201, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -304,7 +279,7 @@ func (r *KubernetesRunnerResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	if data, err = toKubernetesRunnerResourceModel(*httpResp.JSON200, data); err != nil {
+	if data, err = toKubernetesRunnerResourceModel(*httpResp.JSON200, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -354,7 +329,7 @@ func (r *KubernetesRunnerResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	if data, err = toKubernetesRunnerResourceModel(*httpResp.JSON200, data); err != nil {
+	if data, err = toKubernetesRunnerResourceModel(*httpResp.JSON200, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesRunnerResourceModel: %s", err))
 		return
 	} else {
@@ -421,10 +396,10 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 	return objectValue, nil
 }
 
-func toKubernetesRunnerResourceModel(item canyoncp.Runner, data RunnerResourceModel) (RunnerResourceModel, error) {
+func toKubernetesRunnerResourceModel(item canyoncp.Runner, data *RunnerResourceModel) (RunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sRunnerConfiguration()
 
-	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
+	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, data)
 	if err != nil {
 		return RunnerResourceModel{}, err
 	}

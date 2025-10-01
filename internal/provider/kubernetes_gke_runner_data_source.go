@@ -18,7 +18,9 @@ import (
 var _ datasource.DataSource = &KubernetesGkeRunnerDataSource{}
 
 func NewKubernetesGkeRunnerDataSource() datasource.DataSource {
-	return &KubernetesGkeRunnerDataSource{}
+	return &KubernetesGkeRunnerDataSource{baseRunnerDataSource: baseRunnerDataSource{
+		readApiResponseIntoModel: toKubernetesGkeRunnerResourceModel,
+	}}
 }
 
 // KubernetesGkeRunnerDataSource defines the data source implementation.
@@ -154,7 +156,7 @@ func (d *KubernetesGkeRunnerDataSource) Read(ctx context.Context, req datasource
 	data.Description = types.StringPointerValue(runner.Description)
 
 	// Convert the runner to the data source model
-	if convertedData, err := toKubernetesGkeRunnerResourceModel(*runner); err != nil {
+	if convertedData, err := toKubernetesGkeRunnerResourceModel(*runner, &data); err != nil {
 		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesGkeRunnerDataSourceModel: %s", err))
 		return
 	} else {

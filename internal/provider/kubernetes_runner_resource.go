@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -92,26 +91,6 @@ func KubernetesRunnerConfigurationAttributeTypes() map[string]attr.Type {
 				"namespace":       types.StringType,
 				"service_account": types.StringType,
 				"pod_template":    types.StringType,
-			},
-		},
-	}
-}
-
-type KubernetesRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                   `tfsdk:"type"`
-	KubernetesConfiguration KubernetesRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-}
-
-type KubernetesRunnerKubernetesStateStorageConfigurationModel struct {
-	Namespace string `tfsdk:"namespace"`
-}
-
-func KubernetesRunnerStateStorageConfigurationAttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"type": types.StringType,
-		"kubernetes_configuration": types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"namespace": types.StringType,
 			},
 		},
 	}
@@ -499,16 +478,15 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 
 func toKubernetesRunnerResourceModel(item canyoncp.Runner, data RunnerResourceModel) (RunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
 	if err != nil {
 		return RunnerResourceModel{}, err
 	}
 
-	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
-	if stateStorageConfigurationModel == nil {
-		return RunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
+	if err != nil {
+		return RunnerResourceModel{}, err
 	}
 
 	return RunnerResourceModel{

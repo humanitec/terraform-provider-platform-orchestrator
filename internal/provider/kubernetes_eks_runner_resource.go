@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -76,26 +75,6 @@ func KubernetesEksRunnerConfigurationAttributeTypes() map[string]attr.Type {
 				"namespace":       types.StringType,
 				"service_account": types.StringType,
 				"pod_template":    types.StringType,
-			},
-		},
-	}
-}
-
-type KubernetesEksRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                      `tfsdk:"type"`
-	KubernetesConfiguration KubernetesEksRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-}
-
-type KubernetesEksRunnerKubernetesStateStorageConfigurationModel struct {
-	Namespace string `tfsdk:"namespace"`
-}
-
-func KubernetesEksRunnerStateStorageConfigurationAttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"type": types.StringType,
-		"kubernetes_configuration": types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"namespace": types.StringType,
 			},
 		},
 	}
@@ -212,32 +191,7 @@ func (r *KubernetesEksRunnerResource) Schema(ctx context.Context, req resource.S
 					},
 				},
 			},
-			"state_storage_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The state storage configuration for the Kubernetes EKS Runner.",
-				Required:            true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of state storage configuration for the Kubernetes EKS Runner.",
-						Required:            true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("kubernetes"),
-						},
-					},
-					"kubernetes_configuration": schema.SingleNestedAttribute{
-						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes EKS Runner.",
-						Required:            true,
-						Attributes: map[string]schema.Attribute{
-							"namespace": schema.StringAttribute{
-								MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
-								Required:            true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(63),
-								},
-							},
-						},
-					},
-				},
-			},
+			"state_storage_configuration": RunnerStateStorageResourceSchema,
 		},
 	}
 }
@@ -458,16 +412,15 @@ func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRu
 
 func toKubernetesEksRunnerResourceModel(item canyoncp.Runner) (RunnerResourceModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sEksRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesEksRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
 	if err != nil {
 		return RunnerResourceModel{}, err
 	}
 
-	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
-	if stateStorageConfigurationModel == nil {
-		return RunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
+	if err != nil {
+		return RunnerResourceModel{}, err
 	}
 
 	return RunnerResourceModel{

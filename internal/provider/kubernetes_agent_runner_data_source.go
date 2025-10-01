@@ -82,26 +82,7 @@ func (d *KubernetesAgentRunnerDataSource) Schema(ctx context.Context, req dataso
 					},
 				},
 			},
-			"state_storage_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The state storage configuration for the Kubernetes Agent Runner",
-				Computed:            true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of state storage configuration for the Kubernetes Agent Runner",
-						Computed:            true,
-					},
-					"kubernetes_configuration": schema.SingleNestedAttribute{
-						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Agent Runner",
-						Computed:            true,
-						Attributes: map[string]schema.Attribute{
-							"namespace": schema.StringAttribute{
-								MarkdownDescription: "The namespace for the Kubernetes state storage configuration",
-								Computed:            true,
-							},
-						},
-					},
-				},
-			},
+			"state_storage_configuration": RunnerStateStorageDataSourceSchema,
 		},
 	}
 }

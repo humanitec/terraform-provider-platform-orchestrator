@@ -129,26 +129,7 @@ func (d *KubernetesRunnerDataSource) Schema(ctx context.Context, req datasource.
 					},
 				},
 			},
-			"state_storage_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The state storage configuration for the Kubernetes Runner",
-				Computed:            true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of state storage configuration for the Kubernetes Runner",
-						Computed:            true,
-					},
-					"kubernetes_configuration": schema.SingleNestedAttribute{
-						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner",
-						Computed:            true,
-						Attributes: map[string]schema.Attribute{
-							"namespace": schema.StringAttribute{
-								MarkdownDescription: "The namespace for the Kubernetes state storage configuration",
-								Computed:            true,
-							},
-						},
-					},
-				},
-			},
+			"state_storage_configuration": RunnerStateStorageDataSourceSchema,
 		},
 	}
 }
@@ -206,7 +187,6 @@ func (d *KubernetesRunnerDataSource) Read(ctx context.Context, req datasource.Re
 
 	// Convert the runner configuration directly from API response for data source
 	k8sRunnerConfiguration, _ := runner.RunnerConfiguration.AsK8sRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := runner.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	// For data sources, we always use the API response values directly
 	if runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(ctx, k8sRunnerConfiguration, &RunnerResourceModel{
@@ -219,8 +199,8 @@ func (d *KubernetesRunnerDataSource) Read(ctx context.Context, req datasource.Re
 		data.RunnerConfiguration = runnerConfigurationModel
 	}
 
-	if stateStorageConfigurationModel := parseStateStorageConfigurationResponse(ctx, k8sStateStorageConfiguration); stateStorageConfigurationModel == nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, "Failed to parse state storage configuration from API response")
+	if stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(ctx, runner.StateStorageConfiguration); err != nil {
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, "Failed to parse state storage configuration from API response: "+err.Error())
 		return
 	} else {
 		data.StateStorageConfiguration = *stateStorageConfigurationModel

@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -58,26 +57,6 @@ func KubernetesAgentRunnerConfigurationAttributeTypes() map[string]attr.Type {
 				"namespace":       types.StringType,
 				"service_account": types.StringType,
 				"pod_template":    types.StringType,
-			},
-		},
-	}
-}
-
-type KubernetesAgentRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                        `tfsdk:"type"`
-	KubernetesConfiguration KubernetesAgentRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-}
-
-type KubernetesAgentRunnerKubernetesStateStorageConfigurationModel struct {
-	Namespace string `tfsdk:"namespace"`
-}
-
-func KubernetesAgentRunnerStateStorageConfigurationAttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"type": types.StringType,
-		"kubernetes_configuration": types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"namespace": types.StringType,
 			},
 		},
 	}
@@ -143,32 +122,7 @@ func (r *KubernetesAgentRunnerResource) Schema(ctx context.Context, req resource
 					},
 				},
 			},
-			"state_storage_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The state storage configuration for the Kubernetes Agent Runner.",
-				Required:            true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of state storage configuration for the Kubernetes Agent Runner.",
-						Required:            true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("kubernetes"),
-						},
-					},
-					"kubernetes_configuration": schema.SingleNestedAttribute{
-						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Agent Runner.",
-						Required:            true,
-						Attributes: map[string]schema.Attribute{
-							"namespace": schema.StringAttribute{
-								MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
-								Required:            true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(63),
-								},
-							},
-						},
-					},
-				},
-			},
+			"state_storage_configuration": RunnerStateStorageResourceSchema,
 		},
 	}
 }
@@ -385,16 +339,15 @@ func parseKubernetesAgentRunnerConfigurationResponse(ctx context.Context, k8sAge
 
 func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner) (RunnerResourceModel, error) {
 	k8sAgentRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sAgentRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesAgentRunnerConfigurationResponse(context.Background(), k8sAgentRunnerConfiguration)
 	if err != nil {
 		return RunnerResourceModel{}, err
 	}
 
-	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
-	if stateStorageConfigurationModel == nil {
-		return RunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
+	if err != nil {
+		return RunnerResourceModel{}, err
 	}
 
 	return RunnerResourceModel{

@@ -50,7 +50,7 @@ EOT
 
 - `id` (String) The unique identifier for the Kubernetes Agent Runner.
 - `runner_configuration` (Attributes) The configuration of the Kubernetes Agent Runner. (see [below for nested schema](#nestedatt--runner_configuration))
-- `state_storage_configuration` (Attributes) The state storage configuration for the Kubernetes Agent Runner. (see [below for nested schema](#nestedatt--state_storage_configuration))
+- `state_storage_configuration` (Attributes) The state storage configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--state_storage_configuration))
 
 ### Optional
 
@@ -83,8 +83,8 @@ Optional:
 
 Required:
 
-- `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Kubernetes Agent Runner. (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
-- `type` (String) The type of state storage configuration for the Kubernetes Agent Runner.
+- `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
+- `type` (String) The type of state storage configuration for the Kubernetes Runner.
 
 <a id="nestedatt--state_storage_configuration--kubernetes_configuration"></a>
 ### Nested Schema for `state_storage_configuration.kubernetes_configuration`

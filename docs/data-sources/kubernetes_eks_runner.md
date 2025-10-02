@@ -29,7 +29,7 @@ data "platform-orchestrator_kubernetes_eks_runner" "kubernetes_eks_runner" {
 
 - `description` (String) The description of the Kubernetes EKS Runner.
 - `runner_configuration` (Attributes) The configuration of the Kubernetes EKS cluster. (see [below for nested schema](#nestedatt--runner_configuration))
-- `state_storage_configuration` (Attributes) The state storage configuration for the Kubernetes EKS Runner. (see [below for nested schema](#nestedatt--state_storage_configuration))
+- `state_storage_configuration` (Attributes) The state storage configuration for the Kubernetes Runner (see [below for nested schema](#nestedatt--state_storage_configuration))
 
 <a id="nestedatt--runner_configuration"></a>
 ### Nested Schema for `runner_configuration`
@@ -75,12 +75,12 @@ Read-Only:
 
 Read-Only:
 
-- `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Kubernetes EKS Runner. (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
-- `type` (String) The type of state storage configuration for the Kubernetes EKS Runner.
+- `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Kubernetes Runner (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
+- `type` (String) The type of state storage configuration for the Kubernetes Runner
 
 <a id="nestedatt--state_storage_configuration--kubernetes_configuration"></a>
 ### Nested Schema for `state_storage_configuration.kubernetes_configuration`
 
 Read-Only:
 
-- `namespace` (String) The namespace for the Kubernetes state storage configuration.
+- `namespace` (String) The namespace for the Kubernetes state storage configuration

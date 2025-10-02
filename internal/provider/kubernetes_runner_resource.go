@@ -212,17 +212,6 @@ type KubernetesRunnerKubernetesStateStorageConfigurationModel struct {
 	Namespace string `tfsdk:"namespace"`
 }
 
-func KubernetesRunnerStateStorageConfigurationAttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"type": types.StringType,
-		"kubernetes_configuration": types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"namespace": types.StringType,
-			},
-		},
-	}
-}
-
 func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *KubernetesRunnerResourceModel) (basetypes.ObjectValue, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	if data.RunnerConfiguration.IsUnknown() || data.RunnerConfiguration.IsNull() {

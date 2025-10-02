@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func commonStateStorageConfigurationAttributes() map[string]attr.Type {
@@ -24,7 +23,7 @@ func commonStateStorageConfigurationAttributes() map[string]attr.Type {
 	}
 }
 
-func parseStateStorageConfigurationResponse(ctx context.Context, k8sStateStorageConfiguration canyoncp.K8sStorageConfiguration) *basetypes.ObjectValue {
+func parseStateStorageConfigurationResponse(ctx context.Context, k8sStateStorageConfiguration canyoncp.K8sStorageConfiguration) (*basetypes.ObjectValue, error) {
 	var stateStorageConfig commonRunnerStateStorageModel
 
 	stateStorageConfig.Type = string(k8sStateStorageConfiguration.Type)
@@ -34,10 +33,9 @@ func parseStateStorageConfigurationResponse(ctx context.Context, k8sStateStorage
 
 	objectValue, diags := types.ObjectValueFrom(ctx, commonStateStorageConfigurationAttributes(), stateStorageConfig)
 	if diags.HasError() {
-		tflog.Warn(ctx, "can't parse state storage configuration from model", map[string]interface{}{"err": diags.Errors()})
-		return nil
+		return nil, fmt.Errorf("failed to build state storage configuration from model parsing API response: %v", diags.Errors())
 	}
-	return &objectValue
+	return &objectValue, nil
 }
 
 func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.StateStorageConfiguration, error) {

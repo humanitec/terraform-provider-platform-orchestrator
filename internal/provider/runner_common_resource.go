@@ -236,9 +236,9 @@ func (r *commonRunnerResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	switch httpResp.StatusCode() {
-	case 204:
+	case http.StatusNoContent:
 		// Successfully deleted, no further action needed.
-	case 404:
+	case http.StatusNotFound:
 		// If the resource is not found, we can consider it deleted.
 		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:

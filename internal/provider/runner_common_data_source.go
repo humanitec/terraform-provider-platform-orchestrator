@@ -33,12 +33,18 @@ type commonRunnerModel struct {
 }
 
 type commonRunnerStateStorageModel struct {
-	Type                    string                                  `tfsdk:"type"`
-	KubernetesConfiguration commonRunnerKubernetesStateStorageModel `tfsdk:"kubernetes_configuration"`
+	Type                    string                                   `tfsdk:"type"`
+	KubernetesConfiguration *commonRunnerKubernetesStateStorageModel `tfsdk:"kubernetes_configuration"`
+	S3                      *commonRunnerS3StateStorageModel         `tfsdk:"s3"`
 }
 
 type commonRunnerKubernetesStateStorageModel struct {
 	Namespace string `tfsdk:"namespace"`
+}
+
+type commonRunnerS3StateStorageModel struct {
+	Bucket     string `tfsdk:"bucket"`
+	PathPrefix string `tfsdk:"path_prefix"`
 }
 
 func (d *commonRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -46,19 +52,35 @@ func (d *commonRunnerDataSource) Metadata(ctx context.Context, req datasource.Me
 }
 
 var commonRunnerStateStorageDataSourceSchema = schema.SingleNestedAttribute{
-	MarkdownDescription: "The state storage configuration for the Kubernetes Runner",
+	MarkdownDescription: "The state storage configuration for the Runner",
 	Computed:            true,
 	Attributes: map[string]schema.Attribute{
 		"type": schema.StringAttribute{
-			MarkdownDescription: "The type of state storage configuration for the Kubernetes Runner",
+			MarkdownDescription: "The type of state storage configuration for the Runner",
 			Computed:            true,
 		},
 		"kubernetes_configuration": schema.SingleNestedAttribute{
-			MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner",
+			MarkdownDescription: "The Kubernetes state storage configuration for the Runner",
+			Optional:            true,
 			Computed:            true,
 			Attributes: map[string]schema.Attribute{
 				"namespace": schema.StringAttribute{
 					MarkdownDescription: "The namespace for the Kubernetes state storage configuration",
+					Computed:            true,
+				},
+			},
+		},
+		"s3": schema.SingleNestedAttribute{
+			MarkdownDescription: "The S3 state storage configuration for the Runner",
+			Optional:            true,
+			Computed:            true,
+			Attributes: map[string]schema.Attribute{
+				"bucket": schema.StringAttribute{
+					MarkdownDescription: "Name of the S3 Bucket",
+					Computed:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
 					Computed:            true,
 				},
 			},

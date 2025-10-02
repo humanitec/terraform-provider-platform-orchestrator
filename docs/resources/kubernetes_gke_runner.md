@@ -55,7 +55,7 @@ resource "platform-orchestrator_kubernetes_gke_runner" "my_runner" {
 
 - `id` (String) The unique identifier for the Kubernetes GKE Runner.
 - `runner_configuration` (Attributes) The configuration of the Kubernetes GKE cluster. (see [below for nested schema](#nestedatt--runner_configuration))
-- `state_storage_configuration` (Attributes) The state storage configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--state_storage_configuration))
+- `state_storage_configuration` (Attributes) The state storage configuration for the Runner. (see [below for nested schema](#nestedatt--state_storage_configuration))
 
 ### Optional
 
@@ -113,8 +113,12 @@ Optional:
 
 Required:
 
-- `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Kubernetes Runner. (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
-- `type` (String) The type of state storage configuration for the Kubernetes Runner.
+- `type` (String) The type of state storage configuration for the Runner.
+
+Optional:
+
+- `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Runner. (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
+- `s3` (Attributes) The S3 state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--s3))
 
 <a id="nestedatt--state_storage_configuration--kubernetes_configuration"></a>
 ### Nested Schema for `state_storage_configuration.kubernetes_configuration`
@@ -122,6 +126,18 @@ Required:
 Required:
 
 - `namespace` (String) The namespace for the Kubernetes state storage configuration.
+
+
+<a id="nestedatt--state_storage_configuration--s3"></a>
+### Nested Schema for `state_storage_configuration.s3`
+
+Required:
+
+- `bucket` (String) Name of the S3 Bucket
+
+Optional:
+
+- `path_prefix` (String) A prefix path for the state file. The environment uuid will be used as a unique key within this
 
 ## Import
 

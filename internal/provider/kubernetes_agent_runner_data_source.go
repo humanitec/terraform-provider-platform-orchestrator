@@ -1,8 +1,6 @@
 package provider
 
 import (
-	"context"
-	"errors"
 	"regexp"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
@@ -12,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func NewKubernetesAgentRunnerDataSource() datasource.DataSource {
@@ -89,25 +86,8 @@ func NewKubernetesAgentRunnerDataSource() datasource.DataSource {
 			},
 		},
 		ReadApiResponseIntoModel: func(item canyoncp.Runner, model commonRunnerModel) (commonRunnerModel, error) {
-			k8sAgentRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sAgentRunnerConfiguration()
-			k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
-
-			runnerConfigurationModel, err := parseKubernetesAgentRunnerConfigurationResponse(context.Background(), k8sAgentRunnerConfiguration)
-			if err != nil {
-				return commonRunnerModel{}, err
-			}
-
-			stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
-			if stateStorageConfigurationModel == nil {
-				return commonRunnerModel{}, errors.New("failed to parse state storage configuration")
-			}
-
-			return commonRunnerModel{
-				Id:                        types.StringValue(item.Id),
-				Description:               types.StringPointerValue(item.Description),
-				StateStorageConfiguration: *stateStorageConfigurationModel,
-				RunnerConfiguration:       runnerConfigurationModel,
-			}, nil
+			x, err := toKubernetesAgentRunnerResourceModel(item)
+			return commonRunnerModel(x), err
 		},
 	}
 }

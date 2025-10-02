@@ -71,18 +71,18 @@ func (d *commonRunnerDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	httpResp, err := d.cpClient.GetRunnerWithResponse(ctx, d.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read kubernetes eks runner, got error: %s", err))
+		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read %s, got error: %s", d.SubType, err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Kubernetes eks runner with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("%s with ID %s not found in org %s", d.SubType, data.Id.ValueString(), d.orgId))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read kubernetes eks runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read %s, unexpected status code: %d, body: %s", d.SubType, httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -93,7 +93,7 @@ func (d *commonRunnerDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	// Convert the runner to the data source model
 	if convertedData, err := d.ReadApiResponseIntoModel(*runner, data); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to KubernetesEksRunnerDataSourceModel: %s", err))
+		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to %s: %s", d.SubType, err))
 		return
 	} else {
 		data.RunnerConfiguration = convertedData.RunnerConfiguration

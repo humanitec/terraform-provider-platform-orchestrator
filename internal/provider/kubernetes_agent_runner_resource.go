@@ -114,15 +114,6 @@ func KubernetesAgentRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	}
 }
 
-type KubernetesAgentRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                        `tfsdk:"type"`
-	KubernetesConfiguration KubernetesAgentRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-}
-
-type KubernetesAgentRunnerKubernetesStateStorageConfigurationModel struct {
-	Namespace string `tfsdk:"namespace"`
-}
-
 func parseKubernetesAgentRunnerConfigurationResponse(ctx context.Context, k8sAgentRunnerConfiguration canyoncp.K8sAgentRunnerConfiguration) (basetypes.ObjectValue, error) {
 	runnerConfig := KubernetesAgentRunnerConfiguration{
 		Key: types.StringValue(k8sAgentRunnerConfiguration.Key),

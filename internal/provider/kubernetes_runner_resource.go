@@ -192,15 +192,6 @@ func KubernetesRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	}
 }
 
-type KubernetesRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                   `tfsdk:"type"`
-	KubernetesConfiguration KubernetesRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-}
-
-type KubernetesRunnerKubernetesStateStorageConfigurationModel struct {
-	Namespace string `tfsdk:"namespace"`
-}
-
 func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *commonRunnerModel) (basetypes.ObjectValue, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	if data.RunnerConfiguration.IsUnknown() || data.RunnerConfiguration.IsNull() {

@@ -184,26 +184,6 @@ func KubernetesGkeRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	}
 }
 
-type KubernetesGkeRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                      `tfsdk:"type"`
-	KubernetesConfiguration KubernetesGkeRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-}
-
-type KubernetesGkeRunnerKubernetesStateStorageConfigurationModel struct {
-	Namespace string `tfsdk:"namespace"`
-}
-
-func KubernetesGkeRunnerStateStorageConfigurationAttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"type": types.StringType,
-		"kubernetes_configuration": types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"namespace": types.StringType,
-			},
-		},
-	}
-}
-
 func parseKubernetesGKERunnerConfigurationResponse(ctx context.Context, k8sGKERunnerConfiguration canyoncp.K8sGkeRunnerConfiguration) (basetypes.ObjectValue, error) {
 	runnerConfig := KubernetesGkeRunnerConfiguration{
 		Cluster: KubernetesGkeRunnerCluster{

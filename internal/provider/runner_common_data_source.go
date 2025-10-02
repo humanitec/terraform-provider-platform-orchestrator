@@ -32,6 +32,15 @@ type commonRunnerModel struct {
 	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
 }
 
+type commonRunnerStateStorageModel struct {
+	Type                    string                                  `tfsdk:"type"`
+	KubernetesConfiguration commonRunnerKubernetesStateStorageModel `tfsdk:"kubernetes_configuration"`
+}
+
+type commonRunnerKubernetesStateStorageModel struct {
+	Namespace string `tfsdk:"namespace"`
+}
+
 func (d *commonRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_" + d.SubType
 }

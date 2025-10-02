@@ -188,15 +188,6 @@ func KubernetesEksRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	}
 }
 
-type KubernetesEksRunnerStateStorageConfigurationModel struct {
-	Type                    string                                                      `tfsdk:"type"`
-	KubernetesConfiguration KubernetesEksRunnerKubernetesStateStorageConfigurationModel `tfsdk:"kubernetes_configuration"`
-}
-
-type KubernetesEksRunnerKubernetesStateStorageConfigurationModel struct {
-	Namespace string `tfsdk:"namespace"`
-}
-
 func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRunnerConfiguration canyoncp.K8sEksRunnerConfiguration) (basetypes.ObjectValue, error) {
 	runnerConfig := KubernetesEksRunnerConfiguration{
 		Cluster: KubernetesEksRunnerCluster{

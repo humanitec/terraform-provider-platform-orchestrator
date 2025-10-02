@@ -56,6 +56,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
+							"s3": knownvalue.Null(),
 						}),
 					),
 				},
@@ -94,6 +95,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("default"),
 							}),
+							"s3": knownvalue.Null(),
 						}),
 					),
 				},

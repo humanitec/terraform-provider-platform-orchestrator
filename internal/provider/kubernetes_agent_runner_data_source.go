@@ -3,8 +3,6 @@ package provider
 import (
 	"regexp"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -66,9 +64,6 @@ func NewKubernetesAgentRunnerDataSource() datasource.DataSource {
 				"state_storage_configuration": commonRunnerStateStorageDataSourceSchema,
 			},
 		},
-		ReadApiResponseIntoModel: func(item canyoncp.Runner, model commonRunnerModel) (commonRunnerModel, error) {
-			x, err := toKubernetesAgentRunnerResourceModel(item)
-			return commonRunnerModel(x), err
-		},
+		ReadApiResponseIntoModel: toKubernetesAgentRunnerResourceModel,
 	}
 }

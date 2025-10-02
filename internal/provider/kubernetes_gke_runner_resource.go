@@ -125,21 +125,10 @@ func NewKubernetesGkeRunnerResource() resource.Resource {
 				"state_storage_configuration": commonRunnerStateStorageResourceSchema,
 			},
 		},
-		ReadApiResponseIntoModel: func(runner canyoncp.Runner, model commonRunnerModel) (commonRunnerModel, error) {
-			x, err := toKubernetesGkeRunnerResourceModel(runner)
-			return commonRunnerModel(x), err
-		},
+		ReadApiResponseIntoModel:         toKubernetesGkeRunnerResourceModel,
 		ConvertRunnerConfigIntoCreateApi: createKubernetesGKERunnerConfigurationFromObject,
 		ConvertRunnerConfigIntoUpdateApi: updateKubernetesGkeRunnerConfigurationFromObject,
 	}
-}
-
-// KubernetesGkeRunnerModel describes the resource data model.
-type KubernetesGkeRunnerResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
 }
 
 // KubernetesGkeRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
@@ -248,21 +237,21 @@ func parseKubernetesGKERunnerConfigurationResponse(ctx context.Context, k8sGKERu
 	return objectValue, nil
 }
 
-func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner) (KubernetesGkeRunnerResourceModel, error) {
+func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sGkeRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesGKERunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
 	if err != nil {
-		return KubernetesGkeRunnerResourceModel{}, err
+		return commonRunnerModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesGkeRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return commonRunnerModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesGkeRunnerResourceModel{
+	return commonRunnerModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,

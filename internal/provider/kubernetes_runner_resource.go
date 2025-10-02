@@ -127,21 +127,10 @@ func NewKubernetesRunnerResource() resource.Resource {
 				"state_storage_configuration": commonRunnerStateStorageResourceSchema,
 			},
 		},
-		ReadApiResponseIntoModel: func(runner canyoncp.Runner, model commonRunnerModel) (commonRunnerModel, error) {
-			x, err := toKubernetesRunnerResourceModel(runner, KubernetesRunnerResourceModel(model))
-			return commonRunnerModel(x), err
-		},
+		ReadApiResponseIntoModel:         toKubernetesRunnerResourceModel,
 		ConvertRunnerConfigIntoCreateApi: createKubernetesRunnerConfigurationFromObject,
 		ConvertRunnerConfigIntoUpdateApi: updateKubernetesRunnerConfigurationFromObject,
 	}
-}
-
-// KubernetesRunnerModel describes the resource data model.
-type KubernetesRunnerResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
 }
 
 // KubernetesRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
@@ -212,7 +201,7 @@ type KubernetesRunnerKubernetesStateStorageConfigurationModel struct {
 	Namespace string `tfsdk:"namespace"`
 }
 
-func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *KubernetesRunnerResourceModel) (basetypes.ObjectValue, error) {
+func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *commonRunnerModel) (basetypes.ObjectValue, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	if data.RunnerConfiguration.IsUnknown() || data.RunnerConfiguration.IsNull() {
 		runnerConfig = KubernetesRunnerConfiguration{}
@@ -270,21 +259,21 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 	return objectValue, nil
 }
 
-func toKubernetesRunnerResourceModel(item canyoncp.Runner, data KubernetesRunnerResourceModel) (KubernetesRunnerResourceModel, error) {
+func toKubernetesRunnerResourceModel(item canyoncp.Runner, data commonRunnerModel) (commonRunnerModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
 	if err != nil {
-		return KubernetesRunnerResourceModel{}, err
+		return commonRunnerModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return commonRunnerModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesRunnerResourceModel{
+	return commonRunnerModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,

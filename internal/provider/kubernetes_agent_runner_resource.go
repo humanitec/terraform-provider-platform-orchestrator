@@ -83,21 +83,10 @@ func NewKubernetesAgentRunnerResource() resource.Resource {
 				"state_storage_configuration": commonRunnerStateStorageResourceSchema,
 			},
 		},
-		ReadApiResponseIntoModel: func(runner canyoncp.Runner, model commonRunnerModel) (commonRunnerModel, error) {
-			x, err := toKubernetesAgentRunnerResourceModel(runner)
-			return commonRunnerModel(x), err
-		},
+		ReadApiResponseIntoModel:         toKubernetesAgentRunnerResourceModel,
 		ConvertRunnerConfigIntoCreateApi: createKubernetesAgentRunnerConfigurationFromObject,
 		ConvertRunnerConfigIntoUpdateApi: updateK8sAgentRunnerConfigurationFromObject,
 	}
-}
-
-// KubernetesAgentRunnerModel describes the resource data model.
-type KubernetesAgentRunnerResourceModel struct {
-	Id                        types.String `tfsdk:"id"`
-	Description               types.String `tfsdk:"description"`
-	RunnerConfiguration       types.Object `tfsdk:"runner_configuration"`
-	StateStorageConfiguration types.Object `tfsdk:"state_storage_configuration"`
 }
 
 // KubernetesAgentRunnerConfiguration describes the runner configuration structure following SecretRef pattern.
@@ -157,21 +146,21 @@ func parseKubernetesAgentRunnerConfigurationResponse(ctx context.Context, k8sAge
 	return objectValue, nil
 }
 
-func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner) (KubernetesAgentRunnerResourceModel, error) {
+func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
 	k8sAgentRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sAgentRunnerConfiguration()
 	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesAgentRunnerConfigurationResponse(context.Background(), k8sAgentRunnerConfiguration)
 	if err != nil {
-		return KubernetesAgentRunnerResourceModel{}, err
+		return commonRunnerModel{}, err
 	}
 
 	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if stateStorageConfigurationModel == nil {
-		return KubernetesAgentRunnerResourceModel{}, errors.New("failed to parse state storage configuration")
+		return commonRunnerModel{}, errors.New("failed to parse state storage configuration")
 	}
 
-	return KubernetesAgentRunnerResourceModel{
+	return commonRunnerModel{
 		Id:                        types.StringValue(item.Id),
 		Description:               types.StringPointerValue(item.Description),
 		StateStorageConfiguration: *stateStorageConfigurationModel,

@@ -37,15 +37,15 @@ func (d *commonRunnerDataSource) Metadata(ctx context.Context, req datasource.Me
 }
 
 var commonRunnerStateStorageDataSourceSchema = schema.SingleNestedAttribute{
-	MarkdownDescription: "The state storage configuration for the Kubernetes Agent Runner",
+	MarkdownDescription: "The state storage configuration for the Kubernetes Runner",
 	Computed:            true,
 	Attributes: map[string]schema.Attribute{
 		"type": schema.StringAttribute{
-			MarkdownDescription: "The type of state storage configuration for the Kubernetes Agent Runner",
+			MarkdownDescription: "The type of state storage configuration for the Kubernetes Runner",
 			Computed:            true,
 		},
 		"kubernetes_configuration": schema.SingleNestedAttribute{
-			MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Agent Runner",
+			MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner",
 			Computed:            true,
 			Attributes: map[string]schema.Attribute{
 				"namespace": schema.StringAttribute{

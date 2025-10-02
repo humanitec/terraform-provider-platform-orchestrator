@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
@@ -31,6 +33,33 @@ type commonRunnerResource struct {
 
 func (r *commonRunnerResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_" + r.SubType
+}
+
+var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
+	MarkdownDescription: "The state storage configuration for the Kubernetes Runner.",
+	Required:            true,
+	Attributes: map[string]schema.Attribute{
+		"type": schema.StringAttribute{
+			MarkdownDescription: "The type of state storage configuration for the Kubernetes Runner.",
+			Required:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("kubernetes"),
+			},
+		},
+		"kubernetes_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner.",
+			Required:            true,
+			Attributes: map[string]schema.Attribute{
+				"namespace": schema.StringAttribute{
+					MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
+					Required:            true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtMost(63),
+					},
+				},
+			},
+		},
+	},
 }
 
 func (r *commonRunnerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

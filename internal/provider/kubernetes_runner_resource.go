@@ -230,32 +230,7 @@ func (r *KubernetesRunnerResource) Schema(ctx context.Context, req resource.Sche
 					},
 				},
 			},
-			"state_storage_configuration": schema.SingleNestedAttribute{
-				MarkdownDescription: "The state storage configuration for the Kubernetes Runner.",
-				Required:            true,
-				Attributes: map[string]schema.Attribute{
-					"type": schema.StringAttribute{
-						MarkdownDescription: "The type of state storage configuration for the Kubernetes Runner.",
-						Required:            true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("kubernetes"),
-						},
-					},
-					"kubernetes_configuration": schema.SingleNestedAttribute{
-						MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner.",
-						Required:            true,
-						Attributes: map[string]schema.Attribute{
-							"namespace": schema.StringAttribute{
-								MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
-								Required:            true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(63),
-								},
-							},
-						},
-					},
-				},
-			},
+			"state_storage_configuration": commonRunnerStateStorageResourceSchema,
 		},
 	}
 }

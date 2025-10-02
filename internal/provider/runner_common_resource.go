@@ -118,7 +118,7 @@ func (r *commonRunnerResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	if httpResp.StatusCode() != 201 {
+	if httpResp.StatusCode() != http.StatusCreated {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}

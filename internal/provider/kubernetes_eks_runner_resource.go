@@ -260,7 +260,7 @@ func createKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj t
 		Cluster: canyoncp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.K8sRunnerAwsTemporaryAuth{
+			Auth: canyoncp.AwsTemporaryAuth{
 				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
 				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
 				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),
@@ -294,7 +294,7 @@ func updateKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj t
 		Cluster: &canyoncp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.K8sRunnerAwsTemporaryAuth{
+			Auth: canyoncp.AwsTemporaryAuth{
 				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
 				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
 				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),

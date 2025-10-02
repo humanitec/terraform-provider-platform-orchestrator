@@ -129,14 +129,8 @@ func NewKubernetesGkeRunnerResource() resource.Resource {
 			x, err := toKubernetesGkeRunnerResourceModel(runner)
 			return commonRunnerModel(x), err
 		},
-		ConvertRunnerConfigIntoCreateApi: func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
-			x, err := createKubernetesGKERunnerConfigurationFromObject(ctx, obj)
-			return x, err
-		},
-		ConvertRunnerConfigIntoUpdateApi: func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
-			x, err := updateKubernetesGkeRunnerConfigurationFromObject(ctx, obj)
-			return x, err
-		},
+		ConvertRunnerConfigIntoCreateApi: createKubernetesGKERunnerConfigurationFromObject,
+		ConvertRunnerConfigIntoUpdateApi: updateKubernetesGkeRunnerConfigurationFromObject,
 	}
 }
 

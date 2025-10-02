@@ -137,14 +137,8 @@ func NewKubernetesEksRunnerResource() resource.Resource {
 			x, err := toKubernetesEksRunnerResourceModel(runner)
 			return commonRunnerModel(x), err
 		},
-		ConvertRunnerConfigIntoCreateApi: func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
-			x, err := createKubernetesEksRunnerConfigurationFromObject(ctx, obj)
-			return x, err
-		},
-		ConvertRunnerConfigIntoUpdateApi: func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
-			x, err := updateKubernetesEksRunnerConfigurationFromObject(ctx, obj)
-			return x, err
-		},
+		ConvertRunnerConfigIntoCreateApi: createKubernetesEksRunnerConfigurationFromObject,
+		ConvertRunnerConfigIntoUpdateApi: updateKubernetesEksRunnerConfigurationFromObject,
 	}
 }
 

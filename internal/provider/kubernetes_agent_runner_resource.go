@@ -87,14 +87,8 @@ func NewKubernetesAgentRunnerResource() resource.Resource {
 			x, err := toKubernetesAgentRunnerResourceModel(runner)
 			return commonRunnerModel(x), err
 		},
-		ConvertRunnerConfigIntoCreateApi: func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
-			x, err := createKubernetesAgentRunnerConfigurationFromObject(ctx, obj)
-			return x, err
-		},
-		ConvertRunnerConfigIntoUpdateApi: func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
-			x, err := updateK8sAgentRunnerConfigurationFromObject(ctx, obj)
-			return x, err
-		},
+		ConvertRunnerConfigIntoCreateApi: createKubernetesAgentRunnerConfigurationFromObject,
+		ConvertRunnerConfigIntoUpdateApi: updateK8sAgentRunnerConfigurationFromObject,
 	}
 }
 

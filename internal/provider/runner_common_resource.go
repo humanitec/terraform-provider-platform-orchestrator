@@ -155,7 +155,7 @@ func (r *commonRunnerResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	if httpResp.StatusCode() != 200 {
+	if httpResp.StatusCode() != http.StatusOK {
 		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}

@@ -138,13 +138,12 @@ func parseKubernetesAgentRunnerConfigurationResponse(ctx context.Context, k8sAge
 
 func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
 	k8sAgentRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sAgentRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
-
 	runnerConfigurationModel, err := parseKubernetesAgentRunnerConfigurationResponse(context.Background(), k8sAgentRunnerConfiguration)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}
 
+	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
 	if err != nil {
 		return commonRunnerModel{}, err

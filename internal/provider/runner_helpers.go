@@ -20,6 +20,12 @@ func commonStateStorageConfigurationAttributes() map[string]attr.Type {
 				"namespace": types.StringType,
 			},
 		},
+		"s3": types.ObjectType{
+			AttrTypes: map[string]attr.Type{
+				"bucket":      types.StringType,
+				"path_prefix": types.StringType,
+			},
+		},
 	}
 }
 

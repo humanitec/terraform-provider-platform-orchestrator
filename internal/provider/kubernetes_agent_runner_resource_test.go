@@ -56,7 +56,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
-							"s3": knownvalue.Null(),
+							"s3_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -95,7 +95,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("default"),
 							}),
-							"s3": knownvalue.Null(),
+							"s3_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -207,7 +207,7 @@ EOT
 						tfjsonpath.New("state_storage_configuration"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("s3"),
-							"s3": knownvalue.MapExact(map[string]knownvalue.Check{
+							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"bucket":      knownvalue.StringExact("some-bucket"),
 								"path_prefix": knownvalue.StringExact("some/prefix"),
 							}),

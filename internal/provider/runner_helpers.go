@@ -28,7 +28,9 @@ func parseStateStorageConfigurationResponse(ctx context.Context, k8sStateStorage
 	var stateStorageConfig commonRunnerStateStorageModel
 
 	stateStorageConfig.Type = string(k8sStateStorageConfiguration.Type)
-	stateStorageConfig.KubernetesConfiguration.Namespace = k8sStateStorageConfiguration.Namespace
+	stateStorageConfig.KubernetesConfiguration = &commonRunnerKubernetesStateStorageModel{
+		Namespace: k8sStateStorageConfiguration.Namespace,
+	}
 
 	objectValue, diags := types.ObjectValueFrom(ctx, commonStateStorageConfigurationAttributes(), stateStorageConfig)
 	if diags.HasError() {

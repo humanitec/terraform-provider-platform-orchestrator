@@ -163,3 +163,65 @@ EOT
 }
 `
 }
+
+func TestAccKubernetesAgentRunnerResource_s3_state(t *testing.T) {
+	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: `
+resource "platform-orchestrator_kubernetes_agent_runner" "test" {
+  id = "` + runnerId + `"
+  runner_configuration = {
+	key = <<EOT
+-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
+-----END PUBLIC KEY-----
+EOT
+	job = {
+	  namespace = "default"
+      service_account = "humanitec-runner"
+	  pod_template = "{}"
+	}
+  }
+  state_storage_configuration = {
+	type = "s3"
+	s3_configuration = {
+	  bucket = "some-bucket"
+      path_prefix = "some/prefix"
+	}
+  }
+}
+`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_agent_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_agent_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("s3"),
+							"s3": knownvalue.MapExact(map[string]knownvalue.Check{
+								"bucket":      knownvalue.StringExact("some-bucket"),
+								"path_prefix": knownvalue.StringExact("some/prefix"),
+							}),
+							"kubernetes_configuration": knownvalue.Null(),
+						}),
+					),
+				},
+			},
+			{
+				ResourceName:      "platform-orchestrator_kubernetes_agent_runner.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}

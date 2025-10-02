@@ -143,8 +143,7 @@ func toKubernetesAgentRunnerResourceModel(item canyoncp.Runner, _ commonRunnerMo
 		return commonRunnerModel{}, err
 	}
 
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
-	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	"terraform-provider-humanitec-v2/internal/ref"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -29,12 +30,24 @@ func commonStateStorageConfigurationAttributes() map[string]attr.Type {
 	}
 }
 
-func parseStateStorageConfigurationResponse(ctx context.Context, k8sStateStorageConfiguration canyoncp.K8sStorageConfiguration) (*basetypes.ObjectValue, error) {
+func parseStateStorageConfigurationResponse(ctx context.Context, ssc canyoncp.StateStorageConfiguration) (*basetypes.ObjectValue, error) {
 	var stateStorageConfig commonRunnerStateStorageModel
 
-	stateStorageConfig.Type = string(k8sStateStorageConfiguration.Type)
-	stateStorageConfig.KubernetesConfiguration = &commonRunnerKubernetesStateStorageModel{
-		Namespace: k8sStateStorageConfiguration.Namespace,
+	stateStorageConfig.Type, _ = ssc.Discriminator()
+	switch canyoncp.StateStorageType(stateStorageConfig.Type) {
+	case canyoncp.StateStorageTypeS3:
+		typedSsc, _ := ssc.AsS3StorageConfiguration()
+		stateStorageConfig.S3 = &commonRunnerS3StateStorageModel{
+			Bucket:     typedSsc.Bucket,
+			PathPrefix: ref.DerefOr(typedSsc.PathPrefix, ""),
+		}
+	case canyoncp.StateStorageTypeKubernetes:
+		typedSsc, _ := ssc.AsK8sStorageConfiguration()
+		stateStorageConfig.KubernetesConfiguration = &commonRunnerKubernetesStateStorageModel{
+			Namespace: typedSsc.Namespace,
+		}
+	default:
+		return nil, fmt.Errorf("unsupported state storage type: %s", stateStorageConfig.Type)
 	}
 
 	objectValue, diags := types.ObjectValueFrom(ctx, commonStateStorageConfigurationAttributes(), stateStorageConfig)
@@ -52,9 +65,21 @@ func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Ob
 	}
 
 	var stateStorageConfiguration = new(canyoncp.StateStorageConfiguration)
-	_ = stateStorageConfiguration.FromK8sStorageConfiguration(canyoncp.K8sStorageConfiguration{
-		Type:      canyoncp.StateStorageType(stateStorageConfig.Type),
-		Namespace: stateStorageConfig.KubernetesConfiguration.Namespace,
-	})
+	switch canyoncp.StateStorageType(stateStorageConfig.Type) {
+	case canyoncp.StateStorageTypeS3:
+		_ = stateStorageConfiguration.FromS3StorageConfiguration(canyoncp.S3StorageConfiguration{
+			Type:       canyoncp.StateStorageTypeS3,
+			Bucket:     stateStorageConfig.S3.Bucket,
+			PathPrefix: ref.RefStringEmptyNil(stateStorageConfig.S3.PathPrefix),
+		})
+	case canyoncp.StateStorageTypeKubernetes:
+		_ = stateStorageConfiguration.FromK8sStorageConfiguration(canyoncp.K8sStorageConfiguration{
+			Type:      canyoncp.StateStorageTypeKubernetes,
+			Namespace: stateStorageConfig.KubernetesConfiguration.Namespace,
+		})
+	default:
+		return canyoncp.StateStorageConfiguration{}, fmt.Errorf("unsupported state storage type: %s", stateStorageConfig.Type)
+	}
+
 	return *stateStorageConfiguration, nil
 }

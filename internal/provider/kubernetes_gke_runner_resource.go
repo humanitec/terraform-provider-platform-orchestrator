@@ -218,14 +218,13 @@ func parseKubernetesGKERunnerConfigurationResponse(ctx context.Context, k8sGKERu
 
 func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sGkeRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesGKERunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}
 
-	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}

@@ -118,7 +118,7 @@ Required:
 Optional:
 
 - `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Runner. (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
-- `s3` (Attributes) The S3 state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--s3))
+- `s3_configuration` (Attributes) The S3 state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--s3_configuration))
 
 <a id="nestedatt--state_storage_configuration--kubernetes_configuration"></a>
 ### Nested Schema for `state_storage_configuration.kubernetes_configuration`
@@ -128,8 +128,8 @@ Required:
 - `namespace` (String) The namespace for the Kubernetes state storage configuration.
 
 
-<a id="nestedatt--state_storage_configuration--s3"></a>
-### Nested Schema for `state_storage_configuration.s3`
+<a id="nestedatt--state_storage_configuration--s3_configuration"></a>
+### Nested Schema for `state_storage_configuration.s3_configuration`
 
 Required:
 

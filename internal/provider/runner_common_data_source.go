@@ -35,7 +35,7 @@ type commonRunnerModel struct {
 type commonRunnerStateStorageModel struct {
 	Type                    string                                   `tfsdk:"type"`
 	KubernetesConfiguration *commonRunnerKubernetesStateStorageModel `tfsdk:"kubernetes_configuration"`
-	S3                      *commonRunnerS3StateStorageModel         `tfsdk:"s3"`
+	S3Configuration         *commonRunnerS3StateStorageModel         `tfsdk:"s3_configuration"`
 }
 
 type commonRunnerKubernetesStateStorageModel struct {
@@ -70,7 +70,7 @@ var commonRunnerStateStorageDataSourceSchema = schema.SingleNestedAttribute{
 				},
 			},
 		},
-		"s3": schema.SingleNestedAttribute{
+		"s3_configuration": schema.SingleNestedAttribute{
 			MarkdownDescription: "The S3 state storage configuration for the Runner",
 			Optional:            true,
 			Computed:            true,

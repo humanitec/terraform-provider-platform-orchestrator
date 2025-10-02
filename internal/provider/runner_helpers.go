@@ -21,7 +21,7 @@ func commonStateStorageConfigurationAttributes() map[string]attr.Type {
 				"namespace": types.StringType,
 			},
 		},
-		"s3": types.ObjectType{
+		"s3_configuration": types.ObjectType{
 			AttrTypes: map[string]attr.Type{
 				"bucket":      types.StringType,
 				"path_prefix": types.StringType,
@@ -37,7 +37,7 @@ func parseStateStorageConfigurationResponse(ctx context.Context, ssc canyoncp.St
 	switch canyoncp.StateStorageType(stateStorageConfig.Type) {
 	case canyoncp.StateStorageTypeS3:
 		typedSsc, _ := ssc.AsS3StorageConfiguration()
-		stateStorageConfig.S3 = &commonRunnerS3StateStorageModel{
+		stateStorageConfig.S3Configuration = &commonRunnerS3StateStorageModel{
 			Bucket:     typedSsc.Bucket,
 			PathPrefix: ref.DerefOr(typedSsc.PathPrefix, ""),
 		}
@@ -69,8 +69,8 @@ func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Ob
 	case canyoncp.StateStorageTypeS3:
 		_ = stateStorageConfiguration.FromS3StorageConfiguration(canyoncp.S3StorageConfiguration{
 			Type:       canyoncp.StateStorageTypeS3,
-			Bucket:     stateStorageConfig.S3.Bucket,
-			PathPrefix: ref.RefStringEmptyNil(stateStorageConfig.S3.PathPrefix),
+			Bucket:     stateStorageConfig.S3Configuration.Bucket,
+			PathPrefix: ref.RefStringEmptyNil(stateStorageConfig.S3Configuration.PathPrefix),
 		})
 	case canyoncp.StateStorageTypeKubernetes:
 		_ = stateStorageConfiguration.FromK8sStorageConfiguration(canyoncp.K8sStorageConfiguration{

@@ -43,7 +43,7 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 			MarkdownDescription: "The type of state storage configuration for the Runner.",
 			Required:            true,
 			Validators: []validator.String{
-				stringvalidator.OneOf("kubernetes", "s3"),
+				stringvalidator.OneOf(string(canyoncp.StateStorageTypeKubernetes), string(canyoncp.StateStorageTypeS3)),
 			},
 		},
 		"kubernetes_configuration": schema.SingleNestedAttribute{
@@ -59,7 +59,7 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 				},
 			},
 		},
-		"s3": schema.SingleNestedAttribute{
+		"s3_configuration": schema.SingleNestedAttribute{
 			MarkdownDescription: "The S3 state storage configuration for the Runner",
 			Optional:            true,
 			Attributes: map[string]schema.Attribute{

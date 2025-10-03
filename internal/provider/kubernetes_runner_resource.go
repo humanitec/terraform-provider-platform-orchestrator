@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"regexp"
 
@@ -252,16 +251,15 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 
 func toKubernetesRunnerResourceModel(item canyoncp.Runner, data commonRunnerModel) (commonRunnerModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}
 
-	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
-	if stateStorageConfigurationModel == nil {
-		return commonRunnerModel{}, errors.New("failed to parse state storage configuration")
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
+	if err != nil {
+		return commonRunnerModel{}, err
 	}
 
 	return commonRunnerModel{

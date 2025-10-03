@@ -36,19 +36,19 @@ func (r *commonRunnerResource) Metadata(ctx context.Context, req resource.Metada
 }
 
 var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
-	MarkdownDescription: "The state storage configuration for the Kubernetes Runner.",
+	MarkdownDescription: "The state storage configuration for the Runner.",
 	Required:            true,
 	Attributes: map[string]schema.Attribute{
 		"type": schema.StringAttribute{
-			MarkdownDescription: "The type of state storage configuration for the Kubernetes Runner.",
+			MarkdownDescription: "The type of state storage configuration for the Runner.",
 			Required:            true,
 			Validators: []validator.String{
-				stringvalidator.OneOf("kubernetes"),
+				stringvalidator.OneOf(string(canyoncp.StateStorageTypeKubernetes), string(canyoncp.StateStorageTypeS3)),
 			},
 		},
 		"kubernetes_configuration": schema.SingleNestedAttribute{
-			MarkdownDescription: "The Kubernetes state storage configuration for the Kubernetes Runner.",
-			Required:            true,
+			MarkdownDescription: "The Kubernetes state storage configuration for the Runner.",
+			Optional:            true,
 			Attributes: map[string]schema.Attribute{
 				"namespace": schema.StringAttribute{
 					MarkdownDescription: "The namespace for the Kubernetes state storage configuration.",
@@ -56,6 +56,20 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(63),
 					},
+				},
+			},
+		},
+		"s3_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The S3 state storage configuration for the Runner",
+			Optional:            true,
+			Attributes: map[string]schema.Attribute{
+				"bucket": schema.StringAttribute{
+					MarkdownDescription: "Name of the S3 Bucket",
+					Required:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
+					Optional:            true,
 				},
 			},
 		},

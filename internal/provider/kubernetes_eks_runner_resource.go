@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"regexp"
 
@@ -221,16 +220,15 @@ func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRu
 
 func toKubernetesEksRunnerResourceModel(item canyoncp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sEksRunnerConfiguration()
-	k8sStateStorageConfiguration, _ := item.StateStorageConfiguration.AsK8sStorageConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesEksRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}
 
-	stateStorageConfigurationModel := parseStateStorageConfigurationResponse(context.Background(), k8sStateStorageConfiguration)
-	if stateStorageConfigurationModel == nil {
-		return commonRunnerModel{}, errors.New("failed to parse state storage configuration")
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
+	if err != nil {
+		return commonRunnerModel{}, err
 	}
 
 	return commonRunnerModel{
@@ -260,7 +258,7 @@ func createKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj t
 		Cluster: canyoncp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.K8sRunnerAwsTemporaryAuth{
+			Auth: canyoncp.AwsTemporaryAuth{
 				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
 				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
 				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),
@@ -294,7 +292,7 @@ func updateKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj t
 		Cluster: &canyoncp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.K8sRunnerAwsTemporaryAuth{
+			Auth: canyoncp.AwsTemporaryAuth{
 				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
 				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
 				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),

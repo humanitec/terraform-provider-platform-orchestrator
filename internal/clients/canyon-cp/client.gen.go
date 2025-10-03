@@ -58,11 +58,13 @@ const (
 	RunnerTypeKubernetesAgent RunnerType = "kubernetes-agent"
 	RunnerTypeKubernetesEks   RunnerType = "kubernetes-eks"
 	RunnerTypeKubernetesGke   RunnerType = "kubernetes-gke"
+	RunnerTypeServerlessEcs   RunnerType = "serverless-ecs"
 )
 
 // Defines values for StateStorageType.
 const (
 	StateStorageTypeKubernetes StateStorageType = "kubernetes"
+	StateStorageTypeS3         StateStorageType = "s3"
 )
 
 // AvailableResourceType A page of available resource types returned from the list api.
@@ -106,6 +108,18 @@ type AvailableResourceTypePage struct {
 
 	// NextPageToken The page token to use to request the next page of items
 	NextPageToken *string `json:"next_page_token,omitempty"`
+}
+
+// AwsTemporaryAuth Configuration to obtain temporary AWS security credentials by assuming an IAM role.
+type AwsTemporaryAuth struct {
+	// RoleArn The ARN of the role to assume.
+	RoleArn string `json:"role_arn"`
+
+	// SessionName (Optional) Session name to be used when assuming the role. If not provided, a default session name will be "{org_id}-{runner_id}".
+	SessionName *string `json:"session_name,omitempty"`
+
+	// StsRegion (Optional) The AWS region identifier for the Security Token Service (STS) endpoint. If not provided, the cluster region will be used.
+	StsRegion *string `json:"sts_region,omitempty"`
 }
 
 // ConfigurationSecret Secret path and version of a secret stored in the internal store.
@@ -325,8 +339,11 @@ type InternalModuleCatalogueModuleRule struct {
 
 // InternalOrganizationCreateBody A request to create a new organization state in the control plane.
 type InternalOrganizationCreateBody struct {
-	// Id The unique identifier of the org
-	Id string `json:"id"`
+	// Id The unique identifier of the org. It will be auto-generated if not provided.
+	Id *string `json:"id,omitempty"`
+
+	// IdPrefix An id prefix for the org. If will be a prefix to the auto-generated id.
+	IdPrefix *string `json:"id_prefix,omitempty"`
 }
 
 // InternalRunner defines model for InternalRunner.
@@ -431,18 +448,6 @@ type K8sGkeRunnerConfigurationUpdateBody struct {
 	Type RunnerType `json:"type"`
 }
 
-// K8sRunnerAwsTemporaryAuth Configuration to obtain temporary access token to access an EKS cluster.
-type K8sRunnerAwsTemporaryAuth struct {
-	// RoleArn The ARN of the role to assume.
-	RoleArn string `json:"role_arn"`
-
-	// SessionName Optional session name to be used when assuming the role.
-	SessionName *string `json:"session_name,omitempty"`
-
-	// StsRegion Optional AWS STS region to use instead of the global endpoint.
-	StsRegion *string `json:"sts_region,omitempty"`
-}
-
 // K8sRunnerConfiguration Runner configuration for a Kubernetes cluster.
 type K8sRunnerConfiguration struct {
 	// Cluster Configuration to obtain access token to a generic K8s cluster with auth
@@ -469,8 +474,8 @@ type K8sRunnerConfigurationUpdateBody struct {
 
 // K8sRunnerEksCluster Configuration to access an EKS cluster.
 type K8sRunnerEksCluster struct {
-	// Auth Configuration to obtain temporary access token to access an EKS cluster.
-	Auth K8sRunnerAwsTemporaryAuth `json:"auth"`
+	// Auth Configuration to obtain temporary AWS security credentials by assuming an IAM role.
+	Auth AwsTemporaryAuth `json:"auth"`
 
 	// Name Name of the EKS cluster.
 	Name string `json:"name"`
@@ -1218,6 +1223,75 @@ type RunnerUpdateBody struct {
 	StateStorageConfiguration *StateStorageConfiguration `json:"state_storage_configuration,omitempty"`
 }
 
+// S3StorageConfiguration Configuration to use an AWS S3 bucket as state storage backend of this runner. Authentication and other settings
+// can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/s3#state-storage>
+// for more details.
+type S3StorageConfiguration struct {
+	// Bucket Name of the S3 Bucket.
+	Bucket string `json:"bucket"`
+
+	// PathPrefix A prefix path for the state file. The environment uuid will be used as a unique key within this.
+	PathPrefix *string `json:"path_prefix,omitempty"`
+
+	// Type Type of the Terraform Backend used by the runner.
+	Type StateStorageType `json:"type"`
+}
+
+// ServerlessEcsRunnerConfiguration Runner configuration for executing on AWS ECS Fargate.
+type ServerlessEcsRunnerConfiguration struct {
+	// Auth Configuration to obtain temporary AWS security credentials by assuming an IAM role.
+	Auth AwsTemporaryAuth `json:"auth"`
+
+	// Job Job details for the AWS ECS Runner
+	Job ServerlessEcsRunnerJob `json:"job"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
+// ServerlessEcsRunnerConfigurationUpdateBody Runner configuration for executing on AWS ECS Fargate.
+type ServerlessEcsRunnerConfigurationUpdateBody struct {
+	// Auth Configuration to obtain temporary AWS security credentials by assuming an IAM role.
+	Auth *AwsTemporaryAuth `json:"auth,omitempty"`
+
+	// Job Job details for the AWS ECS Runner
+	Job *ServerlessEcsRunnerJob `json:"job,omitempty"`
+
+	// Type The Runner type.
+	Type RunnerType `json:"type"`
+}
+
+// ServerlessEcsRunnerJob Job details for the AWS ECS Runner
+type ServerlessEcsRunnerJob struct {
+	// Cluster ECS Fargate cluster name
+	Cluster string `json:"cluster"`
+
+	// Environment Additional environment variables to pass to the ECS job.
+	Environment map[string]string `json:"environment,omitempty"`
+
+	// ExecutionRoleArn The ARN of the role used to pull images, retrieve secrets and parameters, and execute the Runner.
+	ExecutionRoleArn string `json:"execution_role_arn"`
+
+	// IsPublicIpEnabled Whether to assign a public ip to the ECS task. This is required if the target subnets use Internet Gateways
+	// instead of NAT Gateways to reach public networks. Defaults to false.
+	IsPublicIpEnabled bool `json:"is_public_ip_enabled,omitempty"`
+
+	// Region AWS Region to run the ECS job in.
+	Region string `json:"region"`
+
+	// Secrets A set of AWS Secrets Manager Secrets or Parameter Store Parameters to mount
+	Secrets map[string]string `json:"secrets,omitempty"`
+
+	// SecurityGroups An optional list of IDs for the AWS security groups that the runner should be associated with.
+	SecurityGroups []string `json:"security_groups,omitempty"`
+
+	// Subnets The IDs of the AWS subnets that the runner must be connected to. At least one is required.
+	Subnets []string `json:"subnets"`
+
+	// TaskRoleArn An optional ARN for the role available inside the Runner.
+	TaskRoleArn *string `json:"task_role_arn,omitempty"`
+}
+
 // StateStorageConfiguration Configuration for the Terraform Backend used by the runner.
 type StateStorageConfiguration struct {
 	union json.RawMessage
@@ -1240,6 +1314,9 @@ type EnvIdPathParam = string
 
 // EnvTypeIdPathParam defines model for envTypeIdPathParam.
 type EnvTypeIdPathParam = string
+
+// ForceQueryParam defines model for forceQueryParam.
+type ForceQueryParam = bool
 
 // IncludeNonDeveloperAccessibleQueryParam defines model for includeNonDeveloperAccessibleQueryParam.
 type IncludeNonDeveloperAccessibleQueryParam = bool
@@ -1377,6 +1454,12 @@ type ListEnvironmentsParams struct {
 
 	// ByEnvTypeId Filter the list by environment types
 	ByEnvTypeId *[]string `form:"byEnvTypeId,omitempty" json:"byEnvTypeId,omitempty"`
+}
+
+// DeleteEnvironmentParams defines parameters for DeleteEnvironment.
+type DeleteEnvironmentParams struct {
+	// Force If true, will perform force deletion, without destroying underlying infrastructure.
+	Force *ForceQueryParam `form:"force,omitempty" json:"force,omitempty"`
 }
 
 // UpdateRunnerInAnEnvironmentParams defines parameters for UpdateRunnerInAnEnvironment.
@@ -1614,6 +1697,34 @@ func (t *RunnerConfiguration) MergeK8sAgentRunnerConfiguration(v K8sAgentRunnerC
 	return err
 }
 
+// AsServerlessEcsRunnerConfiguration returns the union data inside the RunnerConfiguration as a ServerlessEcsRunnerConfiguration
+func (t RunnerConfiguration) AsServerlessEcsRunnerConfiguration() (ServerlessEcsRunnerConfiguration, error) {
+	var body ServerlessEcsRunnerConfiguration
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromServerlessEcsRunnerConfiguration overwrites any union data inside the RunnerConfiguration as the provided ServerlessEcsRunnerConfiguration
+func (t *RunnerConfiguration) FromServerlessEcsRunnerConfiguration(v ServerlessEcsRunnerConfiguration) error {
+	v.Type = "serverless-ecs"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeServerlessEcsRunnerConfiguration performs a merge with any union data inside the RunnerConfiguration, using the provided ServerlessEcsRunnerConfiguration
+func (t *RunnerConfiguration) MergeServerlessEcsRunnerConfiguration(v ServerlessEcsRunnerConfiguration) error {
+	v.Type = "serverless-ecs"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t RunnerConfiguration) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"type"`
@@ -1636,6 +1747,8 @@ func (t RunnerConfiguration) ValueByDiscriminator() (interface{}, error) {
 		return t.AsK8sEksRunnerConfiguration()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfiguration()
+	case "serverless-ecs":
+		return t.AsServerlessEcsRunnerConfiguration()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
@@ -1763,6 +1876,34 @@ func (t *RunnerConfigurationUpdate) MergeK8sAgentRunnerConfigurationUpdateBody(v
 	return err
 }
 
+// AsServerlessEcsRunnerConfigurationUpdateBody returns the union data inside the RunnerConfigurationUpdate as a ServerlessEcsRunnerConfigurationUpdateBody
+func (t RunnerConfigurationUpdate) AsServerlessEcsRunnerConfigurationUpdateBody() (ServerlessEcsRunnerConfigurationUpdateBody, error) {
+	var body ServerlessEcsRunnerConfigurationUpdateBody
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromServerlessEcsRunnerConfigurationUpdateBody overwrites any union data inside the RunnerConfigurationUpdate as the provided ServerlessEcsRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) FromServerlessEcsRunnerConfigurationUpdateBody(v ServerlessEcsRunnerConfigurationUpdateBody) error {
+	v.Type = "serverless-ecs"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeServerlessEcsRunnerConfigurationUpdateBody performs a merge with any union data inside the RunnerConfigurationUpdate, using the provided ServerlessEcsRunnerConfigurationUpdateBody
+func (t *RunnerConfigurationUpdate) MergeServerlessEcsRunnerConfigurationUpdateBody(v ServerlessEcsRunnerConfigurationUpdateBody) error {
+	v.Type = "serverless-ecs"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t RunnerConfigurationUpdate) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"type"`
@@ -1785,6 +1926,8 @@ func (t RunnerConfigurationUpdate) ValueByDiscriminator() (interface{}, error) {
 		return t.AsK8sEksRunnerConfigurationUpdateBody()
 	case "kubernetes-gke":
 		return t.AsK8sGkeRunnerConfigurationUpdateBody()
+	case "serverless-ecs":
+		return t.AsServerlessEcsRunnerConfigurationUpdateBody()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
@@ -1828,6 +1971,34 @@ func (t *StateStorageConfiguration) MergeK8sStorageConfiguration(v K8sStorageCon
 	return err
 }
 
+// AsS3StorageConfiguration returns the union data inside the StateStorageConfiguration as a S3StorageConfiguration
+func (t StateStorageConfiguration) AsS3StorageConfiguration() (S3StorageConfiguration, error) {
+	var body S3StorageConfiguration
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromS3StorageConfiguration overwrites any union data inside the StateStorageConfiguration as the provided S3StorageConfiguration
+func (t *StateStorageConfiguration) FromS3StorageConfiguration(v S3StorageConfiguration) error {
+	v.Type = "s3"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeS3StorageConfiguration performs a merge with any union data inside the StateStorageConfiguration, using the provided S3StorageConfiguration
+func (t *StateStorageConfiguration) MergeS3StorageConfiguration(v S3StorageConfiguration) error {
+	v.Type = "s3"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t StateStorageConfiguration) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"type"`
@@ -1844,6 +2015,8 @@ func (t StateStorageConfiguration) ValueByDiscriminator() (interface{}, error) {
 	switch discriminator {
 	case "kubernetes":
 		return t.AsK8sStorageConfiguration()
+	case "s3":
+		return t.AsS3StorageConfiguration()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
@@ -1947,6 +2120,9 @@ type ClientInterface interface {
 	InternalUpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	InternalUpdateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body InternalUpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// InternalForceDeleteEnvironment request
+	InternalForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GenerateInternalModuleCatalogueWithBody request with any body
 	GenerateInternalModuleCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2074,7 +2250,7 @@ type ClientInterface interface {
 	CreateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, body CreateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteEnvironment request
-	DeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *DeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetEnvironment request
 	GetEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2083,9 +2259,6 @@ type ClientInterface interface {
 	UpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// ForceDeleteEnvironment request
-	ForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdateRunnerInAnEnvironment request
 	UpdateRunnerInAnEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *UpdateRunnerInAnEnvironmentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2208,6 +2381,18 @@ func (c *Client) InternalUpdateEnvironmentWithBody(ctx context.Context, orgId Or
 
 func (c *Client) InternalUpdateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body InternalUpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewInternalUpdateEnvironmentRequest(c.Server, orgId, projectId, envId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) InternalForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInternalForceDeleteEnvironmentRequest(c.Server, orgId, projectId, envId)
 	if err != nil {
 		return nil, err
 	}
@@ -2770,8 +2955,8 @@ func (c *Client) CreateEnvironment(ctx context.Context, orgId OrgIdPathParam, pr
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteEnvironmentRequest(c.Server, orgId, projectId, envId)
+func (c *Client) DeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *DeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteEnvironmentRequest(c.Server, orgId, projectId, envId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2808,18 +2993,6 @@ func (c *Client) UpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathP
 
 func (c *Client) UpdateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateEnvironmentRequest(c.Server, orgId, projectId, envId, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) ForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewForceDeleteEnvironmentRequest(c.Server, orgId, projectId, envId)
 	if err != nil {
 		return nil, err
 	}
@@ -3278,6 +3451,54 @@ func NewInternalUpdateEnvironmentRequestWithBody(server string, orgId OrgIdPathP
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewInternalForceDeleteEnvironmentRequest generates requests for InternalForceDeleteEnvironment
+func NewInternalForceDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectId", runtime.ParamLocationPath, projectId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "envId", runtime.ParamLocationPath, envId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/projects/%s/envs/%s/actions/force-delete", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -5053,7 +5274,7 @@ func NewCreateEnvironmentRequestWithBody(server string, orgId OrgIdPathParam, pr
 }
 
 // NewDeleteEnvironmentRequest generates requests for DeleteEnvironment
-func NewDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam) (*http.Request, error) {
+func NewDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *DeleteEnvironmentParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5090,6 +5311,28 @@ func NewDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId 
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Force != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "force", runtime.ParamLocationQuery, *params.Force); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
@@ -5205,54 +5448,6 @@ func NewUpdateEnvironmentRequestWithBody(server string, orgId OrgIdPathParam, pr
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewForceDeleteEnvironmentRequest generates requests for ForceDeleteEnvironment
-func NewForceDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectId", runtime.ParamLocationPath, projectId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam2 string
-
-	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "envId", runtime.ParamLocationPath, envId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/orgs/%s/projects/%s/envs/%s/actions/force_delete", pathParam0, pathParam1, pathParam2)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -6279,6 +6474,9 @@ type ClientWithResponsesInterface interface {
 
 	InternalUpdateEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body InternalUpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*InternalUpdateEnvironmentResponse, error)
 
+	// InternalForceDeleteEnvironmentWithResponse request
+	InternalForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*InternalForceDeleteEnvironmentResponse, error)
+
 	// GenerateInternalModuleCatalogueWithBodyWithResponse request with any body
 	GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
 
@@ -6405,7 +6603,7 @@ type ClientWithResponsesInterface interface {
 	CreateEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, body CreateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateEnvironmentResponse, error)
 
 	// DeleteEnvironmentWithResponse request
-	DeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*DeleteEnvironmentResponse, error)
+	DeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *DeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*DeleteEnvironmentResponse, error)
 
 	// GetEnvironmentWithResponse request
 	GetEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*GetEnvironmentResponse, error)
@@ -6414,9 +6612,6 @@ type ClientWithResponsesInterface interface {
 	UpdateEnvironmentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateEnvironmentResponse, error)
 
 	UpdateEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body UpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEnvironmentResponse, error)
-
-	// ForceDeleteEnvironmentWithResponse request
-	ForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*ForceDeleteEnvironmentResponse, error)
 
 	// UpdateRunnerInAnEnvironmentWithResponse request
 	UpdateRunnerInAnEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *UpdateRunnerInAnEnvironmentParams, reqEditors ...RequestEditorFn) (*UpdateRunnerInAnEnvironmentResponse, error)
@@ -6571,11 +6766,35 @@ func (r InternalUpdateEnvironmentResponse) StatusCode() int {
 	return 0
 }
 
+type InternalForceDeleteEnvironmentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r InternalForceDeleteEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r InternalForceDeleteEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GenerateInternalModuleCatalogueResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *InternalModuleCatalogue
 	JSON404      *N404NotFound
+	JSON409      *N409Conflict
 }
 
 // Status returns HTTPResponse.Status
@@ -7413,29 +7632,6 @@ func (r UpdateEnvironmentResponse) StatusCode() int {
 	return 0
 }
 
-type ForceDeleteEnvironmentResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON404      *N404NotFound
-	JSON409      *N409Conflict
-}
-
-// Status returns HTTPResponse.Status
-func (r ForceDeleteEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ForceDeleteEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type UpdateRunnerInAnEnvironmentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7863,6 +8059,15 @@ func (c *ClientWithResponses) InternalUpdateEnvironmentWithResponse(ctx context.
 	return ParseInternalUpdateEnvironmentResponse(rsp)
 }
 
+// InternalForceDeleteEnvironmentWithResponse request returning *InternalForceDeleteEnvironmentResponse
+func (c *ClientWithResponses) InternalForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*InternalForceDeleteEnvironmentResponse, error) {
+	rsp, err := c.InternalForceDeleteEnvironment(ctx, orgId, projectId, envId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseInternalForceDeleteEnvironmentResponse(rsp)
+}
+
 // GenerateInternalModuleCatalogueWithBodyWithResponse request with arbitrary body returning *GenerateInternalModuleCatalogueResponse
 func (c *ClientWithResponses) GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error) {
 	rsp, err := c.GenerateInternalModuleCatalogueWithBody(ctx, orgId, projectId, envId, contentType, body, reqEditors...)
@@ -8265,8 +8470,8 @@ func (c *ClientWithResponses) CreateEnvironmentWithResponse(ctx context.Context,
 }
 
 // DeleteEnvironmentWithResponse request returning *DeleteEnvironmentResponse
-func (c *ClientWithResponses) DeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*DeleteEnvironmentResponse, error) {
-	rsp, err := c.DeleteEnvironment(ctx, orgId, projectId, envId, reqEditors...)
+func (c *ClientWithResponses) DeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *DeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*DeleteEnvironmentResponse, error) {
+	rsp, err := c.DeleteEnvironment(ctx, orgId, projectId, envId, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -8297,15 +8502,6 @@ func (c *ClientWithResponses) UpdateEnvironmentWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseUpdateEnvironmentResponse(rsp)
-}
-
-// ForceDeleteEnvironmentWithResponse request returning *ForceDeleteEnvironmentResponse
-func (c *ClientWithResponses) ForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*ForceDeleteEnvironmentResponse, error) {
-	rsp, err := c.ForceDeleteEnvironment(ctx, orgId, projectId, envId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseForceDeleteEnvironmentResponse(rsp)
 }
 
 // UpdateRunnerInAnEnvironmentWithResponse request returning *UpdateRunnerInAnEnvironmentResponse
@@ -8638,6 +8834,39 @@ func ParseInternalUpdateEnvironmentResponse(rsp *http.Response) (*InternalUpdate
 	return response, nil
 }
 
+// ParseInternalForceDeleteEnvironmentResponse parses an HTTP response from a InternalForceDeleteEnvironmentWithResponse call
+func ParseInternalForceDeleteEnvironmentResponse(rsp *http.Response) (*InternalForceDeleteEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &InternalForceDeleteEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGenerateInternalModuleCatalogueResponse parses an HTTP response from a GenerateInternalModuleCatalogueWithResponse call
 func ParseGenerateInternalModuleCatalogueResponse(rsp *http.Response) (*GenerateInternalModuleCatalogueResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -8665,6 +8894,13 @@ func ParseGenerateInternalModuleCatalogueResponse(rsp *http.Response) (*Generate
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 
@@ -9918,39 +10154,6 @@ func ParseUpdateEnvironmentResponse(rsp *http.Response) (*UpdateEnvironmentRespo
 			return nil, err
 		}
 		response.JSON404 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseForceDeleteEnvironmentResponse parses an HTTP response from a ForceDeleteEnvironmentWithResponse call
-func ParseForceDeleteEnvironmentResponse(rsp *http.Response) (*ForceDeleteEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ForceDeleteEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest N404NotFound
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
-		var dest N409Conflict
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON409 = &dest
 
 	}
 

@@ -4,38 +4,42 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
 )
 
-func commonStateStorageConfigurationAttributes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"type": types.StringType,
-		"kubernetes_configuration": types.ObjectType{
-			AttrTypes: map[string]attr.Type{
-				"namespace": types.StringType,
-			},
-		},
-	}
-}
-
-func parseStateStorageConfigurationResponse(ctx context.Context, k8sStateStorageConfiguration canyoncp.K8sStorageConfiguration) *basetypes.ObjectValue {
+func parseStateStorageConfigurationResponse(ctx context.Context, ssc canyoncp.StateStorageConfiguration) (*basetypes.ObjectValue, error) {
 	var stateStorageConfig commonRunnerStateStorageModel
 
-	stateStorageConfig.Type = string(k8sStateStorageConfiguration.Type)
-	stateStorageConfig.KubernetesConfiguration.Namespace = k8sStateStorageConfiguration.Namespace
-
-	objectValue, diags := types.ObjectValueFrom(ctx, commonStateStorageConfigurationAttributes(), stateStorageConfig)
-	if diags.HasError() {
-		tflog.Warn(ctx, "can't parse state storage configuration from model", map[string]interface{}{"err": diags.Errors()})
-		return nil
+	stateStorageConfig.Type, _ = ssc.Discriminator()
+	switch canyoncp.StateStorageType(stateStorageConfig.Type) {
+	case canyoncp.StateStorageTypeS3:
+		typedSsc, _ := ssc.AsS3StorageConfiguration()
+		stateStorageConfig.S3Configuration = &commonRunnerS3StateStorageModel{
+			Bucket:     typedSsc.Bucket,
+			PathPrefix: typedSsc.PathPrefix,
+		}
+	case canyoncp.StateStorageTypeKubernetes:
+		typedSsc, _ := ssc.AsK8sStorageConfiguration()
+		stateStorageConfig.KubernetesConfiguration = &commonRunnerKubernetesStateStorageModel{
+			Namespace: typedSsc.Namespace,
+		}
+	default:
+		return nil, fmt.Errorf("unsupported state storage type: %s", stateStorageConfig.Type)
 	}
-	return &objectValue
+
+	attrs, err := AttributeTypesFromResourceSchema(commonRunnerStateStorageResourceSchema.Attributes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build attributes: %v", err)
+	}
+
+	objectValue, diags := types.ObjectValueFrom(ctx, attrs, stateStorageConfig)
+	if diags.HasError() {
+		return nil, fmt.Errorf("failed to build state storage configuration from model parsing API response: %v", diags.Errors())
+	}
+	return &objectValue, nil
 }
 
 func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.StateStorageConfiguration, error) {
@@ -46,9 +50,27 @@ func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Ob
 	}
 
 	var stateStorageConfiguration = new(canyoncp.StateStorageConfiguration)
-	_ = stateStorageConfiguration.FromK8sStorageConfiguration(canyoncp.K8sStorageConfiguration{
-		Type:      canyoncp.StateStorageType(stateStorageConfig.Type),
-		Namespace: stateStorageConfig.KubernetesConfiguration.Namespace,
-	})
+	switch canyoncp.StateStorageType(stateStorageConfig.Type) {
+	case canyoncp.StateStorageTypeS3:
+		if stateStorageConfig.S3Configuration == nil {
+			return canyoncp.StateStorageConfiguration{}, fmt.Errorf("s3 configuration in object is not set")
+		}
+		_ = stateStorageConfiguration.FromS3StorageConfiguration(canyoncp.S3StorageConfiguration{
+			Type:       canyoncp.StateStorageTypeS3,
+			Bucket:     stateStorageConfig.S3Configuration.Bucket,
+			PathPrefix: stateStorageConfig.S3Configuration.PathPrefix,
+		})
+	case canyoncp.StateStorageTypeKubernetes:
+		if stateStorageConfig.KubernetesConfiguration == nil {
+			return canyoncp.StateStorageConfiguration{}, fmt.Errorf("k8s configuration in object is not set")
+		}
+		_ = stateStorageConfiguration.FromK8sStorageConfiguration(canyoncp.K8sStorageConfiguration{
+			Type:      canyoncp.StateStorageTypeKubernetes,
+			Namespace: stateStorageConfig.KubernetesConfiguration.Namespace,
+		})
+	default:
+		return canyoncp.StateStorageConfiguration{}, fmt.Errorf("unsupported state storage type: %s", stateStorageConfig.Type)
+	}
+
 	return *stateStorageConfiguration, nil
 }

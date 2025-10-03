@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -80,24 +81,30 @@ var ecsRunnerConfigurationResourceSchema = schema.SingleNestedAttribute{
 				"cluster": schema.StringAttribute{
 					MarkdownDescription: "The ECS Cluster name.",
 					Required:            true,
+					Validators:          []validator.String{stringvalidator.LengthBetween(1, 255)},
 				},
 				"subnets": schema.ListAttribute{
 					ElementType:         types.StringType,
 					MarkdownDescription: "The list of subnets to use for the Runner. At least one subnet must be provided.",
 					Required:            true,
 					Validators: []validator.List{
-						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeBetween(1, 16),
 					},
 				},
 				"execution_role_arn": schema.StringAttribute{
 					MarkdownDescription: "The ARN of the IAM role to use for launching the ECS Task.",
 					Required:            true,
+					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-/]+$`), "must be a valid IAM role ARN")},
 				},
 				"security_groups": schema.ListAttribute{
 					ElementType:         types.StringType,
 					MarkdownDescription: "The list of subnets to use for the Runner.",
 					Optional:            true,
 					Computed:            true,
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(5),
+						listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 255)),
+					},
 				},
 				"is_public_ip_enabled": schema.BoolAttribute{
 					MarkdownDescription: "Whether to provision a public IP for the ECS Task.",
@@ -107,18 +114,25 @@ var ecsRunnerConfigurationResourceSchema = schema.SingleNestedAttribute{
 				"task_role_arn": schema.StringAttribute{
 					MarkdownDescription: "The ARN of the IAM role to use for running the ECS Task.",
 					Optional:            true,
+					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-/]+$`), "must be a valid IAM role ARN")},
 				},
 				"environment": schema.MapAttribute{
 					MarkdownDescription: "The plain-text environment variables to set for the ECS Task.",
 					ElementType:         types.StringType,
 					Optional:            true,
 					Computed:            true,
+					Validators: []validator.Map{
+						mapvalidator.ValueStringsAre(stringvalidator.LengthAtMost(1024)),
+					},
 				},
 				"secrets": schema.MapAttribute{
 					MarkdownDescription: "The secrets to set for the Runner. The values must be Secrets Manager ARNs or Parameter Store ARNs.",
 					ElementType:         types.StringType,
 					Optional:            true,
 					Computed:            true,
+					Validators: []validator.Map{
+						mapvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:((secretsmanager:[^:]+:[^:]+:secret:[^:]+-[a-zA-Z0-9]{6})|(ssm:[^:]+:[^:]+:parameter/.+))$`), "must be a valid AWS Secret or Parameter ARN")),
+					},
 				},
 			},
 		},

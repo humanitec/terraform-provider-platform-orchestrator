@@ -43,8 +43,8 @@ type commonRunnerKubernetesStateStorageModel struct {
 }
 
 type commonRunnerS3StateStorageModel struct {
-	Bucket     string `tfsdk:"bucket"`
-	PathPrefix string `tfsdk:"path_prefix"`
+	Bucket     string  `tfsdk:"bucket"`
+	PathPrefix *string `tfsdk:"path_prefix"`
 }
 
 func (d *commonRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

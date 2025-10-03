@@ -316,6 +316,7 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 		NewKubernetesEksRunnerDataSource,
 		NewKubernetesGkeRunnerDataSource,
 		NewKubernetesAgentRunnerDataSource,
+		NewServerlessEcsRunnerDataSource,
 		NewProviderDataSource,
 		NewResourceTypeDataSource,
 		NewModuleDataSource,

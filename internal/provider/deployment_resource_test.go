@@ -84,8 +84,9 @@ func TestAccDeploymentResource(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:   deploymentScenario,
-				PlanOnly: true,
+				Config:             deploymentScenario,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: deploymentScenario,

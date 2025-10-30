@@ -18,8 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -102,8 +104,8 @@ func (d *DeploymentResource) Schema(ctx context.Context, request resource.Schema
 			},
 			"mode": schema.StringAttribute{
 				MarkdownDescription: "The mode of the deployment. 'deploy' (the default) or 'plan_only'.",
-				Computed:            true,
 				Optional:            true,
+				Default:             stringdefault.StaticString(string(canyondp.Deploy)),
 				Validators: []validator.String{
 					stringvalidator.OneOf(string(canyondp.Deploy), string(canyondp.PlanOnly)),
 				},
@@ -134,8 +136,8 @@ func (d *DeploymentResource) Schema(ctx context.Context, request resource.Schema
 			},
 			"wait_for": schema.BoolAttribute{
 				MarkdownDescription: "Whether to wait for the deployment to complete. Defaults to true. If false, the output will be empty.",
-				Computed:            true,
 				Optional:            true,
+				Default:             booldefault.StaticBool(true),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},

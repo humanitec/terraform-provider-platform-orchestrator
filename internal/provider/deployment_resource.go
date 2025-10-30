@@ -205,7 +205,7 @@ func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentR
 		data.CreatedAt = types.StringValue(r.JSON201.CreatedAt.Format(time.RFC3339))
 		data.CompletedAt = types.StringNull()
 		data.Outputs = types.StringNull()
-		data.Status = types.StringValue(string(r.JSON201.Status))
+		data.Status = types.StringValue(r.JSON201.Status)
 		data.StatusMessage = types.StringValue(r.JSON201.StatusMessage)
 		data.RunnerId = types.StringValue(r.JSON201.RunnerId)
 	}
@@ -213,8 +213,9 @@ func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentR
 }
 
 func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *DeploymentResourceModel, diags diag.Diagnostics, outputsKey *age.X25519Identity) {
-	deleteTimeout, diags := data.Timeouts.Create(ctx, DefaultAsyncTimeout)
-	if diags.HasError() {
+	deleteTimeout, dd := data.Timeouts.Create(ctx, DefaultAsyncTimeout)
+	if dd.HasError() {
+		diags.Append(dd...)
 		return
 	}
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
@@ -237,7 +238,7 @@ func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *Deploy
 			diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
 			return
 		} else {
-			data.Status = types.StringValue(string(r.JSON200.Status))
+			data.Status = types.StringValue(r.JSON200.Status)
 			data.StatusMessage = types.StringValue(r.JSON200.StatusMessage)
 			data.CompletedAt = types.StringValue(r.JSON200.CompletedAt.Format(time.RFC3339))
 			if data.Status.ValueString() == "succeeded" {

@@ -52,6 +52,8 @@ resource "platform-orchestrator_environment" "env" {
   project_id   = platform-orchestrator_project.project.id
   env_type_id  = platform-orchestrator_environment_type.env_type.id
   depends_on   = [platform-orchestrator_runner_rule.rrule]
+
+  force_destroy = true
 }
 
 resource "platform-orchestrator_deployment" "deployment" {

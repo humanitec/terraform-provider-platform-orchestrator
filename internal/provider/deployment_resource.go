@@ -255,6 +255,8 @@ func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *Deploy
 						data.Outputs = types.StringValue(string(raw))
 					}
 				}
+			} else {
+				diags.AddError(HUM_API_ERR, fmt.Sprintf("Deployment failed: %s", data.StatusMessage))
 			}
 			return
 		}

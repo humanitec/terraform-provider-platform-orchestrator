@@ -104,6 +104,7 @@ func (d *DeploymentResource) Schema(ctx context.Context, request resource.Schema
 			},
 			"mode": schema.StringAttribute{
 				MarkdownDescription: "The mode of the deployment. 'deploy' (the default) or 'plan_only'.",
+				Computed:            true,
 				Optional:            true,
 				Default:             stringdefault.StaticString(string(canyondp.Deploy)),
 				Validators: []validator.String{
@@ -136,6 +137,7 @@ func (d *DeploymentResource) Schema(ctx context.Context, request resource.Schema
 			},
 			"wait_for": schema.BoolAttribute{
 				MarkdownDescription: "Whether to wait for the deployment to complete. Defaults to true. If false, the output will be empty.",
+				Computed:            true,
 				Optional:            true,
 				Default:             booldefault.StaticBool(true),
 				PlanModifiers: []planmodifier.Bool{

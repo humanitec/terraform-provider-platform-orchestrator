@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"gopkg.in/yaml.v3"
 
 	canyondp "terraform-provider-humanitec-v2/internal/clients/canyon-dp"
 	"terraform-provider-humanitec-v2/internal/ref"
@@ -43,6 +44,7 @@ type DeploymentResource struct {
 type DeploymentResourceModel struct {
 	ProjectId     types.String   `tfsdk:"project_id"`
 	EnvId         types.String   `tfsdk:"env_id"`
+	Manifest      types.String   `tfsdk:"manifest"`
 	Mode          types.String   `tfsdk:"mode"`
 	Id            types.String   `tfsdk:"id"`
 	CreatedAt     types.String   `tfsdk:"created_at"`
@@ -89,6 +91,13 @@ func (d *DeploymentResource) Schema(ctx context.Context, request resource.Schema
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"manifest": schema.StringAttribute{
+				MarkdownDescription: "The YAML/JSON encoded manifest to deploy.",
+				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"mode": schema.StringAttribute{
@@ -169,13 +178,19 @@ func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentR
 		data.WaitFor = types.BoolValue(true)
 	}
 
+	var manifest canyondp.DeploymentManifest
+	if err := yaml.Unmarshal([]byte(data.Manifest.ValueString()), &manifest); err != nil {
+		diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to parse manifest, got error: %s", err))
+		return
+	}
+
 	outputsKey, _ = age.GenerateX25519Identity()
 	if r, err := d.dpClient.CreateDeploymentWithResponse(
 		ctx, d.orgId, &canyondp.CreateDeploymentParams{IdempotencyKey: ref.Ref(uuid.NewString())},
 		canyondp.DeploymentCreateBody{
 			ProjectId:                 data.ProjectId.ValueString(),
 			EnvId:                     data.EnvId.ValueString(),
-			Manifest:                  canyondp.DeploymentManifest{},
+			Manifest:                  manifest,
 			Mode:                      canyondp.DeploymentCreateBodyMode(data.Mode.ValueString()),
 			EncryptedOutputsRecipient: ref.Ref(outputsKey.Recipient().String()),
 		},
@@ -198,6 +213,13 @@ func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentR
 }
 
 func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *DeploymentResourceModel, diags diag.Diagnostics, outputsKey *age.X25519Identity) {
+	deleteTimeout, diags := data.Timeouts.Create(ctx, DefaultAsyncTimeout)
+	if diags.HasError() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
+	defer cancel()
+
 	for {
 		if r, err := d.dpClient.WaitForDeploymentCompleteWithResponse(ctx, d.orgId, uuid.MustParse(data.Id.ValueString()), &canyondp.WaitForDeploymentCompleteParams{}); err != nil {
 			if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
@@ -277,6 +299,10 @@ func (d *DeploymentResource) Read(ctx context.Context, request resource.ReadRequ
 		data.CreatedAt = types.StringValue(r.JSON200.CreatedAt.Format(time.RFC3339))
 		data.Outputs = types.StringUnknown()
 		data.WaitFor = types.BoolValue(false)
+		{
+			raw, _ := yaml.Marshal(r.JSON200.Manifest)
+			data.Manifest = types.StringValue(string(raw))
+		}
 	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

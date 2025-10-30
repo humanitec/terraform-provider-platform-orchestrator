@@ -291,20 +291,20 @@ func (d *DeploymentResource) Read(ctx context.Context, request resource.ReadRequ
 	if r, err := d.dpClient.GetDeploymentWithResponse(ctx, d.orgId, uuid.MustParse(data.Id.ValueString())); err != nil {
 		response.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read deployment, got error: %s", err))
 		return
+	} else if r.StatusCode() == http.StatusNotFound {
+		response.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Deployment with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		response.State.RemoveResource(ctx)
+		return
 	} else if r.StatusCode() != http.StatusOK {
 		response.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read deployment, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
 		return
 	} else {
-		data.Mode = types.StringValue(r.JSON200.Mode)
-		data.RunnerId = types.StringValue(r.JSON200.RunnerId)
+		// Just refresh the status/status_message/completed_at fields.
 		data.Status = types.StringValue(r.JSON200.Status)
 		data.StatusMessage = types.StringValue(r.JSON200.StatusMessage)
-		data.CreatedAt = types.StringValue(r.JSON200.CreatedAt.Format(time.RFC3339))
-		data.Outputs = types.StringNull()
-		data.WaitFor = types.BoolValue(false)
-		{
-			raw, _ := yaml.Marshal(r.JSON200.Manifest)
-			data.Manifest = types.StringValue(string(raw))
+		data.CompletedAt = types.StringNull()
+		if r.JSON200.CompletedAt != nil {
+			data.CompletedAt = types.StringValue(r.JSON200.CompletedAt.Format(time.RFC3339))
 		}
 	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

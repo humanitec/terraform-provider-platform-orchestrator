@@ -53,7 +53,7 @@ type EnvironmentResourceModel struct {
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 
-	ForceDestroy types.Bool `tfsdk:"force_destroy"`
+	ForceDelete types.Bool `tfsdk:"force_delete"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -143,7 +143,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The ID of the runner to be used to deploy this environment.",
 				Computed:            true,
 			},
-			"force_destroy": schema.BoolAttribute{
+			"force_delete": schema.BoolAttribute{
 				MarkdownDescription: "When set to true, the environment will be deleted without a destroy deployment.",
 				Optional:            true,
 				Computed:            true,
@@ -279,13 +279,13 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	var forceDestroy *bool
-	if data.ForceDestroy.ValueBool() {
-		forceDestroy = ref.Ref(true)
+	var forceDelete *bool
+	if data.ForceDelete.ValueBool() {
+		forceDelete = ref.Ref(true)
 	}
 
 	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), &canyoncp.DeleteEnvironmentParams{
-		Force: forceDestroy,
+		Force: forceDelete,
 	}); err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete environment, got error: %s", err))
 	} else if httpResp.StatusCode() == http.StatusNotFound {
@@ -368,5 +368,6 @@ func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.
 		StatusMessage: statusMessage,
 		RunnerId:      types.StringValue(environment.RunnerId),
 		Timeouts:      previous.Timeouts,
+		ForceDelete:   previous.ForceDelete,
 	}
 }

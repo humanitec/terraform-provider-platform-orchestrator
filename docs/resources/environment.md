@@ -33,7 +33,7 @@ resource "platform-orchestrator_environment" "example" {
 ### Optional
 
 - `display_name` (String) The display name of the Environment.
-- `force_destroy` (Boolean) When set to true, the environment will be deleted without a destroy deployment.
+- `force_delete` (Boolean) When set to true, the environment will be deleted without a destroy deployment.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only

@@ -9,15 +9,6 @@ import (
 )
 
 const deploymentScenario = `
-terraform {
-  required_providers {
-    random = {
-      source = "hashicorp/random"
-      version = "3.7.2"
-    }
-  }
-}
-
 resource "random_id" "r" {
   byte_length = 4
 }
@@ -84,6 +75,12 @@ func TestAccDeploymentResource(t *testing.T) {
 		PreCheck: func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
 			"platform-orchestrator": providerserver.NewProtocol6WithError(New("test")()),
+		},
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"random": {
+				Source:            "hashicorp/random",
+				VersionConstraint: "3.7.2",
+			},
 		},
 		Steps: []resource.TestStep{
 			{

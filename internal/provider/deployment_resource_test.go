@@ -3,10 +3,21 @@ package provider
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 const deploymentScenario = `
+terraform {
+  required_providers {
+    random = {
+      source = "hashicorp/random"
+      version = "3.7.2"
+    }
+  }
+}
+
 resource "random_id" "r" {
   byte_length = 4
 }
@@ -70,8 +81,10 @@ resource "platform-orchestrator_deployment" "deployment" {
 
 func TestAccDeploymentResource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck: func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"platform-orchestrator": providerserver.NewProtocol6WithError(New("test")()),
+		},
 		Steps: []resource.TestStep{
 			{
 				Config:   deploymentScenario,

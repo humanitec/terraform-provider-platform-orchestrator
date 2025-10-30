@@ -54,7 +54,8 @@ resource "platform-orchestrator_environment" "env" {
 
 resource "platform-orchestrator_deployment" "deployment" {
   project_id   = platform-orchestrator_project.project.id
-  env_type_id  = platform-orchestrator_environment.env.id
+  env_id  = platform-orchestrator_environment.env.id
+  mode = "deploy"
   manifest = jsonencode({
     workloads = {
       main = {

@@ -300,6 +300,7 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 		NewModuleRuleResource,
 		NewRunnerRuleResource,
 		NewEnvironmentResource,
+		NewDeploymentResource,
 	}
 }
 

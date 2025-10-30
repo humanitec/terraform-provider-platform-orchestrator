@@ -356,6 +356,11 @@ func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.
 		statusMessage = types.StringValue(*environment.StatusMessage)
 	}
 
+	forceDelete := previous.ForceDelete
+	if forceDelete.IsNull() {
+		forceDelete = types.BoolValue(false)
+	}
+
 	return EnvironmentResourceModel{
 		Id:            types.StringValue(environment.Id),
 		ProjectId:     types.StringValue(environment.ProjectId),
@@ -368,6 +373,6 @@ func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.
 		StatusMessage: statusMessage,
 		RunnerId:      types.StringValue(environment.RunnerId),
 		Timeouts:      previous.Timeouts,
-		ForceDelete:   previous.ForceDelete,
+		ForceDelete:   forceDelete,
 	}
 }

@@ -300,7 +300,7 @@ func (d *DeploymentResource) Read(ctx context.Context, request resource.ReadRequ
 		data.Status = types.StringValue(r.JSON200.Status)
 		data.StatusMessage = types.StringValue(r.JSON200.StatusMessage)
 		data.CreatedAt = types.StringValue(r.JSON200.CreatedAt.Format(time.RFC3339))
-		data.Outputs = types.StringUnknown()
+		data.Outputs = types.StringNull()
 		data.WaitFor = types.BoolValue(false)
 		{
 			raw, _ := yaml.Marshal(r.JSON200.Manifest)

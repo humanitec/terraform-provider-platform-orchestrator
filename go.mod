@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	filippo.io/age v1.2.1
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0
 	github.com/stretchr/testify v1.9.0
 )

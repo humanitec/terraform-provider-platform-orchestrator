@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
@@ -51,6 +52,8 @@ type EnvironmentResourceModel struct {
 	RunnerId      types.String `tfsdk:"runner_id"`
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
+
+	ForceDelete types.Bool `tfsdk:"force_delete"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -139,6 +142,12 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 			"runner_id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the runner to be used to deploy this environment.",
 				Computed:            true,
+			},
+			"force_delete": schema.BoolAttribute{
+				MarkdownDescription: "When set to true, the environment will be deleted without a destroy deployment.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -270,7 +279,14 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), &canyoncp.DeleteEnvironmentParams{}); err != nil {
+	var forceDelete *bool
+	if data.ForceDelete.ValueBool() {
+		forceDelete = ref.Ref(true)
+	}
+
+	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), &canyoncp.DeleteEnvironmentParams{
+		Force: forceDelete,
+	}); err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete environment, got error: %s", err))
 	} else if httpResp.StatusCode() == http.StatusNotFound {
 		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s no longer found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
@@ -340,6 +356,11 @@ func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.
 		statusMessage = types.StringValue(*environment.StatusMessage)
 	}
 
+	forceDelete := previous.ForceDelete
+	if forceDelete.IsNull() {
+		forceDelete = types.BoolValue(false)
+	}
+
 	return EnvironmentResourceModel{
 		Id:            types.StringValue(environment.Id),
 		ProjectId:     types.StringValue(environment.ProjectId),
@@ -352,5 +373,6 @@ func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.
 		StatusMessage: statusMessage,
 		RunnerId:      types.StringValue(environment.RunnerId),
 		Timeouts:      previous.Timeouts,
+		ForceDelete:   forceDelete,
 	}
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -39,6 +40,7 @@ type ProjectModel struct {
 	CreatedAt   types.String `tfsdk:"created_at"`
 	UpdatedAt   types.String `tfsdk:"updated_at"`
 	Status      types.String `tfsdk:"status"`
+	DeleteRules types.Bool   `tfsdk:"delete_rules"`
 }
 
 func (r *ProjectResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -92,6 +94,12 @@ func (r *ProjectResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"status": schema.StringAttribute{
 				MarkdownDescription: "The status of the Project.",
 				Computed:            true,
+			},
+			"delete_rules": schema.BoolAttribute{
+				MarkdownDescription: "Delete also module and runner rules associated with the project while deleting the project.",
+				Computed:            true,
+				Optional:            true,
+				Default:             booldefault.StaticBool(false),
 			},
 		},
 	}
@@ -219,7 +227,15 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	httpResp, err := r.cpClient.DeleteProjectWithResponse(ctx, r.orgId, data.Id.ValueString())
+	var deleteRules *bool
+	if !data.DeleteRules.IsNull() {
+		v := data.DeleteRules.ValueBool()
+		deleteRules = &v
+	}
+
+	httpResp, err := r.cpClient.DeleteProjectWithResponse(ctx, r.orgId, data.Id.ValueString(), &canyoncp.DeleteProjectParams{
+		DeleteRules: deleteRules,
+	})
 	if err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete project, got error: %s", err))
 		return

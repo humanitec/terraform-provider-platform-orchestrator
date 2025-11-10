@@ -151,6 +151,11 @@ func (d *EnvironmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 		statusMessage = types.StringValue(*environment.StatusMessage)
 	}
 
+	runnerId := types.StringNull()
+	if environment.RunnerId != nil && *environment.RunnerId != "" {
+		runnerId = types.StringValue(*environment.RunnerId)
+	}
+
 	data = EnvironmentDataSourceModel{
 		Id:            types.StringValue(environment.Id),
 		ProjectId:     types.StringValue(environment.ProjectId),
@@ -161,7 +166,7 @@ func (d *EnvironmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 		UpdatedAt:     types.StringValue(environment.UpdatedAt.String()),
 		Status:        types.StringValue(string(environment.Status)),
 		StatusMessage: statusMessage,
-		RunnerId:      types.StringValue(environment.RunnerId),
+		RunnerId:      runnerId,
 	}
 
 	// Save data into Terraform state

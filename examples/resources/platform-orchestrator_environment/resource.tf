@@ -3,4 +3,5 @@ resource "platform-orchestrator_environment" "example" {
   project_id   = "my-project"
   env_type_id  = "development"
   display_name = "My Development Environment"
+  delete_rules = true
 }

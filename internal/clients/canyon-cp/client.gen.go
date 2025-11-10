@@ -30,6 +30,12 @@ const (
 	EnvironmentStatusDeleting     EnvironmentStatus = "deleting"
 )
 
+// Defines values for InternalOrganizationSource.
+const (
+	Internal InternalOrganizationSource = "internal"
+	Public   InternalOrganizationSource = "public"
+)
+
 // Defines values for ModuleParamItemType.
 const (
 	Any    ModuleParamItemType = "any"
@@ -38,12 +44,6 @@ const (
 	Map    ModuleParamItemType = "map"
 	Number ModuleParamItemType = "number"
 	String ModuleParamItemType = "string"
-)
-
-// Defines values for OrganizationSource.
-const (
-	Internal OrganizationSource = "internal"
-	Public   OrganizationSource = "public"
 )
 
 // Defines values for ProjectStatus.
@@ -148,8 +148,8 @@ type Environment struct {
 	// ProjectId Project identifier
 	ProjectId string `json:"project_id"`
 
-	// RunnerId The id of the runner to be used to deploy this environment.
-	RunnerId string `json:"runner_id"`
+	// RunnerId The id of the runner to be used to deploy this environment. If not set, this will be filled in upon first deployment.
+	RunnerId *string `json:"runner_id,omitempty"`
 
 	// Status The status of the environment. Environments are normally active unless they have been deleted. A delete_failed status indicates that the destroy failed and a delete can be re-issued.
 	Status EnvironmentStatus `json:"status"`
@@ -269,6 +269,9 @@ type InternalModuleCatalogueGenerateBody struct {
 
 	// PinnedModuleVersions The normal response body only includes the latest versions for modules. However if there are pinned resources, we need to request the pinned versions as well which may no longer have rules associated with them.
 	PinnedModuleVersions []string `json:"pinned_module_versions,omitempty"`
+
+	// PinnedProviders The normal response body only includes the modules and providers currently configured. However if we are removing nodes that still rely on providers we need to fetch their details without having the modules.
+	PinnedProviders []string `json:"pinned_providers,omitempty"`
 }
 
 // InternalModuleCatalogueModule defines model for InternalModuleCatalogueModule.
@@ -337,6 +340,30 @@ type InternalModuleCatalogueModuleRule struct {
 	RuleId     openapi_types.UUID `json:"rule_id"`
 }
 
+// InternalOrganization defines model for InternalOrganization.
+type InternalOrganization struct {
+	// CreatedAt The date and time when the org state was created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// CreatedBy The user id that created the org for the first time.
+	CreatedBy openapi_types.UUID `json:"created_by"`
+
+	// Id The unique identifier of the org
+	Id string `json:"id"`
+
+	// Plan The plan of the org.
+	Plan string `json:"plan"`
+
+	// Source The source of the org state. This is used to identify the source of the org state, such as a git repository.
+	Source InternalOrganizationSource `json:"source"`
+
+	// Uuid Unique uid for the org to identify a unique lifecycle
+	Uuid openapi_types.UUID `json:"uuid"`
+}
+
+// InternalOrganizationSource The source of the org state. This is used to identify the source of the org state, such as a git repository.
+type InternalOrganizationSource string
+
 // InternalOrganizationCreateBody A request to create a new organization state in the control plane.
 type InternalOrganizationCreateBody struct {
 	// Id The unique identifier of the org. It will be auto-generated if not provided.
@@ -344,6 +371,15 @@ type InternalOrganizationCreateBody struct {
 
 	// IdPrefix An id prefix for the org. If will be a prefix to the auto-generated id.
 	IdPrefix *string `json:"id_prefix,omitempty"`
+}
+
+// InternalOrganizationPage A page of organization state returned from the list api.
+type InternalOrganizationPage struct {
+	// Items The items in this page
+	Items []InternalOrganization `json:"items"`
+
+	// NextPageToken The page token to use to request the next page of items
+	NextPageToken *string `json:"next_page_token,omitempty"`
 }
 
 // InternalRunner defines model for InternalRunner.
@@ -865,26 +901,17 @@ type Organization struct {
 	// CreatedAt The date and time when the org state was created.
 	CreatedAt time.Time `json:"created_at"`
 
+	// CreatedBy The user id that created the org for the first time.
+	CreatedBy openapi_types.UUID `json:"created_by"`
+
 	// Id The unique identifier of the org
 	Id string `json:"id"`
 
-	// Source The source of the org state. This is used to identify the source of the org state, such as a git repository.
-	Source OrganizationSource `json:"source"`
+	// Plan The plan of the org.
+	Plan string `json:"plan"`
 
 	// Uuid Unique uid for the org to identify a unique lifecycle
 	Uuid openapi_types.UUID `json:"uuid"`
-}
-
-// OrganizationSource The source of the org state. This is used to identify the source of the org state, such as a git repository.
-type OrganizationSource string
-
-// OrganizationPage A page of organization state returned from the list api.
-type OrganizationPage struct {
-	// Items The items in this page
-	Items []Organization `json:"items"`
-
-	// NextPageToken The page token to use to request the next page of items
-	NextPageToken *string `json:"next_page_token,omitempty"`
 }
 
 // Project A project.
@@ -1237,6 +1264,36 @@ type S3StorageConfiguration struct {
 	Type StateStorageType `json:"type"`
 }
 
+// Sandbox defines model for Sandbox.
+type Sandbox struct {
+	// OrgId The Organization ID of the sandbox.
+	OrgId string `json:"org_id"`
+
+	// Status The status of the sandbox.
+	Status string `json:"status"`
+}
+
+// SandboxCreateBody The properties required to create a new sandbox
+type SandboxCreateBody struct {
+	// Inputs The inputs to the sandbox.
+	Inputs map[string]string `json:"inputs"`
+}
+
+// SandboxPage A page of sandboxes returned from the list api.
+type SandboxPage struct {
+	// Items The items in this page.
+	Items []SandboxSummary `json:"items"`
+
+	// NextPageToken The page token to use to request the next page of items.
+	NextPageToken *string `json:"next_page_token,omitempty"`
+}
+
+// SandboxSummary A summary of a sandbox
+type SandboxSummary struct {
+	// OrgId The Organization ID of the sandbox.
+	OrgId string `json:"org_id"`
+}
+
 // ServerlessEcsRunnerConfiguration Runner configuration for executing on AWS ECS Fargate.
 type ServerlessEcsRunnerConfiguration struct {
 	// Auth Configuration to obtain temporary AWS security credentials by assuming an IAM role.
@@ -1378,6 +1435,12 @@ type ListInternalOrganizationsParams struct {
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
+// InternalForceDeleteEnvironmentParams defines parameters for InternalForceDeleteEnvironment.
+type InternalForceDeleteEnvironmentParams struct {
+	// DeleteRules Whether to delete all rules associated with the environment
+	DeleteRules *bool `form:"deleteRules,omitempty" json:"deleteRules,omitempty"`
+}
+
 // InternalListResourceTypesParams defines parameters for InternalListResourceTypes.
 type InternalListResourceTypesParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -1421,6 +1484,12 @@ type ListModuleRulesInOrgParams struct {
 
 	// ByModuleId Filter the list by the given module id
 	ByModuleId *string `form:"byModuleId,omitempty" json:"byModuleId,omitempty"`
+
+	// ByProjectId Filter the list by the given project id
+	ByProjectId *string `form:"byProjectId,omitempty" json:"byProjectId,omitempty"`
+
+	// ByEnvId Filter the list by the given environment type id. It must be used together with byProjectId.
+	ByEnvId *string `form:"byEnvId,omitempty" json:"byEnvId,omitempty"`
 }
 
 // ListModulesParams defines parameters for ListModules.
@@ -1444,6 +1513,12 @@ type ListProjectsParams struct {
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
+// DeleteProjectParams defines parameters for DeleteProject.
+type DeleteProjectParams struct {
+	// DeleteRules Whether to delete all rules associated with the project
+	DeleteRules *bool `form:"deleteRules,omitempty" json:"deleteRules,omitempty"`
+}
+
 // ListEnvironmentsParams defines parameters for ListEnvironments.
 type ListEnvironmentsParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -1460,6 +1535,9 @@ type ListEnvironmentsParams struct {
 type DeleteEnvironmentParams struct {
 	// Force If true, will perform force deletion, without destroying underlying infrastructure.
 	Force *ForceQueryParam `form:"force,omitempty" json:"force,omitempty"`
+
+	// DeleteRules Whether to delete all rules associated with the environment
+	DeleteRules *bool `form:"deleteRules,omitempty" json:"deleteRules,omitempty"`
 }
 
 // UpdateRunnerInAnEnvironmentParams defines parameters for UpdateRunnerInAnEnvironment.
@@ -1520,6 +1598,15 @@ type ListRunnersParams struct {
 
 	// ByRunnerType Filter the list by the given runner type
 	ByRunnerType *string `form:"byRunnerType,omitempty" json:"byRunnerType,omitempty"`
+}
+
+// ListSandboxesParams defines parameters for ListSandboxes.
+type ListSandboxesParams struct {
+	// PerPage The maximum number of items to return in a page of results
+	PerPage *PerPageQueryParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Page The page token to request from
+	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
 // CreateInternalOrganizationJSONRequestBody defines body for CreateInternalOrganization for application/json ContentType.
@@ -1584,6 +1671,9 @@ type CreateRunnerJSONRequestBody = RunnerCreateBody
 
 // UpdateRunnerJSONRequestBody defines body for UpdateRunner for application/json ContentType.
 type UpdateRunnerJSONRequestBody = RunnerUpdateBody
+
+// CreateSandboxJSONRequestBody defines body for CreateSandbox for application/json ContentType.
+type CreateSandboxJSONRequestBody = SandboxCreateBody
 
 // AsK8sRunnerConfiguration returns the union data inside the RunnerConfiguration as a K8sRunnerConfiguration
 func (t RunnerConfiguration) AsK8sRunnerConfiguration() (K8sRunnerConfiguration, error) {
@@ -2122,7 +2212,7 @@ type ClientInterface interface {
 	InternalUpdateEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body InternalUpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// InternalForceDeleteEnvironment request
-	InternalForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+	InternalForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *InternalForceDeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GenerateInternalModuleCatalogueWithBody request with any body
 	GenerateInternalModuleCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2150,6 +2240,9 @@ type ClientInterface interface {
 
 	// CreateOrganization request
 	CreateOrganization(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetOrganization request
+	GetOrganization(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListEnvironmentTypes request
 	ListEnvironmentTypes(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentTypesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2231,7 +2324,7 @@ type ClientInterface interface {
 	CreateProject(ctx context.Context, orgId OrgIdPathParam, body CreateProjectJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteProject request
-	DeleteProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *DeleteProjectParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetProject request
 	GetProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2317,6 +2410,20 @@ type ClientInterface interface {
 	UpdateRunnerWithBody(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateRunner(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, body UpdateRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSandboxes request
+	ListSandboxes(ctx context.Context, params *ListSandboxesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSandboxWithBody request with any body
+	CreateSandboxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateSandbox(ctx context.Context, body CreateSandboxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteSandbox request
+	DeleteSandbox(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSandbox request
+	GetSandbox(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) ListInternalOrganizations(ctx context.Context, params *ListInternalOrganizationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -2391,8 +2498,8 @@ func (c *Client) InternalUpdateEnvironment(ctx context.Context, orgId OrgIdPathP
 	return c.Client.Do(req)
 }
 
-func (c *Client) InternalForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewInternalForceDeleteEnvironmentRequest(c.Server, orgId, projectId, envId)
+func (c *Client) InternalForceDeleteEnvironment(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *InternalForceDeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInternalForceDeleteEnvironmentRequest(c.Server, orgId, projectId, envId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2513,6 +2620,18 @@ func (c *Client) InternalUpdateResourceType(ctx context.Context, typeId Resource
 
 func (c *Client) CreateOrganization(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateOrganizationRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetOrganization(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetOrganizationRequest(c.Server, orgId)
 	if err != nil {
 		return nil, err
 	}
@@ -2871,8 +2990,8 @@ func (c *Client) CreateProject(ctx context.Context, orgId OrgIdPathParam, body C
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteProjectRequest(c.Server, orgId, projectId)
+func (c *Client) DeleteProject(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *DeleteProjectParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteProjectRequest(c.Server, orgId, projectId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3255,6 +3374,66 @@ func (c *Client) UpdateRunner(ctx context.Context, orgId OrgIdPathParam, runnerI
 	return c.Client.Do(req)
 }
 
+func (c *Client) ListSandboxes(ctx context.Context, params *ListSandboxesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSandboxesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSandboxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSandboxRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSandbox(ctx context.Context, body CreateSandboxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSandboxRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteSandbox(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteSandboxRequest(c.Server, sandboxId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSandbox(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSandboxRequest(c.Server, sandboxId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // NewListInternalOrganizationsRequest generates requests for ListInternalOrganizations
 func NewListInternalOrganizationsRequest(server string, params *ListInternalOrganizationsParams) (*http.Request, error) {
 	var err error
@@ -3456,7 +3635,7 @@ func NewInternalUpdateEnvironmentRequestWithBody(server string, orgId OrgIdPathP
 }
 
 // NewInternalForceDeleteEnvironmentRequest generates requests for InternalForceDeleteEnvironment
-func NewInternalForceDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam) (*http.Request, error) {
+func NewInternalForceDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *InternalForceDeleteEnvironmentParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3493,6 +3672,28 @@ func NewInternalForceDeleteEnvironmentRequest(server string, orgId OrgIdPathPara
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.DeleteRules != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "deleteRules", runtime.ParamLocationQuery, *params.DeleteRules); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("POST", queryURL.String(), nil)
@@ -3811,6 +4012,40 @@ func NewCreateOrganizationRequest(server string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetOrganizationRequest generates requests for GetOrganization
+func NewGetOrganizationRequest(server string, orgId OrgIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -4458,6 +4693,38 @@ func NewListModuleRulesInOrgRequest(server string, orgId OrgIdPathParam, params 
 
 		}
 
+		if params.ByProjectId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "byProjectId", runtime.ParamLocationQuery, *params.ByProjectId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.ByEnvId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "byEnvId", runtime.ParamLocationQuery, *params.ByEnvId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -4989,7 +5256,7 @@ func NewCreateProjectRequestWithBody(server string, orgId OrgIdPathParam, conten
 }
 
 // NewDeleteProjectRequest generates requests for DeleteProject
-func NewDeleteProjectRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam) (*http.Request, error) {
+func NewDeleteProjectRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *DeleteProjectParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5019,6 +5286,28 @@ func NewDeleteProjectRequest(server string, orgId OrgIdPathParam, projectId Proj
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.DeleteRules != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "deleteRules", runtime.ParamLocationQuery, *params.DeleteRules); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
@@ -5319,6 +5608,22 @@ func NewDeleteEnvironmentRequest(server string, orgId OrgIdPathParam, projectId 
 		if params.Force != nil {
 
 			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "force", runtime.ParamLocationQuery, *params.Force); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DeleteRules != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "deleteRules", runtime.ParamLocationQuery, *params.DeleteRules); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -6415,6 +6720,179 @@ func NewUpdateRunnerRequestWithBody(server string, orgId OrgIdPathParam, runnerI
 	return req, nil
 }
 
+// NewListSandboxesRequest generates requests for ListSandboxes
+func NewListSandboxesRequest(server string, params *ListSandboxesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/sandboxes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "per_page", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateSandboxRequest calls the generic CreateSandbox builder with application/json body
+func NewCreateSandboxRequest(server string, body CreateSandboxJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateSandboxRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCreateSandboxRequestWithBody generates requests for CreateSandbox with any type of body
+func NewCreateSandboxRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/sandboxes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteSandboxRequest generates requests for DeleteSandbox
+func NewDeleteSandboxRequest(server string, sandboxId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "sandboxId", runtime.ParamLocationPath, sandboxId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/sandboxes/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSandboxRequest generates requests for GetSandbox
+func NewGetSandboxRequest(server string, sandboxId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "sandboxId", runtime.ParamLocationPath, sandboxId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/sandboxes/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -6475,7 +6953,7 @@ type ClientWithResponsesInterface interface {
 	InternalUpdateEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body InternalUpdateEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*InternalUpdateEnvironmentResponse, error)
 
 	// InternalForceDeleteEnvironmentWithResponse request
-	InternalForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*InternalForceDeleteEnvironmentResponse, error)
+	InternalForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *InternalForceDeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*InternalForceDeleteEnvironmentResponse, error)
 
 	// GenerateInternalModuleCatalogueWithBodyWithResponse request with any body
 	GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
@@ -6503,6 +6981,9 @@ type ClientWithResponsesInterface interface {
 
 	// CreateOrganizationWithResponse request
 	CreateOrganizationWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CreateOrganizationResponse, error)
+
+	// GetOrganizationWithResponse request
+	GetOrganizationWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*GetOrganizationResponse, error)
 
 	// ListEnvironmentTypesWithResponse request
 	ListEnvironmentTypesWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentTypesParams, reqEditors ...RequestEditorFn) (*ListEnvironmentTypesResponse, error)
@@ -6584,7 +7065,7 @@ type ClientWithResponsesInterface interface {
 	CreateProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, body CreateProjectJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateProjectResponse, error)
 
 	// DeleteProjectWithResponse request
-	DeleteProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*DeleteProjectResponse, error)
+	DeleteProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *DeleteProjectParams, reqEditors ...RequestEditorFn) (*DeleteProjectResponse, error)
 
 	// GetProjectWithResponse request
 	GetProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*GetProjectResponse, error)
@@ -6670,12 +7151,26 @@ type ClientWithResponsesInterface interface {
 	UpdateRunnerWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateRunnerResponse, error)
 
 	UpdateRunnerWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, body UpdateRunnerJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRunnerResponse, error)
+
+	// ListSandboxesWithResponse request
+	ListSandboxesWithResponse(ctx context.Context, params *ListSandboxesParams, reqEditors ...RequestEditorFn) (*ListSandboxesResponse, error)
+
+	// CreateSandboxWithBodyWithResponse request with any body
+	CreateSandboxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSandboxResponse, error)
+
+	CreateSandboxWithResponse(ctx context.Context, body CreateSandboxJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSandboxResponse, error)
+
+	// DeleteSandboxWithResponse request
+	DeleteSandboxWithResponse(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*DeleteSandboxResponse, error)
+
+	// GetSandboxWithResponse request
+	GetSandboxWithResponse(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*GetSandboxResponse, error)
 }
 
 type ListInternalOrganizationsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *OrganizationPage
+	JSON200      *InternalOrganizationPage
 }
 
 // Status returns HTTPResponse.Status
@@ -6697,7 +7192,7 @@ func (r ListInternalOrganizationsResponse) StatusCode() int {
 type CreateInternalOrganizationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON201      *Organization
+	JSON201      *InternalOrganization
 	JSON400      *N400BadRequest
 	JSON409      *N409Conflict
 }
@@ -6721,7 +7216,7 @@ func (r CreateInternalOrganizationResponse) StatusCode() int {
 type GetInternalOrganizationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *Organization
+	JSON200      *InternalOrganization
 	JSON404      *N404NotFound
 }
 
@@ -6948,6 +7443,29 @@ func (r CreateOrganizationResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreateOrganizationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetOrganizationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Organization
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetOrganizationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetOrganizationResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7192,6 +7710,7 @@ type ListModuleRulesInOrgResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *RulePage
+	JSON400      *N400BadRequest
 	JSON404      *N404NotFound
 }
 
@@ -8007,6 +8526,98 @@ func (r UpdateRunnerResponse) StatusCode() int {
 	return 0
 }
 
+type ListSandboxesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SandboxPage
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSandboxesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSandboxesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateSandboxResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *Sandbox
+	JSON400      *N400BadRequest
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateSandboxResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateSandboxResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteSandboxResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteSandboxResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteSandboxResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSandboxResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Sandbox
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSandboxResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSandboxResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // ListInternalOrganizationsWithResponse request returning *ListInternalOrganizationsResponse
 func (c *ClientWithResponses) ListInternalOrganizationsWithResponse(ctx context.Context, params *ListInternalOrganizationsParams, reqEditors ...RequestEditorFn) (*ListInternalOrganizationsResponse, error) {
 	rsp, err := c.ListInternalOrganizations(ctx, params, reqEditors...)
@@ -8060,8 +8671,8 @@ func (c *ClientWithResponses) InternalUpdateEnvironmentWithResponse(ctx context.
 }
 
 // InternalForceDeleteEnvironmentWithResponse request returning *InternalForceDeleteEnvironmentResponse
-func (c *ClientWithResponses) InternalForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, reqEditors ...RequestEditorFn) (*InternalForceDeleteEnvironmentResponse, error) {
-	rsp, err := c.InternalForceDeleteEnvironment(ctx, orgId, projectId, envId, reqEditors...)
+func (c *ClientWithResponses) InternalForceDeleteEnvironmentWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, params *InternalForceDeleteEnvironmentParams, reqEditors ...RequestEditorFn) (*InternalForceDeleteEnvironmentResponse, error) {
+	rsp, err := c.InternalForceDeleteEnvironment(ctx, orgId, projectId, envId, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -8153,6 +8764,15 @@ func (c *ClientWithResponses) CreateOrganizationWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseCreateOrganizationResponse(rsp)
+}
+
+// GetOrganizationWithResponse request returning *GetOrganizationResponse
+func (c *ClientWithResponses) GetOrganizationWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*GetOrganizationResponse, error) {
+	rsp, err := c.GetOrganization(ctx, orgId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetOrganizationResponse(rsp)
 }
 
 // ListEnvironmentTypesWithResponse request returning *ListEnvironmentTypesResponse
@@ -8409,8 +9029,8 @@ func (c *ClientWithResponses) CreateProjectWithResponse(ctx context.Context, org
 }
 
 // DeleteProjectWithResponse request returning *DeleteProjectResponse
-func (c *ClientWithResponses) DeleteProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, reqEditors ...RequestEditorFn) (*DeleteProjectResponse, error) {
-	rsp, err := c.DeleteProject(ctx, orgId, projectId, reqEditors...)
+func (c *ClientWithResponses) DeleteProjectWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, params *DeleteProjectParams, reqEditors ...RequestEditorFn) (*DeleteProjectResponse, error) {
+	rsp, err := c.DeleteProject(ctx, orgId, projectId, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -8688,6 +9308,50 @@ func (c *ClientWithResponses) UpdateRunnerWithResponse(ctx context.Context, orgI
 	return ParseUpdateRunnerResponse(rsp)
 }
 
+// ListSandboxesWithResponse request returning *ListSandboxesResponse
+func (c *ClientWithResponses) ListSandboxesWithResponse(ctx context.Context, params *ListSandboxesParams, reqEditors ...RequestEditorFn) (*ListSandboxesResponse, error) {
+	rsp, err := c.ListSandboxes(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSandboxesResponse(rsp)
+}
+
+// CreateSandboxWithBodyWithResponse request with arbitrary body returning *CreateSandboxResponse
+func (c *ClientWithResponses) CreateSandboxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSandboxResponse, error) {
+	rsp, err := c.CreateSandboxWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSandboxResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateSandboxWithResponse(ctx context.Context, body CreateSandboxJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSandboxResponse, error) {
+	rsp, err := c.CreateSandbox(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSandboxResponse(rsp)
+}
+
+// DeleteSandboxWithResponse request returning *DeleteSandboxResponse
+func (c *ClientWithResponses) DeleteSandboxWithResponse(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*DeleteSandboxResponse, error) {
+	rsp, err := c.DeleteSandbox(ctx, sandboxId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteSandboxResponse(rsp)
+}
+
+// GetSandboxWithResponse request returning *GetSandboxResponse
+func (c *ClientWithResponses) GetSandboxWithResponse(ctx context.Context, sandboxId string, reqEditors ...RequestEditorFn) (*GetSandboxResponse, error) {
+	rsp, err := c.GetSandbox(ctx, sandboxId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSandboxResponse(rsp)
+}
+
 // ParseListInternalOrganizationsResponse parses an HTTP response from a ListInternalOrganizationsWithResponse call
 func ParseListInternalOrganizationsResponse(rsp *http.Response) (*ListInternalOrganizationsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -8703,7 +9367,7 @@ func ParseListInternalOrganizationsResponse(rsp *http.Response) (*ListInternalOr
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest OrganizationPage
+		var dest InternalOrganizationPage
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -8729,7 +9393,7 @@ func ParseCreateInternalOrganizationResponse(rsp *http.Response) (*CreateInterna
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest Organization
+		var dest InternalOrganization
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -8769,7 +9433,7 @@ func ParseGetInternalOrganizationResponse(rsp *http.Response) (*GetInternalOrgan
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest Organization
+		var dest InternalOrganization
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -9120,6 +9784,39 @@ func ParseCreateOrganizationResponse(rsp *http.Response) (*CreateOrganizationRes
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetOrganizationResponse parses an HTTP response from a GetOrganizationWithResponse call
+func ParseGetOrganizationResponse(rsp *http.Response) (*GetOrganizationResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetOrganizationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Organization
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 
@@ -9504,6 +10201,13 @@ func ParseListModuleRulesInOrgResponse(rsp *http.Response) (*ListModuleRulesInOr
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest N404NotFound
@@ -10731,6 +11435,138 @@ func ParseUpdateRunnerResponse(rsp *http.Response) (*UpdateRunnerResponse, error
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListSandboxesResponse parses an HTTP response from a ListSandboxesWithResponse call
+func ParseListSandboxesResponse(rsp *http.Response) (*ListSandboxesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSandboxesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SandboxPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateSandboxResponse parses an HTTP response from a CreateSandboxWithResponse call
+func ParseCreateSandboxResponse(rsp *http.Response) (*CreateSandboxResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateSandboxResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Sandbox
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteSandboxResponse parses an HTTP response from a DeleteSandboxWithResponse call
+func ParseDeleteSandboxResponse(rsp *http.Response) (*DeleteSandboxResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteSandboxResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSandboxResponse parses an HTTP response from a GetSandboxWithResponse call
+func ParseGetSandboxResponse(rsp *http.Response) (*GetSandboxResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSandboxResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Sandbox
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

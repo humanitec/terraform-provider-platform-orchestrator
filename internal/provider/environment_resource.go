@@ -54,6 +54,7 @@ type EnvironmentResourceModel struct {
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 
 	ForceDelete types.Bool `tfsdk:"force_delete"`
+	DeleteRules types.Bool `tfsdk:"delete_rules"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -147,6 +148,12 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "When set to true, the environment will be deleted without a destroy deployment.",
 				Optional:            true,
 				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
+			"delete_rules": schema.BoolAttribute{
+				MarkdownDescription: "Delete also module and runner rules associated with the environment while deleting the environment.",
+				Computed:            true,
+				Optional:            true,
 				Default:             booldefault.StaticBool(false),
 			},
 		},
@@ -284,8 +291,15 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		forceDelete = ref.Ref(true)
 	}
 
+	var deleteRules *bool
+	if !data.DeleteRules.IsNull() {
+		v := data.DeleteRules.ValueBool()
+		deleteRules = &v
+	}
+
 	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), &canyoncp.DeleteEnvironmentParams{
-		Force: forceDelete,
+		Force:       forceDelete,
+		DeleteRules: deleteRules,
 	}); err != nil {
 		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete environment, got error: %s", err))
 	} else if httpResp.StatusCode() == http.StatusNotFound {
@@ -361,6 +375,16 @@ func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.
 		forceDelete = types.BoolValue(false)
 	}
 
+	deleteRules := previous.DeleteRules
+	if deleteRules.IsNull() {
+		deleteRules = types.BoolValue(false)
+	}
+
+	runnerId := types.StringNull()
+	if environment.RunnerId != nil && *environment.RunnerId != "" {
+		runnerId = types.StringValue(*environment.RunnerId)
+	}
+
 	return EnvironmentResourceModel{
 		Id:            types.StringValue(environment.Id),
 		ProjectId:     types.StringValue(environment.ProjectId),
@@ -371,8 +395,9 @@ func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.
 		UpdatedAt:     types.StringValue(environment.UpdatedAt.String()),
 		Status:        types.StringValue(string(environment.Status)),
 		StatusMessage: statusMessage,
-		RunnerId:      types.StringValue(environment.RunnerId),
+		RunnerId:      runnerId,
 		Timeouts:      previous.Timeouts,
 		ForceDelete:   forceDelete,
+		DeleteRules:   deleteRules,
 	}
 }

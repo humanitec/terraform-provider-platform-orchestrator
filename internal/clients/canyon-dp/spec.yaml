@@ -31,9 +31,8 @@ paths:
     post:
       operationId: createDeployment
       tags:
-        - internal
         - Deployment
-      summary: Create a deployment using internal fields
+      summary: Create a new deployment in the target project and environment.
       security:
         - userIdHeader: []
       parameters:
@@ -120,7 +119,7 @@ paths:
                 $ref: "#/components/schemas/Deployment"
         "404":
           $ref: "#/components/responses/404NotFound"
-  /orgs/{orgId}/deployments/{deploymentId}/actions/waitForComplete:
+  /orgs/{orgId}/deployments/{deploymentId}/actions/wait-for-complete:
     get:
       operationId: waitForDeploymentComplete
       tags:
@@ -153,6 +152,47 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  
+  /orgs/{orgId}/deployments/{deploymentId}/actions/get-logs:
+    get:
+      operationId: getDeploymentLogs
+      tags:
+        - Deployment
+      summary: Get the logs produced by the runner execution during the deployment.
+      description: |
+        These logs are only stored and available for 30 days and they are returned encrypted or decrypted according to the existence or not of the
+        decryption key query parameter.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+        - name: DecryptKey
+          description: The private key needed to decrypt the logs. It should be an 'age' private key (see https://age-encryption.org).
+          in: header
+          required: false
+          schema:
+            type: string
+            example: "AGE-SECRET-KEY-1SGKT64UHNGURNZUQSAJ9J0C65R2F2PXDCZQVVGRUPN98L33G2HFSUC24EJ"
+            pattern: ^AGE-SECRET-KEY-[A-Z0-9]+$
+      responses:
+        "200":
+          description: The logs produced by the runner execution.
+          content:
+            text/plain:
+              schema:
+                type: string
+          headers:
+            Content-Disposition:
+              description: Suggests the filename for the downloaded file.
+              schema:
+                type: string
+                example: 'attachment; filename="depId.log"'
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
   /orgs/{orgId}/deployments/{deploymentId}/encrypted-outputs:
     get:
       operationId: getDeploymentEncryptedOutputs
@@ -162,6 +202,8 @@ paths:
       description: |
         These outputs are only stored and available for a short time after the deployment completes and are returned encrypted by the private key
         that was given when the deployment was created. If no private key was provided, no outputs are available.
+      security:
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/deploymentIdPathParam"
@@ -174,6 +216,7 @@ paths:
                 $ref: "#/components/schemas/DeploymentEncryptedOutputs"
         "404":
           $ref: "#/components/responses/404NotFound"
+
   /orgs/{orgId}/deployments/{deploymentId}/bundle:
     get:
       operationId: getDeploymentBundle
@@ -200,6 +243,7 @@ paths:
           $ref: "#/components/responses/400BadRequest"
         "404":
           $ref: "#/components/responses/404NotFound"
+
   /orgs/{orgId}/deployments/{deploymentId}/results:
     post:
       summary: Return the runner outcome for a specific deployment.
@@ -231,7 +275,58 @@ paths:
           $ref: "#/components/responses/404NotFound"
         "409":
           $ref: "#/components/responses/409Conflict"
-  
+
+  /orgs/{orgId}/deployments/{deploymentId}/tf:
+    get:
+      summary: Returns the compiled TF file associated with a deployment.
+      description: |
+        This returns the compiled TF file associated with a deployment. This is intended for debugging purposes.
+        This does not return the contents of any inline modules.
+      operationId: getDeploymentTf
+      tags:
+        - Deployment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/deployments/{deploymentId}/actions/force-failure:
+    post:
+      operationId: internalForceFailDeployment
+      tags:
+        - internal
+        - Deployment
+      summary: Emergency API for force failing a deployment.
+      description: |
+        This should only be used once you have confirmed that the underlying runner job has stopped, failed, or will
+        never execute.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        "200":
+          description: Force failed deployment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentSummary"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+
   /orgs/{orgId}/remote-runners/{runnerId}/actions/poll-requests:
     post:
       security:
@@ -265,6 +360,8 @@ paths:
       summary: List active resource nodes
       description: |
         List active resource nodes matching the query. At the moment, project_id and env_id are required.
+      security:
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdQueryParam"
@@ -281,7 +378,7 @@ paths:
         404:
           $ref: "#/components/responses/404NotFound"
 
-  /internal/orgs/{orgId}/modules/{moduleId}/actions/checkUsage:
+  /internal/orgs/{orgId}/modules/{moduleId}/actions/check-usage:
     post:
       summary: Check whether a given module is in use in a resource graph.
       description: |
@@ -346,6 +443,8 @@ paths:
       operationId: listMetadataKeys
       tags:
         - MetadataKey
+      security:
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/perPageQueryParam"
@@ -367,6 +466,8 @@ paths:
       operationId: createMetadataKey
       tags:
         - MetadataKey
+      security:
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
       requestBody:
@@ -395,6 +496,8 @@ paths:
       operationId: getMetadataKey
       tags:
         - MetadataKey
+      security:
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/metadataKeyNamePathParam"
@@ -414,6 +517,8 @@ paths:
       operationId: deleteMetadataKey
       tags:
         - MetadataKey
+      security:
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/metadataKeyNamePathParam"
@@ -430,6 +535,8 @@ paths:
       operationId: updateMetadataKey
       tags:
         - MetadataKey
+      security:
+        - userIdHeader: []
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/metadataKeyNamePathParam"
@@ -654,7 +761,7 @@ components:
       example: standard.common-postgres
       minLength: 1
       maxLength: 63
-      pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
+      pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
       x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
   
     DeploymentResultsUpdateBody:
@@ -764,6 +871,7 @@ components:
         - env_id
         - id
         - created_at
+        - created_by
         - mode
         - status
         - status_message
@@ -786,6 +894,11 @@ components:
           format: date-time
           example: "2025-01-02T03:04:05Z"
           description: The time the deployment was created
+        created_by:
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
+          description: The user that created the deployment
         completed_at:
           type: string
           format: date-time
@@ -932,10 +1045,31 @@ components:
           x-pattern-error: "encrypted_outputs_recipient: does not look like an 'age' public key"
           minLength: 1
           maxLength: 200
+        encrypted_logs_recipient:
+          description: |
+            A recipient public key must be provided in order to encrypt the logs produced by the runner. This must be an 'age' public key (see https://age-encryption.org).
+            The caller must hold the matching private key in order to decrypt the logs when the logs url is provided. If the recipient key is not set, no logs will be captured
+            by the runner.
+          type: string
+          example: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p
+          pattern: ^age[a-z0-9]+$
+          x-pattern-error: "encrypted_outputs_recipient: does not look like an 'age' public key"
+          minLength: 1
+          maxLength: 200          
         is_dry_run:
           description: Whether to just validate the request and not persist or execute it.
           type: boolean
           x-go-type-skip-optional-pointer: true
+        runner_log_level:
+          description: The log level for the runner.
+          type: string
+          enum:
+            - debug
+            - info
+            - warn
+            - error
+          example: info
+          default: info
 
     DeploymentDryRun:
       type: object
@@ -1143,19 +1277,19 @@ components:
     RemoteRunnerMessage:
       oneOf:
         - $ref: "#/components/schemas/RemoteRunnerMessageCreateJob"
-        - $ref: "#/components/schemas/RemoteRunnerMessageGetJobStatus"
+        - $ref: "#/components/schemas/RemoteRunnerMessageCheckJobStatus"
       discriminator:
         propertyName: action
         mapping:
           create-job: "#/components/schemas/RemoteRunnerMessageCreateJob"
-          get-job-status: "#/components/schemas/RemoteRunnerMessageGetJobStatus"
+          check-job-status: "#/components/schemas/RemoteRunnerMessageCheckJobStatus"
 
     RemoteRunnerMessageAction:
       description: The action to be performed by the remote runner.
       type: string
       enum:
         - create-job
-        - get-job-status
+        - check-job-status
 
     
     RemoteRunnerMessageCreateJob:
@@ -1188,9 +1322,9 @@ components:
         - deployment_token
 
 
-    RemoteRunnerMessageGetJobStatus:
+    RemoteRunnerMessageCheckJobStatus:
       type: object
-      description: The response for getting the status of a job on the runner.
+      description: The response for checking the status of a job on the runner.
       properties:
         action:
           $ref: "#/components/schemas/RemoteRunnerMessageAction"
@@ -1205,12 +1339,19 @@ components:
         deployment_token:
           type: string
           description: The deployment token to authenticate any request to update deployment results from the remote runner.
-          example: "deployment-token-12345"         
+          example: "deployment-token-12345"
+        expires_at:
+          type: string
+          format: date-time
+          description: The time at which the job should be considered stuck by the runner if no pods are running or completed.
+          example: "2025-01-02T03:04:05Z"
+           
       required:
         - action
         - job_id
         - namespace
         - deployment_token
+        - expires_at
 
     OpenidConfiguration:
       description: OpenID discovery configuration.

@@ -56,6 +56,10 @@ func projectDataSourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "The status of the Project.",
 			Computed:            true,
 		},
+		"delete_rules": schema.BoolAttribute{
+			MarkdownDescription: "Delete also module and runner rules associated with the project while deleting the project.",
+			Computed:            true,
+		},
 	}
 }
 
@@ -67,6 +71,7 @@ func projectDataSourceAttributeTypes() map[string]attr.Type {
 		"created_at":   types.StringType,
 		"updated_at":   types.StringType,
 		"status":       types.StringType,
+		"delete_rules": types.BoolType,
 	}
 }
 
@@ -130,6 +135,7 @@ func (d *ProjectDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	data.CreatedAt = types.StringValue(p.CreatedAt.Format(time.RFC3339))
 	data.UpdatedAt = types.StringValue(p.UpdatedAt.Format(time.RFC3339))
 	data.Status = types.StringValue(string(p.Status))
+	data.DeleteRules = types.BoolValue(false)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

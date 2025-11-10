@@ -18,6 +18,7 @@ resource "platform-orchestrator_environment" "example" {
   project_id   = "my-project"
   env_type_id  = "development"
   display_name = "My Development Environment"
+  delete_rules = true
 }
 ```
 
@@ -32,6 +33,7 @@ resource "platform-orchestrator_environment" "example" {
 
 ### Optional
 
+- `delete_rules` (Boolean) Delete also module and runner rules associated with the environment while deleting the environment.
 - `display_name` (String) The display name of the Environment.
 - `force_delete` (Boolean) When set to true, the environment will be deleted without a destroy deployment.
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))

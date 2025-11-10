@@ -30,6 +30,14 @@ const (
 	PlanOnly DeploymentCreateBodyMode = "plan_only"
 )
 
+// Defines values for DeploymentCreateBodyRunnerLogLevel.
+const (
+	DeploymentCreateBodyRunnerLogLevelDebug DeploymentCreateBodyRunnerLogLevel = "debug"
+	DeploymentCreateBodyRunnerLogLevelError DeploymentCreateBodyRunnerLogLevel = "error"
+	DeploymentCreateBodyRunnerLogLevelInfo  DeploymentCreateBodyRunnerLogLevel = "info"
+	DeploymentCreateBodyRunnerLogLevelWarn  DeploymentCreateBodyRunnerLogLevel = "warn"
+)
+
 // Defines values for DeploymentResultsUpdateBodyStatus.
 const (
 	Failure DeploymentResultsUpdateBodyStatus = "failure"
@@ -43,8 +51,8 @@ const (
 
 // Defines values for RemoteRunnerMessageAction.
 const (
-	CreateJob    RemoteRunnerMessageAction = "create-job"
-	GetJobStatus RemoteRunnerMessageAction = "get-job-status"
+	CheckJobStatus RemoteRunnerMessageAction = "check-job-status"
+	CreateJob      RemoteRunnerMessageAction = "create-job"
 )
 
 // Defines values for UpdateMetadataKeySchemaType.
@@ -81,6 +89,9 @@ type Deployment struct {
 	// CreatedAt The time the deployment was created
 	CreatedAt time.Time `json:"created_at"`
 
+	// CreatedBy The user that created the deployment
+	CreatedBy openapi_types.UUID `json:"created_by"`
+
 	// EnvId The Environment id in the project which is being deployed
 	EnvId string `json:"env_id"`
 
@@ -114,6 +125,11 @@ type Deployment struct {
 
 // DeploymentCreateBody defines model for DeploymentCreateBody.
 type DeploymentCreateBody struct {
+	// EncryptedLogsRecipient A recipient public key must be provided in order to encrypt the logs produced by the runner. This must be an 'age' public key (see https://age-encryption.org).
+	// The caller must hold the matching private key in order to decrypt the logs when the logs url is provided. If the recipient key is not set, no logs will be captured
+	// by the runner.
+	EncryptedLogsRecipient *string `json:"encrypted_logs_recipient,omitempty"`
+
 	// EncryptedOutputsRecipient A recipient public key must be provided in order to access encrypted outputs of the deployment. This must be an 'age' public key (see https://age-encryption.org).
 	// The caller must hold the matching private key in order to decrypt the outputs when the deployment completes. If the recipient key is not set, no outputs will be captured
 	// from the deployment.
@@ -133,10 +149,16 @@ type DeploymentCreateBody struct {
 
 	// ProjectId The Project to deploy to.
 	ProjectId string `json:"project_id"`
+
+	// RunnerLogLevel The log level for the runner.
+	RunnerLogLevel *DeploymentCreateBodyRunnerLogLevel `json:"runner_log_level,omitempty"`
 }
 
 // DeploymentCreateBodyMode The mode of the deployment. Defaults to 'deploy'. Can be set to 'plan_only' to test and validate a deployment.
 type DeploymentCreateBodyMode string
+
+// DeploymentCreateBodyRunnerLogLevel The log level for the runner.
+type DeploymentCreateBodyRunnerLogLevel string
 
 // DeploymentDryRun defines model for DeploymentDryRun.
 type DeploymentDryRun struct {
@@ -253,6 +275,9 @@ type DeploymentSummary struct {
 
 	// CreatedAt The time the deployment was created
 	CreatedAt time.Time `json:"created_at"`
+
+	// CreatedBy The user that created the deployment
+	CreatedBy openapi_types.UUID `json:"created_by"`
 
 	// EnvId The Environment id in the project which is being deployed
 	EnvId string `json:"env_id"`
@@ -416,6 +441,24 @@ type RemoteRunnerMessage struct {
 // RemoteRunnerMessageAction The action to be performed by the remote runner.
 type RemoteRunnerMessageAction string
 
+// RemoteRunnerMessageCheckJobStatus The response for checking the status of a job on the runner.
+type RemoteRunnerMessageCheckJobStatus struct {
+	// Action The action to be performed by the remote runner.
+	Action RemoteRunnerMessageAction `json:"action"`
+
+	// DeploymentToken The deployment token to authenticate any request to update deployment results from the remote runner.
+	DeploymentToken string `json:"deployment_token"`
+
+	// ExpiresAt The time at which the job should be considered stuck by the runner if no pods are running or completed.
+	ExpiresAt time.Time `json:"expires_at"`
+
+	// JobId The ID of the job whose status is being requested.
+	JobId string `json:"job_id"`
+
+	// Namespace The ID of the namespace associated with the job.
+	Namespace string `json:"namespace"`
+}
+
 // RemoteRunnerMessageCreateJob The response for creating a job on the runner.
 type RemoteRunnerMessageCreateJob struct {
 	// Action The action to be performed by the remote runner.
@@ -428,21 +471,6 @@ type RemoteRunnerMessageCreateJob struct {
 	DeploymentToken string `json:"deployment_token"`
 
 	// JobId The ID of the job created on the runner.
-	JobId string `json:"job_id"`
-
-	// Namespace The ID of the namespace associated with the job.
-	Namespace string `json:"namespace"`
-}
-
-// RemoteRunnerMessageGetJobStatus The response for getting the status of a job on the runner.
-type RemoteRunnerMessageGetJobStatus struct {
-	// Action The action to be performed by the remote runner.
-	Action RemoteRunnerMessageAction `json:"action"`
-
-	// DeploymentToken The deployment token to authenticate any request to update deployment results from the remote runner.
-	DeploymentToken string `json:"deployment_token"`
-
-	// JobId The ID of the job whose status is being requested.
 	JobId string `json:"job_id"`
 
 	// Namespace The ID of the namespace associated with the job.
@@ -551,6 +579,12 @@ type CreateDeploymentParams struct {
 	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
 }
 
+// GetDeploymentLogsParams defines parameters for GetDeploymentLogs.
+type GetDeploymentLogsParams struct {
+	// DecryptKey The private key needed to decrypt the logs. It should be an 'age' private key (see https://age-encryption.org).
+	DecryptKey *string `json:"DecryptKey,omitempty"`
+}
+
 // WaitForDeploymentCompleteParams defines parameters for WaitForDeploymentComplete.
 type WaitForDeploymentCompleteParams struct {
 	// TimeoutInSeconds Sets a maximum timeout before the HTTP-408 response is returned.
@@ -637,24 +671,24 @@ func (t *RemoteRunnerMessage) MergeRemoteRunnerMessageCreateJob(v RemoteRunnerMe
 	return err
 }
 
-// AsRemoteRunnerMessageGetJobStatus returns the union data inside the RemoteRunnerMessage as a RemoteRunnerMessageGetJobStatus
-func (t RemoteRunnerMessage) AsRemoteRunnerMessageGetJobStatus() (RemoteRunnerMessageGetJobStatus, error) {
-	var body RemoteRunnerMessageGetJobStatus
+// AsRemoteRunnerMessageCheckJobStatus returns the union data inside the RemoteRunnerMessage as a RemoteRunnerMessageCheckJobStatus
+func (t RemoteRunnerMessage) AsRemoteRunnerMessageCheckJobStatus() (RemoteRunnerMessageCheckJobStatus, error) {
+	var body RemoteRunnerMessageCheckJobStatus
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromRemoteRunnerMessageGetJobStatus overwrites any union data inside the RemoteRunnerMessage as the provided RemoteRunnerMessageGetJobStatus
-func (t *RemoteRunnerMessage) FromRemoteRunnerMessageGetJobStatus(v RemoteRunnerMessageGetJobStatus) error {
-	v.Action = "get-job-status"
+// FromRemoteRunnerMessageCheckJobStatus overwrites any union data inside the RemoteRunnerMessage as the provided RemoteRunnerMessageCheckJobStatus
+func (t *RemoteRunnerMessage) FromRemoteRunnerMessageCheckJobStatus(v RemoteRunnerMessageCheckJobStatus) error {
+	v.Action = "check-job-status"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeRemoteRunnerMessageGetJobStatus performs a merge with any union data inside the RemoteRunnerMessage, using the provided RemoteRunnerMessageGetJobStatus
-func (t *RemoteRunnerMessage) MergeRemoteRunnerMessageGetJobStatus(v RemoteRunnerMessageGetJobStatus) error {
-	v.Action = "get-job-status"
+// MergeRemoteRunnerMessageCheckJobStatus performs a merge with any union data inside the RemoteRunnerMessage, using the provided RemoteRunnerMessageCheckJobStatus
+func (t *RemoteRunnerMessage) MergeRemoteRunnerMessageCheckJobStatus(v RemoteRunnerMessageCheckJobStatus) error {
+	v.Action = "check-job-status"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -679,10 +713,10 @@ func (t RemoteRunnerMessage) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
+	case "check-job-status":
+		return t.AsRemoteRunnerMessageCheckJobStatus()
 	case "create-job":
 		return t.AsRemoteRunnerMessageCreateJob()
-	case "get-job-status":
-		return t.AsRemoteRunnerMessageGetJobStatus()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
@@ -780,6 +814,9 @@ type ClientInterface interface {
 	// InternalDeleteDeployments request
 	InternalDeleteDeployments(ctx context.Context, orgId OrgIdPathParam, params *InternalDeleteDeploymentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// InternalForceFailDeployment request
+	InternalForceFailDeployment(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// InternalCheckModuleUsage request
 	InternalCheckModuleUsage(ctx context.Context, orgId OrgIdPathParam, moduleId string, params *InternalCheckModuleUsageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -802,6 +839,9 @@ type ClientInterface interface {
 	// GetDeployment request
 	GetDeployment(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetDeploymentLogs request
+	GetDeploymentLogs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// WaitForDeploymentComplete request
 	WaitForDeploymentComplete(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *WaitForDeploymentCompleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -815,6 +855,9 @@ type ClientInterface interface {
 	UpdateDeploymentResultsWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateDeploymentResults(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, body UpdateDeploymentResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDeploymentTf request
+	GetDeploymentTf(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListLastDeployments request
 	ListLastDeployments(ctx context.Context, orgId OrgIdPathParam, params *ListLastDeploymentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -868,6 +911,18 @@ func (c *Client) GetOpenidConfiguration(ctx context.Context, reqEditors ...Reque
 
 func (c *Client) InternalDeleteDeployments(ctx context.Context, orgId OrgIdPathParam, params *InternalDeleteDeploymentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewInternalDeleteDeploymentsRequest(c.Server, orgId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) InternalForceFailDeployment(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInternalForceFailDeploymentRequest(c.Server, orgId, deploymentId)
 	if err != nil {
 		return nil, err
 	}
@@ -974,6 +1029,18 @@ func (c *Client) GetDeployment(ctx context.Context, orgId OrgIdPathParam, deploy
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetDeploymentLogs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDeploymentLogsRequest(c.Server, orgId, deploymentId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) WaitForDeploymentComplete(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *WaitForDeploymentCompleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewWaitForDeploymentCompleteRequest(c.Server, orgId, deploymentId, params)
 	if err != nil {
@@ -1024,6 +1091,18 @@ func (c *Client) UpdateDeploymentResultsWithBody(ctx context.Context, orgId OrgI
 
 func (c *Client) UpdateDeploymentResults(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, body UpdateDeploymentResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateDeploymentResultsRequest(c.Server, orgId, deploymentId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetDeploymentTf(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDeploymentTfRequest(c.Server, orgId, deploymentId)
 	if err != nil {
 		return nil, err
 	}
@@ -1284,6 +1363,47 @@ func NewInternalDeleteDeploymentsRequest(server string, orgId OrgIdPathParam, pa
 	return req, nil
 }
 
+// NewInternalForceFailDeploymentRequest generates requests for InternalForceFailDeployment
+func NewInternalForceFailDeploymentRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "deploymentId", runtime.ParamLocationPath, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/deployments/%s/actions/force-failure", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewInternalCheckModuleUsageRequest generates requests for InternalCheckModuleUsage
 func NewInternalCheckModuleUsageRequest(server string, orgId OrgIdPathParam, moduleId string, params *InternalCheckModuleUsageParams) (*http.Request, error) {
 	var err error
@@ -1307,7 +1427,7 @@ func NewInternalCheckModuleUsageRequest(server string, orgId OrgIdPathParam, mod
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/internal/orgs/%s/modules/%s/actions/checkUsage", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/internal/orgs/%s/modules/%s/actions/check-usage", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1680,6 +1800,62 @@ func NewGetDeploymentRequest(server string, orgId OrgIdPathParam, deploymentId D
 	return req, nil
 }
 
+// NewGetDeploymentLogsRequest generates requests for GetDeploymentLogs
+func NewGetDeploymentLogsRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "deploymentId", runtime.ParamLocationPath, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/actions/get-logs", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.DecryptKey != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "DecryptKey", runtime.ParamLocationHeader, *params.DecryptKey)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("DecryptKey", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewWaitForDeploymentCompleteRequest generates requests for WaitForDeploymentComplete
 func NewWaitForDeploymentCompleteRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *WaitForDeploymentCompleteParams) (*http.Request, error) {
 	var err error
@@ -1703,7 +1879,7 @@ func NewWaitForDeploymentCompleteRequest(server string, orgId OrgIdPathParam, de
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/actions/waitForComplete", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/actions/wait-for-complete", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1900,6 +2076,47 @@ func NewUpdateDeploymentResultsRequestWithBody(server string, orgId OrgIdPathPar
 
 		req.Header.Set("X-Deployment-Token", headerParam0)
 
+	}
+
+	return req, nil
+}
+
+// NewGetDeploymentTfRequest generates requests for GetDeploymentTf
+func NewGetDeploymentTfRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "deploymentId", runtime.ParamLocationPath, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/tf", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return req, nil
@@ -2373,6 +2590,9 @@ type ClientWithResponsesInterface interface {
 	// InternalDeleteDeploymentsWithResponse request
 	InternalDeleteDeploymentsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *InternalDeleteDeploymentsParams, reqEditors ...RequestEditorFn) (*InternalDeleteDeploymentsResponse, error)
 
+	// InternalForceFailDeploymentWithResponse request
+	InternalForceFailDeploymentWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*InternalForceFailDeploymentResponse, error)
+
 	// InternalCheckModuleUsageWithResponse request
 	InternalCheckModuleUsageWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId string, params *InternalCheckModuleUsageParams, reqEditors ...RequestEditorFn) (*InternalCheckModuleUsageResponse, error)
 
@@ -2395,6 +2615,9 @@ type ClientWithResponsesInterface interface {
 	// GetDeploymentWithResponse request
 	GetDeploymentWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentResponse, error)
 
+	// GetDeploymentLogsWithResponse request
+	GetDeploymentLogsWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*GetDeploymentLogsResponse, error)
+
 	// WaitForDeploymentCompleteWithResponse request
 	WaitForDeploymentCompleteWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *WaitForDeploymentCompleteParams, reqEditors ...RequestEditorFn) (*WaitForDeploymentCompleteResponse, error)
 
@@ -2408,6 +2631,9 @@ type ClientWithResponsesInterface interface {
 	UpdateDeploymentResultsWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateDeploymentResultsResponse, error)
 
 	UpdateDeploymentResultsWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, body UpdateDeploymentResultsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateDeploymentResultsResponse, error)
+
+	// GetDeploymentTfWithResponse request
+	GetDeploymentTfWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentTfResponse, error)
 
 	// ListLastDeploymentsWithResponse request
 	ListLastDeploymentsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListLastDeploymentsParams, reqEditors ...RequestEditorFn) (*ListLastDeploymentsResponse, error)
@@ -2497,6 +2723,30 @@ func (r InternalDeleteDeploymentsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r InternalDeleteDeploymentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type InternalForceFailDeploymentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *DeploymentSummary
+	JSON404      *N404NotFound
+	JSON409      *N409Conflict
+}
+
+// Status returns HTTPResponse.Status
+func (r InternalForceFailDeploymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r InternalForceFailDeploymentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -2643,6 +2893,29 @@ func (r GetDeploymentResponse) StatusCode() int {
 	return 0
 }
 
+type GetDeploymentLogsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDeploymentLogsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDeploymentLogsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type WaitForDeploymentCompleteResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -2731,6 +3004,28 @@ func (r UpdateDeploymentResultsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateDeploymentResultsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetDeploymentTfResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDeploymentTfResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDeploymentTfResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -2927,6 +3222,15 @@ func (c *ClientWithResponses) InternalDeleteDeploymentsWithResponse(ctx context.
 	return ParseInternalDeleteDeploymentsResponse(rsp)
 }
 
+// InternalForceFailDeploymentWithResponse request returning *InternalForceFailDeploymentResponse
+func (c *ClientWithResponses) InternalForceFailDeploymentWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*InternalForceFailDeploymentResponse, error) {
+	rsp, err := c.InternalForceFailDeployment(ctx, orgId, deploymentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseInternalForceFailDeploymentResponse(rsp)
+}
+
 // InternalCheckModuleUsageWithResponse request returning *InternalCheckModuleUsageResponse
 func (c *ClientWithResponses) InternalCheckModuleUsageWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId string, params *InternalCheckModuleUsageParams, reqEditors ...RequestEditorFn) (*InternalCheckModuleUsageResponse, error) {
 	rsp, err := c.InternalCheckModuleUsage(ctx, orgId, moduleId, params, reqEditors...)
@@ -2997,6 +3301,15 @@ func (c *ClientWithResponses) GetDeploymentWithResponse(ctx context.Context, org
 	return ParseGetDeploymentResponse(rsp)
 }
 
+// GetDeploymentLogsWithResponse request returning *GetDeploymentLogsResponse
+func (c *ClientWithResponses) GetDeploymentLogsWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*GetDeploymentLogsResponse, error) {
+	rsp, err := c.GetDeploymentLogs(ctx, orgId, deploymentId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDeploymentLogsResponse(rsp)
+}
+
 // WaitForDeploymentCompleteWithResponse request returning *WaitForDeploymentCompleteResponse
 func (c *ClientWithResponses) WaitForDeploymentCompleteWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *WaitForDeploymentCompleteParams, reqEditors ...RequestEditorFn) (*WaitForDeploymentCompleteResponse, error) {
 	rsp, err := c.WaitForDeploymentComplete(ctx, orgId, deploymentId, params, reqEditors...)
@@ -3039,6 +3352,15 @@ func (c *ClientWithResponses) UpdateDeploymentResultsWithResponse(ctx context.Co
 		return nil, err
 	}
 	return ParseUpdateDeploymentResultsResponse(rsp)
+}
+
+// GetDeploymentTfWithResponse request returning *GetDeploymentTfResponse
+func (c *ClientWithResponses) GetDeploymentTfWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentTfResponse, error) {
+	rsp, err := c.GetDeploymentTf(ctx, orgId, deploymentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDeploymentTfResponse(rsp)
 }
 
 // ListLastDeploymentsWithResponse request returning *ListLastDeploymentsResponse
@@ -3192,6 +3514,46 @@ func ParseInternalDeleteDeploymentsResponse(rsp *http.Response) (*InternalDelete
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseInternalForceFailDeploymentResponse parses an HTTP response from a InternalForceFailDeploymentWithResponse call
+func ParseInternalForceFailDeploymentResponse(rsp *http.Response) (*InternalForceFailDeploymentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &InternalForceFailDeploymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeploymentSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest N404NotFound
@@ -3421,6 +3783,39 @@ func ParseGetDeploymentResponse(rsp *http.Response) (*GetDeploymentResponse, err
 	return response, nil
 }
 
+// ParseGetDeploymentLogsResponse parses an HTTP response from a GetDeploymentLogsWithResponse call
+func ParseGetDeploymentLogsResponse(rsp *http.Response) (*GetDeploymentLogsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDeploymentLogsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseWaitForDeploymentCompleteResponse parses an HTTP response from a WaitForDeploymentCompleteWithResponse call
 func ParseWaitForDeploymentCompleteResponse(rsp *http.Response) (*WaitForDeploymentCompleteResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -3561,6 +3956,32 @@ func ParseUpdateDeploymentResultsResponse(rsp *http.Response) (*UpdateDeployment
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetDeploymentTfResponse parses an HTTP response from a GetDeploymentTfWithResponse call
+func ParseGetDeploymentTfResponse(rsp *http.Response) (*GetDeploymentTfResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDeploymentTfResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

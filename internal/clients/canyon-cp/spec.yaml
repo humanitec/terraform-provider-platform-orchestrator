@@ -21,7 +21,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OrganizationPage"
+                $ref: "#/components/schemas/InternalOrganizationPage"
     post:
       operationId: createInternalOrganization
       tags:
@@ -42,7 +42,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Organization"
+                $ref: "#/components/schemas/InternalOrganization"
         "400":
           $ref: "#/components/responses/400BadRequest"
         "409":
@@ -64,7 +64,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Organization"
+                $ref: "#/components/schemas/InternalOrganization"
         "404":
           $ref: "#/components/responses/404NotFound"
 
@@ -200,6 +200,26 @@ paths:
           $ref: "#/components/responses/403Forbidden"
         "409":
           $ref: "#/components/responses/409Conflict"
+
+  /orgs/{orgId}:
+    get:
+      operationId: getOrganization
+      summary: Get the details of the identified organization.
+      tags:
+        - Organization
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+      responses:
+        "200":
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "404":
+          $ref: "#/components/responses/404NotFound"
 
   /orgs/{orgId}/env-types:
     get:
@@ -369,6 +389,13 @@ paths:
       parameters:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
+        - name: deleteRules
+          in: query
+          description: Whether to delete all rules associated with the project
+          schema:
+            type: boolean
+          required: false
+            
       responses:
         "204":
           description: The project is fully deleted.
@@ -493,6 +520,12 @@ paths:
         - $ref: "#/components/parameters/projectIdPathParam"
         - $ref: "#/components/parameters/envIdPathParam"
         - $ref: "#/components/parameters/forceQueryParam"
+        - name: deleteRules
+          in: query
+          description: Whether to delete all rules associated with the environment
+          schema:
+            type: boolean
+          required: false
       responses:
         "202":
           description: The environment is waiting for a destroy deployment to succeed.
@@ -569,6 +602,12 @@ paths:
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdPathParam"
         - $ref: "#/components/parameters/envIdPathParam"
+        - name: deleteRules
+          in: query
+          description: Whether to delete all rules associated with the environment
+          schema:
+            type: boolean
+          required: false
       responses:
         "204":
           description: The environment was deleted.
@@ -1255,6 +1294,16 @@ paths:
           schema:
             type: string
           description: Filter the list by the given module id
+        - name: byProjectId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given project id
+        - name: byEnvId
+          in: query
+          schema:
+            type: string
+          description: Filter the list by the given environment type id. It must be used together with byProjectId.
       responses:
         "200":
           description: Successful list response
@@ -1262,6 +1311,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RulePage"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
         "404":
           $ref: "#/components/responses/404NotFound"
     post:
@@ -1357,6 +1408,92 @@ paths:
           $ref: "#/components/responses/404NotFound"
         "409":
           $ref: "#/components/responses/409Conflict"
+
+  /sandboxes:
+    get:
+      operationId: listSandboxes
+      tags:
+        - Sandboxes
+      summary: List sandboxes the current user owns
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SandboxPage"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    post:
+      operationId: createSandbox
+      tags:
+        - Sandbox
+      summary: Create a new sandbox
+      security:
+        - userIdHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SandboxCreateBody"
+      responses:
+        "201":
+          description: Successful create response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sandbox"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "409":
+          $ref: "#/components/responses/409Conflict"
+  /sandboxes/{sandboxId}:
+    get:
+      operationId: getSandbox
+      tags:
+        - Sandbox
+      summary: Get sandbox
+      security:
+        - userIdHeader: []
+      parameters:
+        - name: sandboxId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sandbox"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+    delete:
+      operationId: deleteSandbox
+      tags:
+        - Sandbox
+      summary: Delete sandbox
+      security:
+        - userIdHeader: []
+      parameters:
+        - name: sandboxId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Successful delete response.
+        "404":
+          $ref: "#/components/responses/404NotFound"
 
 components:
   securitySchemes:
@@ -1560,7 +1697,8 @@ components:
         - id
         - uuid
         - created_at
-        - source
+        - created_by
+        - plan
       properties:
         id:
           description: The unique identifier of the org
@@ -1576,16 +1714,32 @@ components:
           example: "2023-01-01T00:00:00Z"
           type: string
           format: date-time
-        source:
-          description: The source of the org state. This is used to identify the source of the org state, such as a git repository.
+        created_by:
+          description: The user id that created the org for the first time.
+          example: 00000000-0000-0000-0000-000000000000
           type: string
-          enum:
-            - internal
-            - public
-          default: internal
-          example: internal
+          format: uuid
+        plan:
+          description: The plan of the org.
+          example: custom
+          type: string
+        
+    InternalOrganization:
+      allOf:
+        - $ref: "#/components/schemas/Organization"
+        - properties:
+            source:
+              description: The source of the org state. This is used to identify the source of the org state, such as a git repository.
+              type: string
+              enum:
+                - internal
+                - public
+              default: internal
+              example: internal
+          required:
+            - source
 
-    OrganizationPage:
+    InternalOrganizationPage:
       type: object
       description: A page of organization state returned from the list api.
       required:
@@ -1595,7 +1749,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/Organization"
+            $ref: "#/components/schemas/InternalOrganization"
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -1735,7 +1889,6 @@ components:
         - project_id
         - env_type_id
         - status
-        - runner_id
       properties:
         id:
           description: Environment identifier
@@ -1775,7 +1928,7 @@ components:
           example: delete failed due to a failure in deployment 'xyz'
           type: string
         runner_id:
-          description: The id of the runner to be used to deploy this environment.
+          description: The id of the runner to be used to deploy this environment. If not set, this will be filled in upon first deployment.
           type: string
           example: my-k8s-runner
 
@@ -2528,8 +2681,6 @@ components:
         module_source_code:
           description: The source code of the OpenTofu module backing this module. Required, if module_source is 'inline'.
           type: string
-          minLength: 2
-          maxLength: 2000
         module_params:
           description: |
             The parameters supported by this module. The orchestrator enforces that any required parameters are
@@ -2586,8 +2737,6 @@ components:
         module_source_code:
           description: The source code of the OpenTofu module backing this module.
           type: string
-          minLength: 2
-          maxLength: 2000
         module_params:
           description: |
             The parameters supported by this module. The orchestrator enforces that any required parameters are
@@ -3487,8 +3636,63 @@ components:
             type: string
             example: my-module@01234567-89ab-cdef-0123-456789abcdef
           x-go-type-skip-optional-pointer: true
+        pinned_providers:
+          description: The normal response body only includes the modules and providers currently configured. However if we are removing nodes that still rely on providers we need to fetch their details without having the modules.
+          type: array
+          items:
+            description: The provider type and id separated by a '.'.
+            type: string
+            example: aws.default
+          x-go-type-skip-optional-pointer: true
         are_rules_ignored:
           description: When running a destroy deployment, we only care about pinned module version and do not need to check the rules. This option can be used to skip rule evaluation.
           type: boolean
           example: false
           x-go-type-skip-optional-pointer: true
+    
+    SandboxCreateBody:
+      type: object
+      description: The properties required to create a new sandbox
+      required:
+        - inputs
+      properties:
+        inputs:
+          type: object
+          description: The inputs to the sandbox.
+          additionalProperties:
+            type: string
+    
+    SandboxPage:
+      description: A page of sandboxes returned from the list api.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page.
+          items:
+            $ref: "#/components/schemas/SandboxSummary"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items.
+      
+    SandboxSummary:
+      type: object
+      description: A summary of a sandbox
+      required:
+        - org_id
+      properties:
+        org_id:
+          type: string
+          description: The Organization ID of the sandbox.
+          
+    Sandbox:
+      description: The full details of a sandbox
+      allOf:
+        - $ref: "#/components/schemas/SandboxSummary"
+        - required:
+            - status
+          properties:
+            status:
+              type: string
+              description: The status of the sandbox.

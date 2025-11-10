@@ -30,6 +30,7 @@ data "platform-orchestrator_environment" "example" {
 ### Read-Only
 
 - `created_at` (String) The date and time when the environment was created.
+- `delete_rules` (Boolean) Delete also module and runner rules associated with the environment while deleting the environment.
 - `display_name` (String) The display name of the Environment.
 - `env_type_id` (String) The environment type for the environment.
 - `runner_id` (String) The ID of the runner to be used to deploy this environment.

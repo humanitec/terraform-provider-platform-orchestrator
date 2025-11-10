@@ -16,6 +16,7 @@ Project resource
 resource "platform-orchestrator_project" "example-project" {
   id           = "backend"
   display_name = "Backend Project"
+  delete_rules = true
 }
 ```
 
@@ -28,6 +29,7 @@ resource "platform-orchestrator_project" "example-project" {
 
 ### Optional
 
+- `delete_rules` (Boolean) Delete also module and runner rules associated with the project while deleting the project.
 - `display_name` (String) The display name of the Project.
 
 ### Read-Only

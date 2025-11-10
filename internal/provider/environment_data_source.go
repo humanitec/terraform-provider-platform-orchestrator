@@ -37,6 +37,7 @@ type EnvironmentDataSourceModel struct {
 	Status        types.String `tfsdk:"status"`
 	StatusMessage types.String `tfsdk:"status_message"`
 	RunnerId      types.String `tfsdk:"runner_id"`
+	DeleteRules   types.Bool   `tfsdk:"delete_rules"`
 }
 
 func (d *EnvironmentDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -87,6 +88,10 @@ func (d *EnvironmentDataSource) Schema(ctx context.Context, req datasource.Schem
 			},
 			"runner_id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the runner to be used to deploy this environment.",
+				Computed:            true,
+			},
+			"delete_rules": schema.BoolAttribute{
+				MarkdownDescription: "Delete also module and runner rules associated with the environment while deleting the environment.",
 				Computed:            true,
 			},
 		},
@@ -167,6 +172,7 @@ func (d *EnvironmentDataSource) Read(ctx context.Context, req datasource.ReadReq
 		Status:        types.StringValue(string(environment.Status)),
 		StatusMessage: statusMessage,
 		RunnerId:      runnerId,
+		DeleteRules:   types.BoolValue(false),
 	}
 
 	// Save data into Terraform state

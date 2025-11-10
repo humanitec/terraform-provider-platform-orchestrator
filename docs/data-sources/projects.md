@@ -34,6 +34,7 @@ Required:
 Read-Only:
 
 - `created_at` (String) The Created At timestamp of the Project in RFC3339 format.
+- `delete_rules` (Boolean) Delete also module and runner rules associated with the project while deleting the project.
 - `display_name` (String) The display name of the Project.
 - `status` (String) The status of the Project.
 - `updated_at` (String) The Updated At timestamp of the Project in RFC3339 format.

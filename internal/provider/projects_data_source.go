@@ -96,7 +96,7 @@ func (d *ProjectsDataSource) Read(ctx context.Context, req datasource.ReadReques
 		}
 
 		for _, item := range httpResp.JSON200.Items {
-			if pm, err := types.ObjectValueFrom(ctx, projectAttributeTypes, toProjectModel(item)); err != nil {
+			if pm, err := types.ObjectValueFrom(ctx, projectAttributeTypes, toProjectModel(ProjectModel{}, item)); err != nil {
 				resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert project response to model: %s", err))
 				return
 			} else {

@@ -153,7 +153,7 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	data = toProjectModel(*httpResp.JSON201)
+	data = toProjectModel(data, *httpResp.JSON201)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -186,7 +186,7 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	data = toProjectModel(*httpResp.JSON200)
+	data = toProjectModel(data, *httpResp.JSON200)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -214,7 +214,7 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(toProjectModel(*httpResp.JSON200)))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(toProjectModel(data, *httpResp.JSON200)))...)
 }
 
 func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -259,7 +259,12 @@ func (r *ProjectResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func toProjectModel(item canyoncp.Project) ProjectModel {
+func toProjectModel(previous ProjectModel, item canyoncp.Project) ProjectModel {
+	deleteRules := previous.DeleteRules
+	if deleteRules.IsNull() {
+		deleteRules = types.BoolValue(false)
+	}
+
 	return ProjectModel{
 		Id:          types.StringValue(item.Id),
 		DisplayName: types.StringValue(item.DisplayName),
@@ -267,5 +272,6 @@ func toProjectModel(item canyoncp.Project) ProjectModel {
 		CreatedAt:   types.StringValue(item.CreatedAt.Format(time.RFC3339)),
 		UpdatedAt:   types.StringValue(item.UpdatedAt.Format(time.RFC3339)),
 		Status:      types.StringValue(string(item.Status)),
+		DeleteRules: deleteRules,
 	}
 }

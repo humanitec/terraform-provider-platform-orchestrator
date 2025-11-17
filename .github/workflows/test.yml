@@ -57,6 +57,15 @@ jobs:
     concurrency:
       group: acceptance-tests
     steps:
+      - name: Load secret from 1p
+        uses: 1password/load-secrets-action@v3
+        with:
+          # Export loaded secrets as environment variables
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.ONEPASSWORD_SERVICE_ACCOUNT }}
+          HUMANITEC_AUTH_TOKEN: "op://Humanitec Operations/HUMANITEC_AUTH_TOKEN/credential"
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
@@ -70,6 +79,6 @@ jobs:
       - env:
           TF_ACC: "1"
           HUMANITEC_ORG_ID: ${{ vars.HUMANITEC_ORG_ID }}
-          HUMANITEC_AUTH_TOKEN: ${{ secrets.HUMANITEC_AUTH_TOKEN }}
+          HUMANITEC_AUTH_TOKEN: ${{ env.HUMANITEC_AUTH_TOKEN }}
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10

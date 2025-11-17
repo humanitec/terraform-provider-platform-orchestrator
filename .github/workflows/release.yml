@@ -17,6 +17,16 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
+      - name: Load secret from 1p
+        uses: 1password/load-secrets-action@v3
+        with:
+          # Export loaded secrets as environment variables
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.ONEPASSWORD_SERVICE_ACCOUNT }}
+          GPG_PRIVATE_KEY: "op://Humanitec Operations/Terraform provider signing GPG key/GPG_KEYS/GPG_PRIVATE_KEY"
+          PASSPHRASE: "op://Humanitec Operations/Terraform provider signing GPG key/password"
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           # Allow goreleaser to access older tag information.
@@ -29,8 +39,8 @@ jobs:
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         id: import_gpg
         with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
+          gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
+          passphrase: ${{ env.PASSPHRASE }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
         with:

@@ -92,7 +92,8 @@ func TestAccDeploymentResource(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: deploymentScenario,
+				Config:      deploymentScenario,
+				ExpectError: regexp.MustCompile(`.* not reachable, please check your network connection: .*`),
 			},
 		},
 	})
@@ -118,7 +119,7 @@ resource "platform-orchestrator_deployment" "deployment" {
     }
   })
 }
-`, ExpectError: regexp.MustCompile(`bananas`),
+`, ExpectError: regexp.MustCompile(`Unable to create deployment, unexpected status code: 409.*`),
 			},
 		},
 	})

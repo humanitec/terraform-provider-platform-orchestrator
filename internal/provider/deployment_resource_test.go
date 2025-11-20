@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -91,7 +92,34 @@ func TestAccDeploymentResource(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: deploymentScenario,
+				Config:      deploymentScenario,
+				ExpectError: regexp.MustCompile(`.*kubernetes agent not reachable.*`),
+			},
+		},
+	})
+}
+
+func TestAccDeploymentResource_bad_request(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"platform-orchestrator": providerserver.NewProtocol6WithError(New("test")()),
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+
+resource "platform-orchestrator_deployment" "deployment" {
+  project_id   = "does-not-exist"
+  env_id  =  "does-not-exist"
+  mode = "deploy"
+  manifest = jsonencode({
+    workloads = {
+      main = {}
+    }
+  })
+}
+`, ExpectError: regexp.MustCompile(`Unable to create deployment, unexpected status code: 409.*`),
 			},
 		},
 	})

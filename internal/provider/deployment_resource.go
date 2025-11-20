@@ -170,7 +170,7 @@ func (d *DeploymentResource) Configure(ctx context.Context, request resource.Con
 	d.orgId = providerData.OrgId
 }
 
-func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentResourceModel, diags diag.Diagnostics) (outputsKey *age.X25519Identity) {
+func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentResourceModel, diags *diag.Diagnostics) (outputsKey *age.X25519Identity) {
 	if data.Mode.IsNull() {
 		data.Mode = types.StringValue(string(canyondp.Deploy))
 	}
@@ -221,16 +221,22 @@ func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *Deploy
 	ctx, cancel := context.WithTimeout(ctx, deleteTimeout)
 	defer cancel()
 
+	deploymentUuid, err := uuid.Parse(data.Id.ValueString())
+	if err != nil {
+		diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to parse deployment ID, got error: %s", err))
+		return
+	}
+
 	for {
-		if r, err := d.dpClient.WaitForDeploymentCompleteWithResponse(ctx, d.orgId, uuid.MustParse(data.Id.ValueString()), &canyondp.WaitForDeploymentCompleteParams{}); err != nil {
+		if r, err := d.dpClient.WaitForDeploymentCompleteWithResponse(ctx, d.orgId, deploymentUuid, &canyondp.WaitForDeploymentCompleteParams{}); err != nil {
 			if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
 				continue
 			}
-			diags.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
+			diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
 			return
 		} else if r.StatusCode() == http.StatusRequestTimeout {
 			if err := ctx.Err(); err != nil {
-				diags.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
+				diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
 				return
 			}
 			continue
@@ -242,8 +248,8 @@ func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *Deploy
 			data.StatusMessage = types.StringValue(r.JSON200.StatusMessage)
 			data.CompletedAt = types.StringValue(r.JSON200.CompletedAt.Format(time.RFC3339))
 			if data.Status.ValueString() == "succeeded" {
-				if r, err := d.dpClient.GetDeploymentEncryptedOutputsWithResponse(ctx, d.orgId, uuid.MustParse(data.Id.ValueString())); err != nil {
-					diags.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read deployment outputs, got error: %s", err))
+				if r, err := d.dpClient.GetDeploymentEncryptedOutputsWithResponse(ctx, d.orgId, deploymentUuid); err != nil {
+					diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read deployment outputs, got error: %s", err))
 				} else if r.StatusCode() != http.StatusOK {
 					diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read deployment outputs, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
 				} else {
@@ -256,7 +262,7 @@ func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *Deploy
 					}
 				}
 			} else {
-				diags.AddError(HUM_API_ERR, fmt.Sprintf("Deployment failed: %s", data.StatusMessage))
+				diags.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Deployment failed: %s", data.StatusMessage))
 			}
 			return
 		}
@@ -270,7 +276,7 @@ func (d *DeploymentResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	outputsKey := d.doDeployment(ctx, &data, response.Diagnostics)
+	outputsKey := d.doDeployment(ctx, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -288,7 +294,13 @@ func (d *DeploymentResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	if r, err := d.dpClient.GetDeploymentWithResponse(ctx, d.orgId, uuid.MustParse(data.Id.ValueString())); err != nil {
+	deploymentUuid, err := uuid.Parse(data.Id.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to parse deployment ID, got error: %s", err))
+		return
+	}
+
+	if r, err := d.dpClient.GetDeploymentWithResponse(ctx, d.orgId, deploymentUuid); err != nil {
 		response.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read deployment, got error: %s", err))
 		return
 	} else if r.StatusCode() == http.StatusNotFound {
@@ -317,7 +329,7 @@ func (d *DeploymentResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	outputsKey := d.doDeployment(ctx, &data, response.Diagnostics)
+	outputsKey := d.doDeployment(ctx, &data, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
 		return
 	}

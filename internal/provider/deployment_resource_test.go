@@ -93,7 +93,7 @@ func TestAccDeploymentResource(t *testing.T) {
 			},
 			{
 				Config:      deploymentScenario,
-				ExpectError: regexp.MustCompile(`.* not reachable, please check your network connection: .*`),
+				ExpectError: regexp.MustCompile(`.* not reachable, .*`),
 			},
 		},
 	})

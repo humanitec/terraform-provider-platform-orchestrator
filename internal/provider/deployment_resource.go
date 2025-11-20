@@ -212,7 +212,7 @@ func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentR
 	return outputsKey
 }
 
-func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *DeploymentResourceModel, diags diag.Diagnostics, outputsKey *age.X25519Identity) {
+func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *DeploymentResourceModel, diags *diag.Diagnostics, outputsKey *age.X25519Identity) {
 	deleteTimeout, dd := data.Timeouts.Create(ctx, DefaultAsyncTimeout)
 	if dd.HasError() {
 		diags.Append(dd...)
@@ -282,7 +282,7 @@ func (d *DeploymentResource) Create(ctx context.Context, request resource.Create
 	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 	if data.WaitFor.ValueBool() {
-		d.waitForDeployment(ctx, &data, response.Diagnostics, outputsKey)
+		d.waitForDeployment(ctx, &data, &response.Diagnostics, outputsKey)
 		response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 	}
 }
@@ -335,7 +335,7 @@ func (d *DeploymentResource) Update(ctx context.Context, request resource.Update
 	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 	if data.WaitFor.ValueBool() {
-		d.waitForDeployment(ctx, &data, response.Diagnostics, outputsKey)
+		d.waitForDeployment(ctx, &data, &response.Diagnostics, outputsKey)
 		response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 	}
 }

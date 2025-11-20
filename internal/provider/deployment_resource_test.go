@@ -110,7 +110,7 @@ func TestAccDeploymentResource_bad_request(t *testing.T) {
 
 resource "platform-orchestrator_deployment" "deployment" {
   project_id   = "does-not-exist"
-  env_id  =  "does-not-exist"s
+  env_id  =  "does-not-exist"
   mode = "deploy"
   manifest = jsonencode({
     workloads = {

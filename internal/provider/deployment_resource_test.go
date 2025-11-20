@@ -93,7 +93,7 @@ func TestAccDeploymentResource(t *testing.T) {
 			},
 			{
 				Config:      deploymentScenario,
-				ExpectError: regexp.MustCompile(`.* not reachable, .*`),
+				ExpectError: regexp.MustCompile(`.*kubernetes agent not reachable.*`),
 			},
 		},
 	})

@@ -148,6 +148,9 @@ type Environment struct {
 	// ProjectId Project identifier
 	ProjectId string `json:"project_id"`
 
+	// ProjectUuid Unique uid for the project to identify a unique lifecycle
+	ProjectUuid *openapi_types.UUID `json:"project_uuid,omitempty"`
+
 	// RunnerId The id of the runner to be used to deploy this environment. If not set, this will be filled in upon first deployment.
 	RunnerId *string `json:"runner_id,omitempty"`
 
@@ -670,6 +673,25 @@ type ModuleCoProvisionManifest struct {
 	Type string `json:"type"`
 }
 
+// ModuleCoreFields defines model for ModuleCoreFields.
+type ModuleCoreFields struct {
+	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
+	Coprovisioned []ModuleCoProvisionManifest `json:"coprovisioned"`
+
+	// Dependencies A mapping of alias to resource dependencies that must be provisioned with this module
+	Dependencies map[string]ModuleDependencyManifest `json:"dependencies"`
+
+	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
+	ModuleInputs map[string]interface{} `json:"module_inputs"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params"`
+
+	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
+	ModuleSourceCode *string `json:"module_source_code,omitempty"`
+}
+
 // ModuleCreateBody A request to create a new module
 type ModuleCreateBody struct {
 	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
@@ -838,7 +860,7 @@ type ModuleProviderUpdateBody struct {
 	VersionConstraint *string `json:"version_constraint,omitempty"`
 }
 
-// ModuleSummary A summary of the module that maps an OpenTofu module to a resource type. The full details can be retrieved through the Get api.
+// ModuleSummary defines model for ModuleSummary.
 type ModuleSummary struct {
 	// CreatedAt The date and time when the module was created.
 	CreatedAt time.Time `json:"created_at"`
@@ -894,6 +916,91 @@ type ModuleUpdateBody struct {
 
 	// ProviderMapping A mapping of module providers to use when provisioning using this module.
 	ProviderMapping *map[string]string `json:"provider_mapping,omitempty"`
+}
+
+// ModuleVersion defines model for ModuleVersion.
+type ModuleVersion struct {
+	// Coprovisioned A set of resources to provision after or in parallel with the resource of the current module.
+	Coprovisioned []ModuleCoProvisionManifest `json:"coprovisioned"`
+
+	// CreatedAt The date and time when the module version was created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// Dependencies A mapping of alias to resource dependencies that must be provisioned with this module
+	Dependencies map[string]ModuleDependencyManifest `json:"dependencies"`
+
+	// Description An optional text description for this module
+	Description *string `json:"description,omitempty"`
+
+	// ModuleInputs The fixed inputs to this module. These may contain expressions referencing the modules context.
+	ModuleInputs map[string]interface{} `json:"module_inputs"`
+
+	// ModuleParams The parameters supported by this module. The orchestrator enforces that any required parameters are
+	// provided and that they keys do not overlap with the 'module_inputs'.
+	ModuleParams map[string]ModuleParamItem `json:"module_params"`
+
+	// ModuleSource The source of the OpenTofu module backing this module.
+	ModuleSource string `json:"module_source"`
+
+	// ModuleSourceCode The source code of the OpenTofu module backing this module if the module_source is 'inline'.
+	ModuleSourceCode *string `json:"module_source_code,omitempty"`
+
+	// ProviderMapping A mapping of module providers to use when provisioning using this module
+	ProviderMapping map[string]string `json:"provider_mapping"`
+
+	// ResourceType The resource type that this module provisions.
+	ResourceType string `json:"resource_type"`
+
+	// VersionId A unique identifier for this version of the module
+	VersionId string `json:"version_id"`
+}
+
+// ModuleVersionPage A page of the list modules versions response.
+type ModuleVersionPage struct {
+	// Items The items in this page
+	Items []ModuleVersionSummary `json:"items"`
+
+	// NextPageToken The page token to use to request the next page of items
+	NextPageToken *string `json:"next_page_token,omitempty"`
+}
+
+// ModuleVersionSummary defines model for ModuleVersionSummary.
+type ModuleVersionSummary struct {
+	// CreatedAt The date and time when the module version was created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// Description An optional text description for this module
+	Description *string `json:"description,omitempty"`
+
+	// ModuleSource The source of the OpenTofu module backing this module.
+	ModuleSource string `json:"module_source"`
+
+	// ProviderMapping A mapping of module providers to use when provisioning using this module
+	ProviderMapping map[string]string `json:"provider_mapping"`
+
+	// ResourceType The resource type that this module provisions.
+	ResourceType string `json:"resource_type"`
+
+	// VersionId A unique identifier for this version of the module
+	VersionId string `json:"version_id"`
+}
+
+// ModuleVersionSummaryCoreFields defines model for ModuleVersionSummaryCoreFields.
+type ModuleVersionSummaryCoreFields struct {
+	// Description An optional text description for this module
+	Description *string `json:"description,omitempty"`
+
+	// ModuleSource The source of the OpenTofu module backing this module.
+	ModuleSource string `json:"module_source"`
+
+	// ProviderMapping A mapping of module providers to use when provisioning using this module
+	ProviderMapping map[string]string `json:"provider_mapping"`
+
+	// ResourceType The resource type that this module provisions.
+	ResourceType string `json:"resource_type"`
+
+	// VersionId A unique identifier for this version of the module
+	VersionId string `json:"version_id"`
 }
 
 // Organization The internal state of an organization known by the control plane.
@@ -1266,11 +1373,23 @@ type S3StorageConfiguration struct {
 
 // Sandbox defines model for Sandbox.
 type Sandbox struct {
+	// CompletedAt The date and time when the sandbox deployment completed.
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+
+	// CreatedAt The date and time when the sandbox was created.
+	CreatedAt time.Time `json:"created_at"`
+
+	// Inputs The inputs to the sandbox.
+	Inputs map[string]string `json:"inputs"`
+
 	// OrgId The Organization ID of the sandbox.
 	OrgId string `json:"org_id"`
 
 	// Status The status of the sandbox.
 	Status string `json:"status"`
+
+	// Token The service user token created for the sandbox.
+	Token string `json:"token"`
 }
 
 // SandboxCreateBody The properties required to create a new sandbox
@@ -1329,6 +1448,9 @@ type ServerlessEcsRunnerJob struct {
 	// ExecutionRoleArn The ARN of the role used to pull images, retrieve secrets and parameters, and execute the Runner.
 	ExecutionRoleArn string `json:"execution_role_arn"`
 
+	// Image Container image to use for the runner. If not specified, a default runner image will be used.
+	Image *string `json:"image,omitempty"`
+
 	// IsPublicIpEnabled Whether to assign a public ip to the ECS task. This is required if the target subnets use Internet Gateways
 	// instead of NAT Gateways to reach public networks. Defaults to false.
 	IsPublicIpEnabled bool `json:"is_public_ip_enabled,omitempty"`
@@ -1372,6 +1494,9 @@ type EnvIdPathParam = string
 // EnvTypeIdPathParam defines model for envTypeIdPathParam.
 type EnvTypeIdPathParam = string
 
+// EnvUuidPathParam defines model for envUuidPathParam.
+type EnvUuidPathParam = openapi_types.UUID
+
 // ForceQueryParam defines model for forceQueryParam.
 type ForceQueryParam = bool
 
@@ -1380,6 +1505,9 @@ type IncludeNonDeveloperAccessibleQueryParam = bool
 
 // ModuleIdPathParam defines model for moduleIdPathParam.
 type ModuleIdPathParam = string
+
+// ModuleVersionIdPathParam defines model for moduleVersionIdPathParam.
+type ModuleVersionIdPathParam = openapi_types.UUID
 
 // OrgIdPathParam defines model for orgIdPathParam.
 type OrgIdPathParam = string
@@ -1392,6 +1520,9 @@ type PerPageQueryParam = int
 
 // ProjectIdPathParam defines model for projectIdPathParam.
 type ProjectIdPathParam = string
+
+// ProjectUuidPathParam defines model for projectUuidPathParam.
+type ProjectUuidPathParam = openapi_types.UUID
 
 // ProviderIdPathParam defines model for providerIdPathParam.
 type ProviderIdPathParam = string
@@ -1439,6 +1570,15 @@ type ListInternalOrganizationsParams struct {
 type InternalForceDeleteEnvironmentParams struct {
 	// DeleteRules Whether to delete all rules associated with the environment
 	DeleteRules *bool `form:"deleteRules,omitempty" json:"deleteRules,omitempty"`
+}
+
+// ListInternalEnvironmentsByProjectUuidParams defines parameters for ListInternalEnvironmentsByProjectUuid.
+type ListInternalEnvironmentsByProjectUuidParams struct {
+	// PerPage The maximum number of items to return in a page of results
+	PerPage *PerPageQueryParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Page The page token to request from
+	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
 // InternalListResourceTypesParams defines parameters for InternalListResourceTypes.
@@ -1502,6 +1642,15 @@ type ListModulesParams struct {
 
 	// ByResourceType Filter the list by the given resource type
 	ByResourceType *string `form:"byResourceType,omitempty" json:"byResourceType,omitempty"`
+}
+
+// ListModuleVersionsParams defines parameters for ListModuleVersions.
+type ListModuleVersionsParams struct {
+	// PerPage The maximum number of items to return in a page of results
+	PerPage *PerPageQueryParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Page The page token to request from
+	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
 // ListProjectsParams defines parameters for ListProjects.
@@ -2206,6 +2355,9 @@ type ClientInterface interface {
 	// GetInternalOrganization request
 	GetInternalOrganization(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetInternalEnvironmentByUuid request
+	GetInternalEnvironmentByUuid(ctx context.Context, orgId OrgIdPathParam, envUuid EnvUuidPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// InternalUpdateEnvironmentWithBody request with any body
 	InternalUpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -2218,6 +2370,12 @@ type ClientInterface interface {
 	GenerateInternalModuleCatalogueWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetInternalProjectByUuid request
+	GetInternalProjectByUuid(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListInternalEnvironmentsByProjectUuid request
+	ListInternalEnvironmentsByProjectUuid(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, params *ListInternalEnvironmentsByProjectUuidParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetInternalRunner request
 	GetInternalRunner(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2314,6 +2472,12 @@ type ClientInterface interface {
 	UpdateModuleWithBody(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateModule(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListModuleVersions request
+	ListModuleVersions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetModuleVersion request
+	GetModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListProjects request
 	ListProjects(ctx context.Context, orgId OrgIdPathParam, params *ListProjectsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2474,6 +2638,18 @@ func (c *Client) GetInternalOrganization(ctx context.Context, orgId OrgIdPathPar
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetInternalEnvironmentByUuid(ctx context.Context, orgId OrgIdPathParam, envUuid EnvUuidPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetInternalEnvironmentByUuidRequest(c.Server, orgId, envUuid)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) InternalUpdateEnvironmentWithBody(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewInternalUpdateEnvironmentRequestWithBody(c.Server, orgId, projectId, envId, contentType, body)
 	if err != nil {
@@ -2524,6 +2700,30 @@ func (c *Client) GenerateInternalModuleCatalogueWithBody(ctx context.Context, or
 
 func (c *Client) GenerateInternalModuleCatalogue(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGenerateInternalModuleCatalogueRequest(c.Server, orgId, projectId, envId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetInternalProjectByUuid(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetInternalProjectByUuidRequest(c.Server, orgId, projectUuid)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListInternalEnvironmentsByProjectUuid(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, params *ListInternalEnvironmentsByProjectUuidParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListInternalEnvironmentsByProjectUuidRequest(c.Server, orgId, projectUuid, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2944,6 +3144,30 @@ func (c *Client) UpdateModuleWithBody(ctx context.Context, orgId OrgIdPathParam,
 
 func (c *Client) UpdateModule(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateModuleRequest(c.Server, orgId, moduleId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListModuleVersions(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListModuleVersionsRequest(c.Server, orgId, moduleId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetModuleVersion(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetModuleVersionRequest(c.Server, orgId, moduleId, moduleVersionId)
 	if err != nil {
 		return nil, err
 	}
@@ -3573,6 +3797,47 @@ func NewGetInternalOrganizationRequest(server string, orgId OrgIdPathParam) (*ht
 	return req, nil
 }
 
+// NewGetInternalEnvironmentByUuidRequest generates requests for GetInternalEnvironmentByUuid
+func NewGetInternalEnvironmentByUuidRequest(server string, orgId OrgIdPathParam, envUuid EnvUuidPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "envUuid", runtime.ParamLocationPath, envUuid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/envs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewInternalUpdateEnvironmentRequest calls the generic InternalUpdateEnvironment builder with application/json body
 func NewInternalUpdateEnvironmentRequest(server string, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body InternalUpdateEnvironmentJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3761,6 +4026,126 @@ func NewGenerateInternalModuleCatalogueRequestWithBody(server string, orgId OrgI
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetInternalProjectByUuidRequest generates requests for GetInternalProjectByUuid
+func NewGetInternalProjectByUuidRequest(server string, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectUuid", runtime.ParamLocationPath, projectUuid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/projects/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListInternalEnvironmentsByProjectUuidRequest generates requests for ListInternalEnvironmentsByProjectUuid
+func NewListInternalEnvironmentsByProjectUuidRequest(server string, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, params *ListInternalEnvironmentsByProjectUuidParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "projectUuid", runtime.ParamLocationPath, projectUuid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/internal/orgs/%s/projects/%s/envs", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "per_page", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -5132,6 +5517,133 @@ func NewUpdateModuleRequestWithBody(server string, orgId OrgIdPathParam, moduleI
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListModuleVersionsRequest generates requests for ListModuleVersions
+func NewListModuleVersionsRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "per_page", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetModuleVersionRequest generates requests for GetModuleVersion
+func NewGetModuleVersionRequest(server string, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "moduleId", runtime.ParamLocationPath, moduleId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "moduleVersionId", runtime.ParamLocationPath, moduleVersionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/modules/%s/versions/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -6947,6 +7459,9 @@ type ClientWithResponsesInterface interface {
 	// GetInternalOrganizationWithResponse request
 	GetInternalOrganizationWithResponse(ctx context.Context, orgId OrgIdPathParam, reqEditors ...RequestEditorFn) (*GetInternalOrganizationResponse, error)
 
+	// GetInternalEnvironmentByUuidWithResponse request
+	GetInternalEnvironmentByUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, envUuid EnvUuidPathParam, reqEditors ...RequestEditorFn) (*GetInternalEnvironmentByUuidResponse, error)
+
 	// InternalUpdateEnvironmentWithBodyWithResponse request with any body
 	InternalUpdateEnvironmentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalUpdateEnvironmentResponse, error)
 
@@ -6959,6 +7474,12 @@ type ClientWithResponsesInterface interface {
 	GenerateInternalModuleCatalogueWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
 
 	GenerateInternalModuleCatalogueWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, body GenerateInternalModuleCatalogueJSONRequestBody, reqEditors ...RequestEditorFn) (*GenerateInternalModuleCatalogueResponse, error)
+
+	// GetInternalProjectByUuidWithResponse request
+	GetInternalProjectByUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, reqEditors ...RequestEditorFn) (*GetInternalProjectByUuidResponse, error)
+
+	// ListInternalEnvironmentsByProjectUuidWithResponse request
+	ListInternalEnvironmentsByProjectUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, params *ListInternalEnvironmentsByProjectUuidParams, reqEditors ...RequestEditorFn) (*ListInternalEnvironmentsByProjectUuidResponse, error)
 
 	// GetInternalRunnerWithResponse request
 	GetInternalRunnerWithResponse(ctx context.Context, orgId OrgIdPathParam, runnerId RunnerIdPathParam, reqEditors ...RequestEditorFn) (*GetInternalRunnerResponse, error)
@@ -7055,6 +7576,12 @@ type ClientWithResponsesInterface interface {
 	UpdateModuleWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateModuleResponse, error)
 
 	UpdateModuleWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, body UpdateModuleJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateModuleResponse, error)
+
+	// ListModuleVersionsWithResponse request
+	ListModuleVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*ListModuleVersionsResponse, error)
+
+	// GetModuleVersionWithResponse request
+	GetModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleVersionResponse, error)
 
 	// ListProjectsWithResponse request
 	ListProjectsWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListProjectsParams, reqEditors ...RequestEditorFn) (*ListProjectsResponse, error)
@@ -7236,6 +7763,29 @@ func (r GetInternalOrganizationResponse) StatusCode() int {
 	return 0
 }
 
+type GetInternalEnvironmentByUuidResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Environment
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetInternalEnvironmentByUuidResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetInternalEnvironmentByUuidResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type InternalUpdateEnvironmentResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7302,6 +7852,52 @@ func (r GenerateInternalModuleCatalogueResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GenerateInternalModuleCatalogueResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetInternalProjectByUuidResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Project
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetInternalProjectByUuidResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetInternalProjectByUuidResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListInternalEnvironmentsByProjectUuidResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentPage
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListInternalEnvironmentsByProjectUuidResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListInternalEnvironmentsByProjectUuidResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7912,6 +8508,52 @@ func (r UpdateModuleResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateModuleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListModuleVersionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleVersionPage
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListModuleVersionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListModuleVersionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetModuleVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ModuleVersion
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r GetModuleVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetModuleVersionResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8653,6 +9295,15 @@ func (c *ClientWithResponses) GetInternalOrganizationWithResponse(ctx context.Co
 	return ParseGetInternalOrganizationResponse(rsp)
 }
 
+// GetInternalEnvironmentByUuidWithResponse request returning *GetInternalEnvironmentByUuidResponse
+func (c *ClientWithResponses) GetInternalEnvironmentByUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, envUuid EnvUuidPathParam, reqEditors ...RequestEditorFn) (*GetInternalEnvironmentByUuidResponse, error) {
+	rsp, err := c.GetInternalEnvironmentByUuid(ctx, orgId, envUuid, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetInternalEnvironmentByUuidResponse(rsp)
+}
+
 // InternalUpdateEnvironmentWithBodyWithResponse request with arbitrary body returning *InternalUpdateEnvironmentResponse
 func (c *ClientWithResponses) InternalUpdateEnvironmentWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, projectId ProjectIdPathParam, envId EnvIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InternalUpdateEnvironmentResponse, error) {
 	rsp, err := c.InternalUpdateEnvironmentWithBody(ctx, orgId, projectId, envId, contentType, body, reqEditors...)
@@ -8694,6 +9345,24 @@ func (c *ClientWithResponses) GenerateInternalModuleCatalogueWithResponse(ctx co
 		return nil, err
 	}
 	return ParseGenerateInternalModuleCatalogueResponse(rsp)
+}
+
+// GetInternalProjectByUuidWithResponse request returning *GetInternalProjectByUuidResponse
+func (c *ClientWithResponses) GetInternalProjectByUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, reqEditors ...RequestEditorFn) (*GetInternalProjectByUuidResponse, error) {
+	rsp, err := c.GetInternalProjectByUuid(ctx, orgId, projectUuid, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetInternalProjectByUuidResponse(rsp)
+}
+
+// ListInternalEnvironmentsByProjectUuidWithResponse request returning *ListInternalEnvironmentsByProjectUuidResponse
+func (c *ClientWithResponses) ListInternalEnvironmentsByProjectUuidWithResponse(ctx context.Context, orgId OrgIdPathParam, projectUuid ProjectUuidPathParam, params *ListInternalEnvironmentsByProjectUuidParams, reqEditors ...RequestEditorFn) (*ListInternalEnvironmentsByProjectUuidResponse, error) {
+	rsp, err := c.ListInternalEnvironmentsByProjectUuid(ctx, orgId, projectUuid, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListInternalEnvironmentsByProjectUuidResponse(rsp)
 }
 
 // GetInternalRunnerWithResponse request returning *GetInternalRunnerResponse
@@ -9000,6 +9669,24 @@ func (c *ClientWithResponses) UpdateModuleWithResponse(ctx context.Context, orgI
 		return nil, err
 	}
 	return ParseUpdateModuleResponse(rsp)
+}
+
+// ListModuleVersionsWithResponse request returning *ListModuleVersionsResponse
+func (c *ClientWithResponses) ListModuleVersionsWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, params *ListModuleVersionsParams, reqEditors ...RequestEditorFn) (*ListModuleVersionsResponse, error) {
+	rsp, err := c.ListModuleVersions(ctx, orgId, moduleId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListModuleVersionsResponse(rsp)
+}
+
+// GetModuleVersionWithResponse request returning *GetModuleVersionResponse
+func (c *ClientWithResponses) GetModuleVersionWithResponse(ctx context.Context, orgId OrgIdPathParam, moduleId ModuleIdPathParam, moduleVersionId ModuleVersionIdPathParam, reqEditors ...RequestEditorFn) (*GetModuleVersionResponse, error) {
+	rsp, err := c.GetModuleVersion(ctx, orgId, moduleId, moduleVersionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetModuleVersionResponse(rsp)
 }
 
 // ListProjectsWithResponse request returning *ListProjectsResponse
@@ -9451,6 +10138,39 @@ func ParseGetInternalOrganizationResponse(rsp *http.Response) (*GetInternalOrgan
 	return response, nil
 }
 
+// ParseGetInternalEnvironmentByUuidResponse parses an HTTP response from a GetInternalEnvironmentByUuidWithResponse call
+func ParseGetInternalEnvironmentByUuidResponse(rsp *http.Response) (*GetInternalEnvironmentByUuidResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetInternalEnvironmentByUuidResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Environment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseInternalUpdateEnvironmentResponse parses an HTTP response from a InternalUpdateEnvironmentWithResponse call
 func ParseInternalUpdateEnvironmentResponse(rsp *http.Response) (*InternalUpdateEnvironmentResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -9565,6 +10285,72 @@ func ParseGenerateInternalModuleCatalogueResponse(rsp *http.Response) (*Generate
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetInternalProjectByUuidResponse parses an HTTP response from a GetInternalProjectByUuidWithResponse call
+func ParseGetInternalProjectByUuidResponse(rsp *http.Response) (*GetInternalProjectByUuidResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetInternalProjectByUuidResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Project
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListInternalEnvironmentsByProjectUuidResponse parses an HTTP response from a ListInternalEnvironmentsByProjectUuidWithResponse call
+func ParseListInternalEnvironmentsByProjectUuidResponse(rsp *http.Response) (*ListInternalEnvironmentsByProjectUuidResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListInternalEnvironmentsByProjectUuidResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 
@@ -10507,6 +11293,72 @@ func ParseUpdateModuleResponse(rsp *http.Response) (*UpdateModuleResponse, error
 			return nil, err
 		}
 		response.JSON409 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListModuleVersionsResponse parses an HTTP response from a ListModuleVersionsWithResponse call
+func ParseListModuleVersionsResponse(rsp *http.Response) (*ListModuleVersionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListModuleVersionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleVersionPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetModuleVersionResponse parses an HTTP response from a GetModuleVersionWithResponse call
+func ParseGetModuleVersionResponse(rsp *http.Response) (*GetModuleVersionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetModuleVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ModuleVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

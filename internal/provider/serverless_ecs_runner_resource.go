@@ -94,7 +94,7 @@ var ecsRunnerConfigurationResourceSchema = schema.SingleNestedAttribute{
 				"execution_role_arn": schema.StringAttribute{
 					MarkdownDescription: "The ARN of the IAM role to use for launching the ECS Task.",
 					Required:            true,
-					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-/]+$`), "must be a valid IAM role ARN")},
+					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-_/]+$`), "must be a valid IAM role ARN")},
 				},
 				"security_groups": schema.ListAttribute{
 					ElementType:         types.StringType,
@@ -114,7 +114,18 @@ var ecsRunnerConfigurationResourceSchema = schema.SingleNestedAttribute{
 				"task_role_arn": schema.StringAttribute{
 					MarkdownDescription: "The ARN of the IAM role to use for running the ECS Task.",
 					Optional:            true,
-					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-/]+$`), "must be a valid IAM role ARN")},
+					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-_/]+$`), "must be a valid IAM role ARN")},
+				},
+				"image": schema.StringAttribute{
+					MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default canyon-runner image will be used.",
+					Optional:            true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 255),
+						stringvalidator.RegexMatches(
+							regexp.MustCompile(`^[a-zA-Z0-9._:/-]+(?:@[a-z0-9]+:[a-fA-F0-9]+)?$`),
+							"image must be a valid container image",
+						),
+					},
 				},
 				"environment": schema.MapAttribute{
 					MarkdownDescription: "The plain-text environment variables to set for the ECS Task.",
@@ -192,6 +203,7 @@ type ServerlessEcsRunnerJob struct {
 	SecurityGroups    types.List   `tfsdk:"security_groups"`
 	IsPublicIpEnabled types.Bool   `tfsdk:"is_public_ip_enabled"`
 	TaskRole          types.String `tfsdk:"task_role_arn"`
+	Image             types.String `tfsdk:"image"`
 	Environment       types.Map    `tfsdk:"environment"`
 	Secrets           types.Map    `tfsdk:"secrets"`
 }
@@ -256,16 +268,24 @@ func convertEcsRunnerApiJobIntoModel(j canyoncp.ServerlessEcsRunnerJob) Serverle
 		ExecutionRole:     types.StringValue(j.ExecutionRoleArn),
 		IsPublicIpEnabled: types.BoolValue(j.IsPublicIpEnabled),
 		TaskRole:          types.StringPointerValue(j.TaskRoleArn),
-		Environment: types.MapValueMust(types.StringType, maps.Collect(func(yield func(string, attr.Value) bool) {
-			for k, v := range j.Environment {
-				yield(k, types.StringValue(v))
-			}
-		})),
-		Secrets: types.MapValueMust(types.StringType, maps.Collect(func(yield func(string, attr.Value) bool) {
-			for k, v := range j.Secrets {
-				yield(k, types.StringValue(v))
-			}
-		})),
+		Image:             types.StringPointerValue(j.Image),
+
+		Environment: types.MapValueMust(
+			types.StringType,
+			maps.Collect(func(yield func(string, attr.Value) bool) {
+				for k, v := range j.Environment {
+					yield(k, types.StringValue(v))
+				}
+			}),
+		),
+		Secrets: types.MapValueMust(
+			types.StringType,
+			maps.Collect(func(yield func(string, attr.Value) bool) {
+				for k, v := range j.Secrets {
+					yield(k, types.StringValue(v))
+				}
+			}),
+		),
 	}
 }
 
@@ -313,7 +333,7 @@ func convertEcsRunnerJobModelIntoApi(j ServerlessEcsRunnerJob) canyoncp.Serverle
 		}
 		return ""
 	}
-	return canyoncp.ServerlessEcsRunnerJob{
+	result := canyoncp.ServerlessEcsRunnerJob{
 		Region:  j.Region.ValueString(),
 		Cluster: j.Cluster.ValueString(),
 		Subnets: slices.Collect(func(yield func(string) bool) {
@@ -329,6 +349,7 @@ func convertEcsRunnerJobModelIntoApi(j ServerlessEcsRunnerJob) canyoncp.Serverle
 		}),
 		IsPublicIpEnabled: j.IsPublicIpEnabled.ValueBool(),
 		TaskRoleArn:       fromStringValueToStringPointer(j.TaskRole),
+		Image:             fromStringValueToStringPointer(j.Image),
 		Environment: maps.Collect(func(yield func(string, string) bool) {
 			for k, v := range j.Environment.Elements() {
 				yield(k, stringify(v))
@@ -340,4 +361,6 @@ func convertEcsRunnerJobModelIntoApi(j ServerlessEcsRunnerJob) canyoncp.Serverle
 			}
 		}),
 	}
+
+	return result
 }

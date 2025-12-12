@@ -152,7 +152,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  
+  /orgs/{orgId}/deployments/{deploymentId}/actions/diff:
+    post:
+      operationId: calculateDeploymentDiff
+      tags:
+        - Deployment
+      summary: Calculate the diff from another deployment to this one.
+      description: |
+        Returns the diff from another deployment to this one. The deployments must both be in the same environment.
+        The diff details the nodes that have been added, removed, or changed.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+        - name: fromDeploymentId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: |
+            The id of the previous deployment in the same environment. If this is not specified, the diff
+            will be calculated from the previous stateful deployment.
+      responses:
+        "200":
+          description: Successful diff response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeploymentDiff"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "404":
+          $ref: "#/components/responses/404NotFound"
   /orgs/{orgId}/deployments/{deploymentId}/actions/get-logs:
     get:
       operationId: getDeploymentLogs
@@ -259,13 +291,13 @@ paths:
           in: header
           required: true
           schema:
-            type: string          
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeploymentResultsUpdateBody"          
+              $ref: "#/components/schemas/DeploymentResultsUpdateBody"
       responses:
         "204":
           description: Results successfully received.
@@ -409,7 +441,7 @@ paths:
                 $ref: "#/components/schemas/InternalModuleUsage"
         404:
           $ref: "#/components/responses/404NotFound"
-  
+
   /internal/orgs/{orgId}/remote-runners/{runnerId}/actions/push-message:
     post:
       summary: Push a message to a remote runner
@@ -475,14 +507,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MetadataKeyCreateBody'
+              $ref: "#/components/schemas/MetadataKeyCreateBody"
       responses:
         201:
           description: Metadata key created successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetadataKey'
+                $ref: "#/components/schemas/MetadataKey"
         400:
           $ref: "#/components/responses/400BadRequest"
         404:
@@ -507,7 +539,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetadataKey'
+                $ref: "#/components/schemas/MetadataKey"
         404:
           $ref: "#/components/responses/404NotFound"
     delete:
@@ -545,14 +577,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MetadataKeyUpdateBody'
+              $ref: "#/components/schemas/MetadataKeyUpdateBody"
       responses:
         200:
           description: Metadata key updated successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MetadataKey'
+                $ref: "#/components/schemas/MetadataKey"
         400:
           $ref: "#/components/responses/400BadRequest"
         404:
@@ -624,7 +656,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-            
+
   responses:
     400BadRequest:
       description: The request was invalid. More detail can be found in the error body.
@@ -637,7 +669,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
     409Conflict:
       description: The request conflicts with existing state in the system.
       content:
@@ -693,7 +725,7 @@ components:
       example: "sample-runner"
       required: true
       schema:
-        type: string        
+        type: string
     perPageQueryParam:
       name: per_page
       in: query
@@ -763,7 +795,7 @@ components:
       maxLength: 63
       pattern: ^[a-z0-9]+(?:-+[a-z0-9]+)*(?:\.[a-z0-9]+(?:-+[a-z0-9]+)*)*$
       x-pattern-error: resource id must be a valid resource id with one or more dot-separated parts of lowercase alphanumerics and hyphens
-  
+
     DeploymentResultsUpdateBody:
       description: The outcome of the runner execution.
       type: object
@@ -779,21 +811,21 @@ components:
             - failure
           description: The overall status of the runner execution.
         error:
-          $ref: '#/components/schemas/Error'
+          $ref: "#/components/schemas/Error"
         tf_resource_counts:
-          $ref: '#/components/schemas/DeploymentTFResourceCounts'
+          $ref: "#/components/schemas/DeploymentTFResourceCounts"
         metadata:
-          $ref: '#/components/schemas/DeploymentResultMetadata'
+          $ref: "#/components/schemas/DeploymentResultMetadata"
       required:
         - status
-    
+
     DeploymentResultMetadata:
       x-go-type-skip-optional-pointer: true
       description: The metadata produced by the resources involved in the deployment.
       type: array
       items:
-        $ref: '#/components/schemas/DeploymentResultMetadataPerNode'
-    
+        $ref: "#/components/schemas/DeploymentResultMetadataPerNode"
+
     DeploymentResultMetadataPerNode:
       description: The metadata produced by a specific resource identified by its hash.
       type: object
@@ -812,13 +844,13 @@ components:
           example:
             k8s_namespace: test-namespace
             gcp_project: test-gcp-project
-    
+
     DeploymentTFResourceCounts:
       type: object
       x-go-type-skip-optional-pointer: true
       description: Details about the Terraform resources added / removed / changed .
       properties:
-        num_resources: 
+        num_resources:
           type: integer
           description: Number of Terraform resources involved in the deployment.
         num_resources_added:
@@ -829,7 +861,7 @@ components:
           description: Number of Terraform resources removed by this deployment run.
         num_resources_changed:
           type: integer
-          description: Number of Terraform resources changed by this deployment run.        
+          description: Number of Terraform resources changed by this deployment run.
       required:
         - num_resources
         - num_resources_added
@@ -873,6 +905,7 @@ components:
         - created_at
         - created_by
         - mode
+        - plan_only
         - status
         - status_message
         - metrics
@@ -906,7 +939,16 @@ components:
         mode:
           description: The mode of the deployment.
           type: string
-          example: apply
+          example: deploy
+        plan_only:
+          type: boolean
+          description: Whether the deployment is executed in plan mode.
+          example: true
+        rollback_to_deployment_id:
+          description: When mode is 'rollback', this field will hold the uuid of the deployment rollback to.
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
         status:
           description: The status of the deployment.
           type: string
@@ -916,7 +958,7 @@ components:
           type: string
           example: Deployment in flight
         metrics:
-          $ref: '#/components/schemas/DeploymentMetrics'
+          $ref: "#/components/schemas/DeploymentMetrics"
 
     DeploymentPage:
       description: A page of deployments
@@ -986,12 +1028,22 @@ components:
           additionalProperties:
             $ref: "#/components/schemas/DeploymentManifestResource"
           x-go-type-skip-optional-pointer: true
-        variables:
+        outputs:
           type: object
           maxItems: 100
           additionalProperties:
             type: string
           x-go-type-skip-optional-pointer: true
+        variables:
+          type: object
+          description: Parameter variables is deprecated and will be removed in a future release. Please use outputs instead.
+          deprecated: true
+          maxItems: 100
+          additionalProperties:
+            type: string
+          x-go-type-skip-optional-pointer: true
+          x-oapi-codegen-extra-tags:
+            yaml: variables,omitempty
 
     Deployment:
       type: object
@@ -1014,18 +1066,31 @@ components:
         - mode
         - project_id
         - env_id
-        - manifest
       properties:
         mode:
           description: |
-            The mode of the deployment. Defaults to 'deploy'. Can be set to 'plan_only' to test and validate a deployment.
+            The mode of the deployment. Defaults to 'deploy'. Can be set to 'rollback' to rollback to the graph used in
+            the deployment specified by `rollback_to_deployment_id`. For backwards compatibility, this can be set to
+            'plan_only' which is equivalent to 'deploy' mode with plan_only set to true.
           type: string
           enum:
             - plan_only
             - deploy
+            - rollback
           example: deploy
+        plan_only:
+          type: boolean
+          description: |
+            Whether the deployment should be planned only and not executed. This defaults to 'false' unless the mode is
+            set to 'plan_only'.
+          example: true
         manifest:
           $ref: "#/components/schemas/DeploymentManifest"
+        rollback_to_deployment_id:
+          description: Optional ID to rollback to when the deployment mode is 'rollback' or 'rollback_plan'.
+          type: string
+          format: uuid
+          example: "01234567-89ab-cdef-0123-456789abcdef"
         project_id:
           description: The Project to deploy to.
           type: string
@@ -1055,7 +1120,7 @@ components:
           pattern: ^age[a-z0-9]+$
           x-pattern-error: "encrypted_outputs_recipient: does not look like an 'age' public key"
           minLength: 1
-          maxLength: 200          
+          maxLength: 200
         is_dry_run:
           description: Whether to just validate the request and not persist or execute it.
           type: boolean
@@ -1075,11 +1140,14 @@ components:
       type: object
       required:
         - runner_id
+        - diff
       properties:
         runner_id:
           description: The Runner ID that this deployment would have executed on
           type: string
           example: my-runner
+        diff:
+          $ref: "#/components/schemas/DeploymentDiff"
 
     DeploymentEncryptedOutputs:
       type: object
@@ -1090,6 +1158,70 @@ components:
           description: |
             The base64 encoded encrypted outputs. These are returned in standard base64 with padding. The outputs are encrypted with https://age-encryption.org/ and may
             be decrypted by the holder of the recipients key.
+          type: string
+
+    DeploymentDiff:
+      type: object
+      description: Describes a diff between the resource graphs of two deployments.
+      required:
+        - changes
+        - num_added
+        - num_changed
+        - num_removed
+      properties:
+        from_deployment_id:
+          description: The deployment ID the diff is calculated from. This will be null if there is no previous deployment.
+          type: string
+          format: uuid
+        to_deployment_id:
+          description: The deployment ID the diff is calculated to. This will be null if the diff is calculated from a dry-run.
+          type: string
+          format: uuid
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentDiffChange"
+        num_added:
+          type: integer
+          description: The number of resources added in the deployment.
+        num_changed:
+          type: integer
+          description: The number of resources changed in the deployment.
+        num_removed:
+          type: integer
+          description: The number of resources removed in the deployment.
+
+    DeploymentDiffChange:
+      type: object
+      required:
+        - id
+        - resource
+        - type
+        - summary
+      properties:
+        id:
+          description: The deterministic hash of the node.
+          type: string
+          example: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        resource:
+          description: The resource identifier of the node including the type, class, and id
+          type: string
+          example: "postgres.default@example"
+        type:
+          description: The type of change in a resource node.
+          type: string
+          enum:
+            - added
+            - removed
+            - module_changed
+            - params_changed
+          x-enum-varnames:
+            - DeploymentDiffChangeTypeAdded
+            - DeploymentDiffChangeTypeRemoved
+            - DeploymentDiffChangeTypeModuleChanged
+            - DeploymentDiffChangeTypeParamsChanged
+        summary:
+          description: A human readable summary of the change to this node.
           type: string
 
     MetadataKeyPage:
@@ -1124,7 +1256,7 @@ components:
           example: "2025-01-02T03:04:05Z"
           description: The time the metadata key was created
         schema:
-          $ref: '#/components/schemas/MetadataKeySchema'
+          $ref: "#/components/schemas/MetadataKeySchema"
       required:
         - name
         - schema
@@ -1166,7 +1298,7 @@ components:
           type: string
           example: "This is an example metadata key."
         schema:
-          $ref: '#/components/schemas/MetadataKeySchema'
+          $ref: "#/components/schemas/MetadataKeySchema"
       required:
         - name
         - schema
@@ -1180,7 +1312,7 @@ components:
           type: string
           example: "This is an example metadata key."
         schema:
-          $ref: '#/components/schemas/UpdateMetadataKeySchema'
+          $ref: "#/components/schemas/UpdateMetadataKeySchema"
       type: object
 
     UpdateMetadataKeySchema:
@@ -1273,7 +1405,7 @@ components:
           description: The list of active resource nodes.
           items:
             $ref: "#/components/schemas/ActiveResourceNode"
-    
+
     RemoteRunnerMessage:
       oneOf:
         - $ref: "#/components/schemas/RemoteRunnerMessageCreateJob"
@@ -1291,7 +1423,6 @@ components:
         - create-job
         - check-job-status
 
-    
     RemoteRunnerMessageCreateJob:
       type: object
       description: The response for creating a job on the runner.
@@ -1313,14 +1444,13 @@ components:
         deployment_token:
           type: string
           description: The deployment token to authenticate any request to update deployment results from the remote runner.
-          example: "deployment-token-12345"  
+          example: "deployment-token-12345"
       required:
         - action
         - job_id
         - namespace
         - configuration
         - deployment_token
-
 
     RemoteRunnerMessageCheckJobStatus:
       type: object
@@ -1335,7 +1465,7 @@ components:
         namespace:
           type: string
           description: The ID of the namespace associated with the job.
-          example: "test-namespace"       
+          example: "test-namespace"
         deployment_token:
           type: string
           description: The deployment token to authenticate any request to update deployment results from the remote runner.
@@ -1345,7 +1475,7 @@ components:
           format: date-time
           description: The time at which the job should be considered stuck by the runner if no pods are running or completed.
           example: "2025-01-02T03:04:05Z"
-           
+
       required:
         - action
         - job_id

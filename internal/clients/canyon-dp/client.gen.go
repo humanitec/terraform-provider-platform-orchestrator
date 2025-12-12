@@ -28,6 +28,7 @@ const (
 const (
 	Deploy   DeploymentCreateBodyMode = "deploy"
 	PlanOnly DeploymentCreateBodyMode = "plan_only"
+	Rollback DeploymentCreateBodyMode = "rollback"
 )
 
 // Defines values for DeploymentCreateBodyRunnerLogLevel.
@@ -36,6 +37,14 @@ const (
 	DeploymentCreateBodyRunnerLogLevelError DeploymentCreateBodyRunnerLogLevel = "error"
 	DeploymentCreateBodyRunnerLogLevelInfo  DeploymentCreateBodyRunnerLogLevel = "info"
 	DeploymentCreateBodyRunnerLogLevelWarn  DeploymentCreateBodyRunnerLogLevel = "warn"
+)
+
+// Defines values for DeploymentDiffChangeType.
+const (
+	DeploymentDiffChangeTypeAdded         DeploymentDiffChangeType = "added"
+	DeploymentDiffChangeTypeModuleChanged DeploymentDiffChangeType = "module_changed"
+	DeploymentDiffChangeTypeParamsChanged DeploymentDiffChangeType = "params_changed"
+	DeploymentDiffChangeTypeRemoved       DeploymentDiffChangeType = "removed"
 )
 
 // Defines values for DeploymentResultsUpdateBodyStatus.
@@ -110,8 +119,14 @@ type Deployment struct {
 	// OrgId The Organization ID
 	OrgId OrganizationId `json:"org_id"`
 
+	// PlanOnly Whether the deployment is executed in plan mode.
+	PlanOnly bool `json:"plan_only"`
+
 	// ProjectId The Project id which the environment exists in
 	ProjectId string `json:"project_id"`
+
+	// RollbackToDeploymentId When mode is 'rollback', this field will hold the uuid of the deployment rollback to.
+	RollbackToDeploymentId *openapi_types.UUID `json:"rollback_to_deployment_id,omitempty"`
 
 	// RunnerId The Runner ID that this deployment executes on
 	RunnerId string `json:"runner_id"`
@@ -142,26 +157,78 @@ type DeploymentCreateBody struct {
 	IsDryRun bool `json:"is_dry_run,omitempty"`
 
 	// Manifest The manifest associated with a deployment
-	Manifest DeploymentManifest `json:"manifest"`
+	Manifest *DeploymentManifest `json:"manifest,omitempty"`
 
-	// Mode The mode of the deployment. Defaults to 'deploy'. Can be set to 'plan_only' to test and validate a deployment.
+	// Mode The mode of the deployment. Defaults to 'deploy'. Can be set to 'rollback' to rollback to the graph used in
+	// the deployment specified by `rollback_to_deployment_id`. For backwards compatibility, this can be set to
+	// 'plan_only' which is equivalent to 'deploy' mode with plan_only set to true.
 	Mode DeploymentCreateBodyMode `json:"mode"`
+
+	// PlanOnly Whether the deployment should be planned only and not executed. This defaults to 'false' unless the mode is
+	// set to 'plan_only'.
+	PlanOnly *bool `json:"plan_only,omitempty"`
 
 	// ProjectId The Project to deploy to.
 	ProjectId string `json:"project_id"`
+
+	// RollbackToDeploymentId Optional ID to rollback to when the deployment mode is 'rollback' or 'rollback_plan'.
+	RollbackToDeploymentId *openapi_types.UUID `json:"rollback_to_deployment_id,omitempty"`
 
 	// RunnerLogLevel The log level for the runner.
 	RunnerLogLevel *DeploymentCreateBodyRunnerLogLevel `json:"runner_log_level,omitempty"`
 }
 
-// DeploymentCreateBodyMode The mode of the deployment. Defaults to 'deploy'. Can be set to 'plan_only' to test and validate a deployment.
+// DeploymentCreateBodyMode The mode of the deployment. Defaults to 'deploy'. Can be set to 'rollback' to rollback to the graph used in
+// the deployment specified by `rollback_to_deployment_id`. For backwards compatibility, this can be set to
+// 'plan_only' which is equivalent to 'deploy' mode with plan_only set to true.
 type DeploymentCreateBodyMode string
 
 // DeploymentCreateBodyRunnerLogLevel The log level for the runner.
 type DeploymentCreateBodyRunnerLogLevel string
 
+// DeploymentDiff Describes a diff between the resource graphs of two deployments.
+type DeploymentDiff struct {
+	Changes []DeploymentDiffChange `json:"changes"`
+
+	// FromDeploymentId The deployment ID the diff is calculated from. This will be null if there is no previous deployment.
+	FromDeploymentId *openapi_types.UUID `json:"from_deployment_id,omitempty"`
+
+	// NumAdded The number of resources added in the deployment.
+	NumAdded int `json:"num_added"`
+
+	// NumChanged The number of resources changed in the deployment.
+	NumChanged int `json:"num_changed"`
+
+	// NumRemoved The number of resources removed in the deployment.
+	NumRemoved int `json:"num_removed"`
+
+	// ToDeploymentId The deployment ID the diff is calculated to. This will be null if the diff is calculated from a dry-run.
+	ToDeploymentId *openapi_types.UUID `json:"to_deployment_id,omitempty"`
+}
+
+// DeploymentDiffChange defines model for DeploymentDiffChange.
+type DeploymentDiffChange struct {
+	// Id The deterministic hash of the node.
+	Id string `json:"id"`
+
+	// Resource The resource identifier of the node including the type, class, and id
+	Resource string `json:"resource"`
+
+	// Summary A human readable summary of the change to this node.
+	Summary string `json:"summary"`
+
+	// Type The type of change in a resource node.
+	Type DeploymentDiffChangeType `json:"type"`
+}
+
+// DeploymentDiffChangeType The type of change in a resource node.
+type DeploymentDiffChangeType string
+
 // DeploymentDryRun defines model for DeploymentDryRun.
 type DeploymentDryRun struct {
+	// Diff Describes a diff between the resource graphs of two deployments.
+	Diff DeploymentDiff `json:"diff"`
+
 	// RunnerId The Runner ID that this deployment would have executed on
 	RunnerId string `json:"runner_id"`
 }
@@ -202,8 +269,12 @@ type DeploymentManifestResource struct {
 
 // DeploymentManifestWorkload defines model for DeploymentManifestWorkload.
 type DeploymentManifestWorkload struct {
+	Outputs   map[string]string                     `json:"outputs,omitempty"`
 	Resources map[string]DeploymentManifestResource `json:"resources,omitempty"`
-	Variables map[string]string                     `json:"variables,omitempty"`
+
+	// Variables Parameter variables is deprecated and will be removed in a future release. Please use outputs instead.
+	// Deprecated:
+	Variables map[string]string `json:"variables,omitempty" yaml:"variables,omitempty"`
 }
 
 // DeploymentMetrics Metrics resulting from a deployment.
@@ -294,8 +365,14 @@ type DeploymentSummary struct {
 	// OrgId The Organization ID
 	OrgId OrganizationId `json:"org_id"`
 
+	// PlanOnly Whether the deployment is executed in plan mode.
+	PlanOnly bool `json:"plan_only"`
+
 	// ProjectId The Project id which the environment exists in
 	ProjectId string `json:"project_id"`
+
+	// RollbackToDeploymentId When mode is 'rollback', this field will hold the uuid of the deployment rollback to.
+	RollbackToDeploymentId *openapi_types.UUID `json:"rollback_to_deployment_id,omitempty"`
 
 	// Status The status of the deployment.
 	Status string `json:"status"`
@@ -579,6 +656,13 @@ type CreateDeploymentParams struct {
 	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
 }
 
+// CalculateDeploymentDiffParams defines parameters for CalculateDeploymentDiff.
+type CalculateDeploymentDiffParams struct {
+	// FromDeploymentId The id of the previous deployment in the same environment. If this is not specified, the diff
+	// will be calculated from the previous stateful deployment.
+	FromDeploymentId *openapi_types.UUID `form:"fromDeploymentId,omitempty" json:"fromDeploymentId,omitempty"`
+}
+
 // GetDeploymentLogsParams defines parameters for GetDeploymentLogs.
 type GetDeploymentLogsParams struct {
 	// DecryptKey The private key needed to decrypt the logs. It should be an 'age' private key (see https://age-encryption.org).
@@ -839,6 +923,9 @@ type ClientInterface interface {
 	// GetDeployment request
 	GetDeployment(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CalculateDeploymentDiff request
+	CalculateDeploymentDiff(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CalculateDeploymentDiffParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetDeploymentLogs request
 	GetDeploymentLogs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1019,6 +1106,18 @@ func (c *Client) CreateDeployment(ctx context.Context, orgId OrgIdPathParam, par
 
 func (c *Client) GetDeployment(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDeploymentRequest(c.Server, orgId, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CalculateDeploymentDiff(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CalculateDeploymentDiffParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCalculateDeploymentDiffRequest(c.Server, orgId, deploymentId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1793,6 +1892,69 @@ func NewGetDeploymentRequest(server string, orgId OrgIdPathParam, deploymentId D
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCalculateDeploymentDiffRequest generates requests for CalculateDeploymentDiff
+func NewCalculateDeploymentDiffRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CalculateDeploymentDiffParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "deploymentId", runtime.ParamLocationPath, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/actions/diff", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.FromDeploymentId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "fromDeploymentId", runtime.ParamLocationQuery, *params.FromDeploymentId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -2615,6 +2777,9 @@ type ClientWithResponsesInterface interface {
 	// GetDeploymentWithResponse request
 	GetDeploymentWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentResponse, error)
 
+	// CalculateDeploymentDiffWithResponse request
+	CalculateDeploymentDiffWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CalculateDeploymentDiffParams, reqEditors ...RequestEditorFn) (*CalculateDeploymentDiffResponse, error)
+
 	// GetDeploymentLogsWithResponse request
 	GetDeploymentLogsWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *GetDeploymentLogsParams, reqEditors ...RequestEditorFn) (*GetDeploymentLogsResponse, error)
 
@@ -2887,6 +3052,30 @@ func (r GetDeploymentResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetDeploymentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CalculateDeploymentDiffResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *DeploymentDiff
+	JSON400      *N400BadRequest
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r CalculateDeploymentDiffResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CalculateDeploymentDiffResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3299,6 +3488,15 @@ func (c *ClientWithResponses) GetDeploymentWithResponse(ctx context.Context, org
 		return nil, err
 	}
 	return ParseGetDeploymentResponse(rsp)
+}
+
+// CalculateDeploymentDiffWithResponse request returning *CalculateDeploymentDiffResponse
+func (c *ClientWithResponses) CalculateDeploymentDiffWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *CalculateDeploymentDiffParams, reqEditors ...RequestEditorFn) (*CalculateDeploymentDiffResponse, error) {
+	rsp, err := c.CalculateDeploymentDiff(ctx, orgId, deploymentId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCalculateDeploymentDiffResponse(rsp)
 }
 
 // GetDeploymentLogsWithResponse request returning *GetDeploymentLogsResponse
@@ -3770,6 +3968,46 @@ func ParseGetDeploymentResponse(rsp *http.Response) (*GetDeploymentResponse, err
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCalculateDeploymentDiffResponse parses an HTTP response from a CalculateDeploymentDiffWithResponse call
+func ParseCalculateDeploymentDiffResponse(rsp *http.Response) (*CalculateDeploymentDiffResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CalculateDeploymentDiffResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeploymentDiff
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest N400BadRequest
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest N404NotFound

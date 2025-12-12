@@ -57,6 +57,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
       secrets = {
         "MY_SECRET" = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:myapp/api-key-XyZ9Qw"
       }
+      image = "my-custom-image:v1.2.3"
     }
   }
   state_storage_configuration = {
@@ -101,6 +102,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 							"security_groups":      knownvalue.ListExact([]knownvalue.Check{}),
 							"task_role_arn":        knownvalue.Null(),
 							"is_public_ip_enabled": knownvalue.Bool(false),
+							"image":                knownvalue.Null(),
 							"environment":          knownvalue.MapExact(map[string]knownvalue.Check{}),
 							"secrets":              knownvalue.MapExact(map[string]knownvalue.Check{}),
 						}),
@@ -142,6 +144,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 							"security_groups":      knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("my-security-group")}),
 							"task_role_arn":        knownvalue.StringExact("arn:aws:iam::123456789012:role/task_role"),
 							"is_public_ip_enabled": knownvalue.Bool(true),
+							"image":                knownvalue.StringExact("my-custom-image:v1.2.3"),
 							"environment": knownvalue.MapExact(map[string]knownvalue.Check{
 								"MY_ENV_VAR": knownvalue.StringExact("my-env-var-value"),
 							}),
@@ -191,6 +194,7 @@ data "platform-orchestrator_serverless_ecs_runner" "test" {
 							"security_groups":      knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("my-security-group")}),
 							"task_role_arn":        knownvalue.StringExact("arn:aws:iam::123456789012:role/task_role"),
 							"is_public_ip_enabled": knownvalue.Bool(true),
+							"image":                knownvalue.StringExact("my-custom-image:v1.2.3"),
 							"environment": knownvalue.MapExact(map[string]knownvalue.Check{
 								"MY_ENV_VAR": knownvalue.StringExact("my-env-var-value"),
 							}),

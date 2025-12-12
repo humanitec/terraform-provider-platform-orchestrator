@@ -37,7 +37,7 @@ Then commit the changes to `go.mod` and `go.sum`.
 
 ## Using the provider
 
-See [humanitec/platform-orchestrator](https://registry.terraform.io/providers/humanitec/platform-orchestrator/latest) in the Terraform Registry or [humanitec/platform-orchestrator](https://search.opentofu.org/provider/humanitec/platform-orchestrator/latest) in the OpenTofu registry. 
+See [humanitec/platform-orchestrator](https://registry.terraform.io/providers/humanitec/platform-orchestrator/latest) in the Terraform Registry or [humanitec/platform-orchestrator](https://search.opentofu.org/provider/humanitec/platform-orchestrator/latest) in the OpenTofu registry.
 
 ## Developing the Provider
 

@@ -68,6 +68,74 @@ paths:
         "404":
           $ref: "#/components/responses/404NotFound"
 
+  /internal/orgs/{orgId}/projects/{projectUuid}:
+    get:
+      operationId: getInternalProjectByUuid
+      tags:
+        - Project
+        - internal
+      summary: Get a Project by UUID
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectUuidPathParam"
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/projects/{projectUuid}/envs:
+    get:
+      operationId: listInternalEnvironmentsByProjectUuid
+      tags:
+        - Environment
+        - internal
+      summary: Get the list of Environments by Project UUID
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/projectUuidPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnvironmentPage"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
+  /internal/orgs/{orgId}/envs/{envUuid}:
+    get:
+      operationId: getInternalEnvironmentByUuid
+      tags:
+        - Environment
+        - internal
+      summary: Get an Environment by UUID
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/envUuidPathParam"
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Environment"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+
   /internal/resource-types:
     get:
       operationId: internalListResourceTypes
@@ -395,7 +463,7 @@ paths:
           schema:
             type: boolean
           required: false
-            
+
       responses:
         "204":
           description: The project is fully deleted.
@@ -1271,6 +1339,49 @@ paths:
           $ref: "#/components/responses/404NotFound"
         "409":
           $ref: "#/components/responses/409Conflict"
+  /orgs/{orgId}/modules/{moduleId}/versions:
+    get:
+      operationId: listModuleVersions
+      tags:
+        - Modules
+      summary: List the versions of a module
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/moduleIdPathParam"
+        - $ref: "#/components/parameters/perPageQueryParam"
+        - $ref: "#/components/parameters/pageTokenQueryParam"
+      responses:
+        "200":
+          description: Successful list response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleVersionPage"
+        "404":
+          $ref: "#/components/responses/404NotFound"
+  /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}:
+    get:
+      operationId: getModuleVersion
+      tags:
+        - Modules
+      summary: Get a previous module version in the org
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/moduleIdPathParam"
+        - $ref: "#/components/parameters/moduleVersionIdPathParam"
+      responses:
+        "200":
+          description: Successful get response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleVersion"
+        "404":
+          $ref: "#/components/responses/404NotFound"
 
   /orgs/{orgId}/module-rules:
     get:
@@ -1518,6 +1629,15 @@ components:
       required: true
       schema:
         type: string
+    projectUuidPathParam:
+      name: projectUuid
+      in: path
+      description: The Project UUID
+      example: "01234567-89ab-cdef-0123-456789abcdef"
+      required: true
+      schema:
+        type: string
+        format: uuid
     envIdPathParam:
       name: envId
       in: path
@@ -1526,6 +1646,15 @@ components:
       required: true
       schema:
         type: string
+    envUuidPathParam:
+      name: envUuid
+      in: path
+      description: The Environment UUID
+      example: "01234567-89ab-cdef-0123-456789abcdef"
+      required: true
+      schema:
+        type: string
+        format: uuid
     envTypeIdPathParam:
       name: envTypeId
       in: path
@@ -1566,6 +1695,15 @@ components:
       required: true
       schema:
         type: string
+    moduleVersionIdPathParam:
+      name: moduleVersionId
+      in: path
+      description: A Module Version ID
+      example: 01234567-89ab-cdef-0123-456789abcdef
+      required: true
+      schema:
+        type: string
+        format: uuid
     ruleIdPathParam:
       name: ruleId
       in: path
@@ -1723,7 +1861,7 @@ components:
           description: The plan of the org.
           example: custom
           type: string
-        
+
     InternalOrganization:
       allOf:
         - $ref: "#/components/schemas/Organization"
@@ -1903,6 +2041,11 @@ components:
           description: Project identifier
           type: string
           example: sample-project
+        project_uuid:
+          description: Unique uid for the project to identify a unique lifecycle
+          example: 00000000-0000-0000-0000-000000000000
+          type: string
+          format: uuid
         env_type_id:
           description: The environment type for the environment.
           type: string
@@ -2457,39 +2600,14 @@ components:
         - kubernetes
         - s3
 
-    ModuleSummary:
+    ModuleVersionSummaryCoreFields:
       type: object
-      description: A summary of the module that maps an OpenTofu module to a resource type. The full details can be retrieved through the Get api.
       required:
-        - org_id
-        - id
-        - created_at
-        - updated_at
         - version_id
         - resource_type
-        - provider_mapping
         - module_source
+        - provider_mapping
       properties:
-        org_id:
-          description: The Organization ID
-          type: string
-          example: my-org
-        id:
-          $ref: "#/components/schemas/ModuleId"
-        created_at:
-          description: The date and time when the module was created.
-          example: "2023-01-01T00:00:00Z"
-          type: string
-          format: date-time
-        updated_at:
-          description: The date and time when the module was updated to this version.
-          example: "2023-01-01T00:00:00Z"
-          type: string
-          format: date-time
-        description:
-          description: An optional text description for this module
-          type: string
-          example: Module for an aws s3 bucket
         version_id:
           description: A unique identifier for this version of the module
           type: string
@@ -2509,6 +2627,66 @@ components:
             type: string
           example:
             aws: aws.default
+        description:
+          description: An optional text description for this module
+          type: string
+          example: Module for an aws s3 bucket
+
+    ModuleVersionSummary:
+      allOf:
+        - $ref: "#/components/schemas/ModuleVersionSummaryCoreFields"
+        - description: A summary of Module Version.
+          required:
+            - created_at
+          properties:
+            created_at:
+              description: The date and time when the module version was created.
+              example: "2023-01-01T00:00:00Z"
+              type: string
+              format: date-time
+
+    ModuleVersionPage:
+      type: object
+      description: A page of the list modules versions response.
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The items in this page
+          items:
+            $ref: "#/components/schemas/ModuleVersionSummary"
+        next_page_token:
+          type: string
+          description: The page token to use to request the next page of items
+
+    ModuleSummary:
+      type: object
+      description: A summary of the module that maps an OpenTofu module to a resource type. The full details can be retrieved through the Get api.
+      allOf:
+        - $ref: "#/components/schemas/ModuleVersionSummaryCoreFields"
+        - required:
+            - org_id
+            - id
+            - created_at
+            - updated_at
+          properties:
+            org_id:
+              description: The Organization ID
+              type: string
+              example: my-org
+            id:
+              $ref: "#/components/schemas/ModuleId"
+            created_at:
+              description: The date and time when the module was created.
+              example: "2023-01-01T00:00:00Z"
+              type: string
+              format: date-time
+            updated_at:
+              description: The date and time when the module was updated to this version.
+              example: "2023-01-01T00:00:00Z"
+              type: string
+              format: date-time
 
     ModulePage:
       type: object
@@ -2525,41 +2703,52 @@ components:
           type: string
           description: The page token to use to request the next page of items
 
+    ModuleCoreFields:
+      type: object
+      required:
+        - module_params
+        - module_inputs
+        - dependencies
+        - coprovisioned
+      properties:
+        module_params:
+          description: |
+            The parameters supported by this module. The orchestrator enforces that any required parameters are
+            provided and that they keys do not overlap with the 'module_inputs'.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ModuleParamItem"
+        module_inputs:
+          description: The fixed inputs to this module. These may contain expressions referencing the modules context.
+          type: object
+          additionalProperties: true
+        module_source_code:
+          description: The source code of the OpenTofu module backing this module if the module_source is 'inline'.
+          type: string
+        dependencies:
+          description: A mapping of alias to resource dependencies that must be provisioned with this module
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ModuleDependencyManifest"
+        coprovisioned:
+          description: A set of resources to provision after or in parallel with the resource of the current module.
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleCoProvisionManifest"
+
     Module:
       type: object
       description: Configuration for an OpenTofu provider that will be used in modules
       allOf:
         - $ref: "#/components/schemas/ModuleSummary"
-        - required:
-            - module_params
-            - module_inputs
-            - dependencies
-            - coprovisioned
-          properties:
-            module_params:
-              description: |
-                The parameters supported by this module. The orchestrator enforces that any required parameters are
-                provided and that they keys do not overlap with the 'module_inputs'.
-              type: object
-              additionalProperties:
-                $ref: "#/components/schemas/ModuleParamItem"
-            module_inputs:
-              description: The fixed inputs to this module. These may contain expressions referencing the modules context.
-              type: object
-              additionalProperties: true
-            module_source_code:
-              description: The source code of the OpenTofu module backing this module if the module_source is 'inline'.
-              type: string
-            dependencies:
-              description: A mapping of alias to resource dependencies that must be provisioned with this module
-              type: object
-              additionalProperties:
-                $ref: "#/components/schemas/ModuleDependencyManifest"
-            coprovisioned:
-              description: A set of resources to provision after or in parallel with the resource of the current module.
-              type: array
-              items:
-                $ref: "#/components/schemas/ModuleCoProvisionManifest"
+        - $ref: "#/components/schemas/ModuleCoreFields"
+
+    ModuleVersion:
+      type: object
+      description: Configuration for an OpenTofu provider that will be used in modules
+      allOf:
+        - $ref: "#/components/schemas/ModuleVersionSummary"
+        - $ref: "#/components/schemas/ModuleCoreFields"
 
     ModuleDependencyManifest:
       description: A dependency to provision before the current resource is provisioned
@@ -3266,7 +3455,7 @@ components:
           x-go-type-skip-optional-pointer: true
         is_public_ip_enabled:
           description: |
-            Whether to assign a public ip to the ECS task. This is required if the target subnets use Internet Gateways 
+            Whether to assign a public ip to the ECS task. This is required if the target subnets use Internet Gateways
             instead of NAT Gateways to reach public networks. Defaults to false.
           type: boolean
           example: true
@@ -3277,6 +3466,13 @@ components:
           pattern: ^arn:aws:iam::\d{12}:role\/[a-zA-Z_0-9+=,.@\-_/]+$
           x-pattern-error: job execution_role_arn is not a valid IAM Role ARN
           example: arn:aws:iam::123456789012:role/ECSExecutionRole
+        image:
+          description: Container image to use for the runner. If not specified, a default runner image will be used.
+          type: string
+          pattern: ^[a-zA-Z0-9._:/-]+(?:@[a-z0-9]+:[a-fA-F0-9]+)?$
+          x-pattern-error: image must be a valid container image
+          example: humanitec/humanitec-runner:latest
+          maxLength: 255
         task_role_arn:
           description: An optional ARN for the role available inside the Runner.
           type: string
@@ -3649,7 +3845,7 @@ components:
           type: boolean
           example: false
           x-go-type-skip-optional-pointer: true
-    
+
     SandboxCreateBody:
       type: object
       description: The properties required to create a new sandbox
@@ -3661,7 +3857,7 @@ components:
           description: The inputs to the sandbox.
           additionalProperties:
             type: string
-    
+
     SandboxPage:
       description: A page of sandboxes returned from the list api.
       required:
@@ -3675,7 +3871,7 @@ components:
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
-      
+
     SandboxSummary:
       type: object
       description: A summary of a sandbox
@@ -3685,14 +3881,35 @@ components:
         org_id:
           type: string
           description: The Organization ID of the sandbox.
-          
+
     Sandbox:
       description: The full details of a sandbox
       allOf:
         - $ref: "#/components/schemas/SandboxSummary"
         - required:
             - status
+            - inputs
+            - token
+            - created_at
           properties:
             status:
               type: string
               description: The status of the sandbox.
+            inputs:
+              type: object
+              description: The inputs to the sandbox.
+              additionalProperties:
+                type: string
+            token:
+              type: string
+              description: The service user token created for the sandbox.
+            created_at:
+              description: The date and time when the sandbox was created.
+              example: "2023-01-01T00:00:00Z"
+              type: string
+              format: date-time
+            completed_at:
+              description: The date and time when the sandbox deployment completed.
+              example: "2023-01-01T00:00:00Z"
+              type: string
+              format: date-time

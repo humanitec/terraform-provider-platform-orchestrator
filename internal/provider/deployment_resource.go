@@ -190,7 +190,7 @@ func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentR
 		canyondp.DeploymentCreateBody{
 			ProjectId:                 data.ProjectId.ValueString(),
 			EnvId:                     data.EnvId.ValueString(),
-			Manifest:                  manifest,
+			Manifest:                  &manifest,
 			Mode:                      canyondp.DeploymentCreateBodyMode(data.Mode.ValueString()),
 			EncryptedOutputsRecipient: ref.Ref(outputsKey.Recipient().String()),
 		},

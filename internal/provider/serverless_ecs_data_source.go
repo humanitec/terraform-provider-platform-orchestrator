@@ -88,6 +88,10 @@ func NewServerlessEcsRunnerDataSource() datasource.DataSource {
 									MarkdownDescription: "The ARN of the IAM role to use for running the ECS Task.",
 									Computed:            true,
 								},
+								"image": schema.StringAttribute{
+									MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default canyon-runner image will be used.",
+									Computed:            true,
+								},
 								"environment": schema.MapAttribute{
 									MarkdownDescription: "The plain-text environment variables to set for the ECS Task.",
 									ElementType:         types.StringType,

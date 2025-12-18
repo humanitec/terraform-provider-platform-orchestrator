@@ -1,0 +1,46 @@
+name: Scheduled e2e tests
+on:
+  schedule:
+  - cron: "0 10 * * *"
+  workflow_call:
+
+jobs:
+  e2e_tests:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+  notify:
+    needs: e2e_tests
+    runs-on: ubuntu-latest
+    if: ${{ needs.e2e_tests.result == 'failure' }}
+    steps:
+      - name: Notify on failure
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "attachments": [{
+                "color": "danger",
+                "title": "Terraform Provider Acceptance Tests Failed",
+                "text": "The scheduled e2e acceptance tests have failed. Please review the workflow run.",
+                "fields": [
+                  {
+                    "title": "Repository",
+                    "value": "${{ github.repository }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Workflow",
+                    "value": "${{ github.workflow }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Run",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>",
+                    "short": false
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

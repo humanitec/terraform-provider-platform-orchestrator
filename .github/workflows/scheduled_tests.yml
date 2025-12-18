@@ -13,12 +13,23 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ needs.e2e_tests.result == 'failure' }}
     steps:
-      - name: Notify on failure
-        uses: slackapi/slack-github-action@v2.0.0
+      - name: Load secret from 1p
+        uses: 1password/load-secrets-action@v3
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          # Export loaded secrets as environment variables
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.ONEPASSWORD_SERVICE_ACCOUNT }}
+          SLACK_BOT_TOKEN: "op://Humanitec QA/QA SLACK API TOKEN/password"
+
+      - name: Notify on failure
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ env.SLACK_BOT_TOKEN }}
           payload: |
             {
+              "channel":"${{ vars.SLACK_CHANNEL_ID }}",
               "attachments": [{
                 "color": "danger",
                 "title": "Terraform Provider Acceptance Tests Failed",
@@ -42,5 +53,3 @@ jobs:
                 ]
               }]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

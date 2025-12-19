@@ -1,0 +1,55 @@
+name: Scheduled e2e tests
+on:
+  schedule:
+  - cron: "0 10 * * *"
+  workflow_call:
+
+jobs:
+  e2e_tests:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+  notify:
+    needs: e2e_tests
+    runs-on: ubuntu-latest
+    if: ${{ needs.e2e_tests.result == 'failure' }}
+    steps:
+      - name: Load secret from 1p
+        uses: 1password/load-secrets-action@v3
+        with:
+          # Export loaded secrets as environment variables
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.ONEPASSWORD_SERVICE_ACCOUNT }}
+          SLACK_BOT_TOKEN: "op://Humanitec QA/QA SLACK API TOKEN/password"
+
+      - name: Notify on failure
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ env.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel":"${{ vars.SLACK_CHANNEL_ID }}",
+              "attachments": [{
+                "color": "danger",
+                "title": "Terraform Provider Acceptance Tests Failed",
+                "text": "The scheduled e2e acceptance tests have failed. Please review the workflow run.",
+                "fields": [
+                  {
+                    "title": "Repository",
+                    "value": "${{ github.repository }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Workflow",
+                    "value": "${{ github.workflow }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Run",
+                    "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>",
+                    "short": false
+                  }
+                ]
+              }]
+            }

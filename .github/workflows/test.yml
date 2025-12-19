@@ -6,6 +6,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_call:
 
 # Testing only needs permissions to read the repository contents.
 permissions:

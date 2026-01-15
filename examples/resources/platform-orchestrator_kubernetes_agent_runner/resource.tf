@@ -9,7 +9,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 EOT
     job = {
       namespace       = "default"
-      service_account = "canyon-runner"
+      service_account = "humanitec-runner"
       pod_template = jsonencode({
         metadata = {
           labels = {

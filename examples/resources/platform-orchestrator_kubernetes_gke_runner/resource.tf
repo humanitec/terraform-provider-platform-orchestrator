@@ -14,7 +14,7 @@ resource "platform-orchestrator_kubernetes_gke_runner" "my_runner" {
     }
     job = {
       namespace       = "default"
-      service_account = "canyon-runner"
+      service_account = "humanitec-runner"
       pod_template = jsonencode({
         metadata = {
           labels = {

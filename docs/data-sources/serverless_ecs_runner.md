@@ -51,7 +51,7 @@ Read-Only:
 - `cluster` (String) The ECS Cluster name.
 - `environment` (Map of String) The plain-text environment variables to set for the ECS Task.
 - `execution_role_arn` (String) The ARN of the IAM role to use for launching the ECS Task.
-- `image` (String) The container image to use for the ECS Task. If not provided, a default canyon-runner image will be used.
+- `image` (String) The container image to use for the ECS Task. If not provided, a default humanitec-runner image will be used.
 - `is_public_ip_enabled` (Boolean) Whether to provision a public IP for the ECS Task.
 - `region` (String) The AWS Region.
 - `secrets` (Map of String) The secrets to set for the Runner. The values must be Secrets Manager ARNs or Parameter Store ARNs.

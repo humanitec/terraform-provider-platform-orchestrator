@@ -99,7 +99,7 @@ Required:
 Optional:
 
 - `environment` (Map of String) The plain-text environment variables to set for the ECS Task.
-- `image` (String) The container image to use for the ECS Task. If not provided, a default canyon-runner image will be used.
+- `image` (String) The container image to use for the ECS Task. If not provided, a default humanitec-runner image will be used.
 - `is_public_ip_enabled` (Boolean) Whether to provision a public IP for the ECS Task.
 - `secrets` (Map of String) The secrets to set for the Runner. The values must be Secrets Manager ARNs or Parameter Store ARNs.
 - `security_groups` (List of String) The list of subnets to use for the Runner.

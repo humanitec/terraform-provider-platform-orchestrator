@@ -117,7 +117,7 @@ var ecsRunnerConfigurationResourceSchema = schema.SingleNestedAttribute{
 					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-_/]+$`), "must be a valid IAM role ARN")},
 				},
 				"image": schema.StringAttribute{
-					MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default canyon-runner image will be used.",
+					MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default humanitec-runner image will be used.",
 					Optional:            true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),

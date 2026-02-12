@@ -64,7 +64,8 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -134,7 +135,8 @@ service_account_token = "service-account-token"
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -187,7 +189,8 @@ service_account_token = "another-service-account-token"
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},

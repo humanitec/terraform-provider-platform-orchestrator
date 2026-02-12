@@ -54,7 +54,8 @@ func TestAccKubernetesEksRunnerResource(t *testing.T) {
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -96,7 +97,8 @@ func TestAccKubernetesEksRunnerResource(t *testing.T) {
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("default"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},

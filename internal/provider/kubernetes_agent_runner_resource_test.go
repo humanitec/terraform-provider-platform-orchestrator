@@ -56,7 +56,8 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -95,7 +96,8 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("default"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -212,6 +214,7 @@ EOT
 								"path_prefix": knownvalue.StringExact("some/prefix"),
 							}),
 							"kubernetes_configuration": knownvalue.Null(),
+							"gcs_configuration":        knownvalue.Null(),
 						}),
 					),
 				},

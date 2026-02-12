@@ -224,7 +224,7 @@ func toKubernetesGkeRunnerResourceModel(item canyoncp.Runner, _ commonRunnerMode
 		return commonRunnerModel{}, err
 	}
 
-	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration, commonRunnerStateStorageResourceSchema.Attributes, buildCommonStateStorageModel)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}

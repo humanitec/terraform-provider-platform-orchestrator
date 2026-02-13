@@ -23,6 +23,34 @@ import (
 	"terraform-provider-humanitec-v2/internal/ref"
 )
 
+var ecsRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
+	MarkdownDescription: "The state storage configuration for the Runner.",
+	Required:            true,
+	Attributes: map[string]schema.Attribute{
+		"type": schema.StringAttribute{
+			MarkdownDescription: "The type of state storage configuration for the Runner.",
+			Required:            true,
+			Validators: []validator.String{
+				stringvalidator.OneOf(string(canyoncp.StateStorageTypeS3)),
+			},
+		},
+		"s3_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The S3 state storage configuration for the Runner",
+			Optional:            true,
+			Attributes: map[string]schema.Attribute{
+				"bucket": schema.StringAttribute{
+					MarkdownDescription: "Name of the S3 Bucket",
+					Required:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
+					Optional:            true,
+				},
+			},
+		},
+	},
+}
+
 var ecsRunnerConfigurationResourceSchema = schema.SingleNestedAttribute{
 	MarkdownDescription: "The configuration of the AWS ECS Runner.",
 	Required:            true,
@@ -176,7 +204,7 @@ var ecsRunnerResourceSchema = schema.Schema{
 			},
 		},
 		"runner_configuration":        ecsRunnerConfigurationResourceSchema,
-		"state_storage_configuration": commonRunnerStateStorageResourceSchema,
+		"state_storage_configuration": ecsRunnerStateStorageResourceSchema,
 	},
 }
 
@@ -188,6 +216,27 @@ func NewServerlessEcsRunnerResource() resource.Resource {
 		ConvertRunnerConfigIntoCreateApi: convertEcsRunnerModelIntoRunnerConfigCreate,
 		ConvertRunnerConfigIntoUpdateApi: convertEcsRunnerModelIntoRunnerConfigUpdate,
 	}
+}
+
+type ecsRunnerStateStorageModel struct {
+	Type            string                           `tfsdk:"type"`
+	S3Configuration *commonRunnerS3StateStorageModel `tfsdk:"s3_configuration"`
+}
+
+func buildEcsStateStorageModel(ssc canyoncp.StateStorageConfiguration) (ecsRunnerStateStorageModel, error) {
+	var model ecsRunnerStateStorageModel
+	model.Type, _ = ssc.Discriminator()
+	switch canyoncp.StateStorageType(model.Type) {
+	case canyoncp.StateStorageTypeS3:
+		typedSsc, _ := ssc.AsS3StorageConfiguration()
+		model.S3Configuration = &commonRunnerS3StateStorageModel{
+			Bucket:     typedSsc.Bucket,
+			PathPrefix: typedSsc.PathPrefix,
+		}
+	default:
+		return model, fmt.Errorf("unsupported state storage type for ECS runner: %s", model.Type)
+	}
+	return model, nil
 }
 
 type ServerlessEcsRunnerConfiguration struct {
@@ -216,7 +265,7 @@ func convertEcsRunnerApiIntoModel(item canyoncp.Runner, _ commonRunnerModel) (co
 		return commonRunnerModel{}, err
 	}
 
-	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration)
+	stateStorageConfigurationModel, err := parseStateStorageConfigurationResponse(context.Background(), item.StateStorageConfiguration, ecsRunnerStateStorageResourceSchema.Attributes, buildEcsStateStorageModel)
 	if err != nil {
 		return commonRunnerModel{}, err
 	}

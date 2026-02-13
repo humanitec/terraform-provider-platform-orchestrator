@@ -56,7 +56,8 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("humanitec-runner"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -100,7 +101,8 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace": knownvalue.StringExact("default"),
 							}),
-							"s3_configuration": knownvalue.Null(),
+							"s3_configuration":  knownvalue.Null(),
+							"gcs_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -113,6 +115,153 @@ func TestAccKubernetesGkeRunnerResource(t *testing.T) {
 			// Delete testing automatically occurs in TestCase
 		},
 	})
+}
+
+func TestAccKubernetesGkeRunnerResource_gcs_state(t *testing.T) {
+	var runnerId = fmt.Sprint("runner-", time.Now().UnixNano())
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create with GCS state storage
+			{
+				Config: testAccKubernetesGkeRunnerResourceGCSState(runnerId, "my-bucket", "initial/prefix"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_gke_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_gke_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("gcs"),
+							"gcs_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
+								"bucket":      knownvalue.StringExact("my-bucket"),
+								"path_prefix": knownvalue.StringExact("initial/prefix"),
+							}),
+							"kubernetes_configuration": knownvalue.Null(),
+							"s3_configuration":         knownvalue.Null(),
+						}),
+					),
+				},
+			},
+			// Update prefix
+			{
+				Config: testAccKubernetesGkeRunnerResourceGCSState(runnerId, "my-bucket", "updated/prefix"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_gke_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_gke_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("gcs"),
+							"gcs_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
+								"bucket":      knownvalue.StringExact("my-bucket"),
+								"path_prefix": knownvalue.StringExact("updated/prefix"),
+							}),
+							"kubernetes_configuration": knownvalue.Null(),
+							"s3_configuration":         knownvalue.Null(),
+						}),
+					),
+				},
+			},
+			// Remove prefix
+			{
+				Config: testAccKubernetesGkeRunnerResourceGCSStateNoPrefix(runnerId, "my-bucket"),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_gke_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_kubernetes_gke_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("gcs"),
+							"gcs_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
+								"bucket":      knownvalue.StringExact("my-bucket"),
+								"path_prefix": knownvalue.Null(),
+							}),
+							"kubernetes_configuration": knownvalue.Null(),
+							"s3_configuration":         knownvalue.Null(),
+						}),
+					),
+				},
+			},
+			{
+				ResourceName:      "platform-orchestrator_kubernetes_gke_runner.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
+func testAccKubernetesGkeRunnerResourceGCSStateNoPrefix(id, bucket string) string {
+	return `
+resource "platform-orchestrator_kubernetes_gke_runner" "test" {
+  id = "` + id + `"
+  runner_configuration = {
+    cluster = {
+      name = "gke-cluster-name"
+	  project_id = "gke-project-id"
+	  location = "gke-location"
+      auth = {
+		gcp_audience = "https://gke.googleapis.com/"
+		gcp_service_account = "account@example.com"
+      }
+   }
+	job = {
+		namespace = "default"
+		service_account = "humanitec-runner"
+	}
+  }
+  state_storage_configuration = {
+	type = "gcs"
+	gcs_configuration = {
+	  bucket = "` + bucket + `"
+	}
+  }
+}
+`
+}
+
+func testAccKubernetesGkeRunnerResourceGCSState(id, bucket, pathPrefix string) string {
+	return `
+resource "platform-orchestrator_kubernetes_gke_runner" "test" {
+  id = "` + id + `"
+  runner_configuration = {
+    cluster = {
+      name = "gke-cluster-name"
+	  project_id = "gke-project-id"
+	  location = "gke-location"
+      auth = {
+		gcp_audience = "https://gke.googleapis.com/"
+		gcp_service_account = "account@example.com"
+      }
+   }
+	job = {
+		namespace = "default"
+		service_account = "humanitec-runner"
+	}
+  }
+  state_storage_configuration = {
+	type = "gcs"
+	gcs_configuration = {
+	  bucket = "` + bucket + `"
+	  path_prefix = "` + pathPrefix + `"
+	}
+  }
+}
+`
 }
 
 func testAccKubernetesGkeRunnerResource(id, stateNamespace, podTemplate string) string {

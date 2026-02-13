@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
-  title: ""
-  version: ""
+  title: ''
+  version: ''
 paths:
   /internal/orgs:
     get:
@@ -13,15 +13,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalOrganizationPage"
+                $ref: '#/components/schemas/InternalOrganizationPage'
     post:
       operationId: createInternalOrganization
       tags:
@@ -35,18 +35,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InternalOrganizationCreateBody"
+              $ref: '#/components/schemas/InternalOrganizationCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalOrganization"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/InternalOrganization'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /internal/orgs/{orgId}:
     get:
       operationId: getInternalOrganization
@@ -57,16 +57,16 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalOrganization"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/InternalOrganization'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /internal/orgs/{orgId}/projects/{projectUuid}:
     get:
@@ -78,18 +78,18 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectUuidPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectUuidPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Project"
-        "404":
-          $ref: "#/components/responses/404NotFound"
-
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  
   /internal/orgs/{orgId}/projects/{projectUuid}/envs:
     get:
       operationId: listInternalEnvironmentsByProjectUuid
@@ -100,19 +100,19 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectUuidPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectUuidPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'          
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnvironmentPage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/EnvironmentPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /internal/orgs/{orgId}/envs/{envUuid}:
     get:
@@ -124,17 +124,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/envUuidPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envUuidPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Environment"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Environment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /internal/resource-types:
     get:
@@ -146,15 +146,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceTypePage"
+                $ref: '#/components/schemas/ResourceTypePage'
     post:
       operationId: internalCreateResourceType
       summary: Create a new built-in resource type
@@ -169,18 +169,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResourceTypeCreateBody"
+              $ref: '#/components/schemas/ResourceTypeCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceType"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /internal/resource-types/{typeId}:
     delete:
       operationId: internalDeleteResourceType
@@ -191,14 +191,14 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/resourceTypeIdPathParam"
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     patch:
       operationId: internalUpdateResourceType
       summary: Update a built-in resource type
@@ -208,24 +208,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/resourceTypeIdPathParam"
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResourceTypeUpdateBody"
+              $ref: '#/components/schemas/ResourceTypeUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceType"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /internal/orgs/{orgId}/runners/{runnerId}:
     get:
@@ -235,17 +235,17 @@ paths:
         - internal
       summary: Get runner in the org with secret configuration as secret path
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/runnerIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalRunner"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/InternalRunner'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /orgs:
     post:
@@ -256,18 +256,18 @@ paths:
       security:
         - userIdHeader: []
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Organization"
-        "401":
-          $ref: "#/components/responses/401Unauthorized"
-        "403":
-          $ref: "#/components/responses/403Forbidden"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /orgs/{orgId}:
     get:
@@ -278,16 +278,16 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful list response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Organization"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Organization'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /orgs/{orgId}/env-types:
     get:
@@ -298,18 +298,18 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnvironmentTypePage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/EnvironmentTypePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createEnvironmentType
       summary: Create a new environment type in the organization
@@ -318,24 +318,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnvironmentTypeCreateBody"
+              $ref: '#/components/schemas/EnvironmentTypeCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnvironmentType"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/EnvironmentType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/env-types/{envTypeId}:
     get:
       operationId: getEnvironmentType
@@ -345,17 +345,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/envTypeIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envTypeIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnvironmentType"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/EnvironmentType'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     delete:
       operationId: deleteEnvironmentType
       summary: Delete an environment type
@@ -364,15 +364,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/envTypeIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envTypeIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     patch:
       operationId: updateEnvironmentType
       summary: Update an environment type in the org
@@ -381,23 +381,23 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/envTypeIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/envTypeIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnvironmentTypeUpdateBody"
+              $ref: '#/components/schemas/EnvironmentTypeUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnvironmentType"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/EnvironmentType'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /orgs/{orgId}/projects:
     get:
@@ -408,18 +408,18 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProjectPage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ProjectPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createProject
       summary: Create a new project
@@ -428,24 +428,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProjectCreateBody"
+              $ref: '#/components/schemas/ProjectCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Project"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/projects/{projectId}:
     delete:
       operationId: deleteProject
@@ -455,8 +455,8 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
         - name: deleteRules
           in: query
           description: Whether to delete all rules associated with the project
@@ -465,12 +465,12 @@ paths:
           required: false
 
       responses:
-        "204":
+        '204':
           description: The project is fully deleted.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     get:
       operationId: getProject
       summary: Get an project
@@ -479,17 +479,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Project"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     patch:
       operationId: updateProject
       summary: Update a project
@@ -498,23 +498,23 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProjectUpdateBody"
+              $ref: '#/components/schemas/ProjectUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Project"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/404NotFound'
   /orgs/{orgId}/projects/{projectId}/envs:
     get:
       operationId: listEnvironments
@@ -524,10 +524,10 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
         - name: byEnvTypeId
           in: query
           description: Filter the list by environment types
@@ -538,14 +538,14 @@ paths:
           example: development
           required: false
       responses:
-        "200":
+        '200':
           description: Successful list response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EnvironmentPage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/EnvironmentPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createEnvironment
       summary: Create a new project environment
@@ -554,25 +554,25 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnvironmentCreateBody"
+              $ref: '#/components/schemas/EnvironmentCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Environment"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Environment'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /orgs/{orgId}/projects/{projectId}/envs/{envId}:
     delete:
@@ -584,10 +584,10 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
-        - $ref: "#/components/parameters/forceQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/forceQueryParam'
         - name: deleteRules
           in: query
           description: Whether to delete all rules associated with the environment
@@ -595,18 +595,18 @@ paths:
             type: boolean
           required: false
       responses:
-        "202":
+        '202':
           description: The environment is waiting for a destroy deployment to succeed.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Environment"
-        "204":
+                $ref: '#/components/schemas/Environment'
+        '204':
           description: The environment could be deleted without waiting for a destroy deployment.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     get:
       operationId: getEnvironment
       summary: Get a project environment
@@ -615,18 +615,18 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Environment"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Environment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     patch:
       operationId: updateEnvironment
       summary: Update a project environment
@@ -635,24 +635,55 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnvironmentUpdateBody"
+              $ref: '#/components/schemas/EnvironmentUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Environment"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Environment'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  
+  /orgs/{orgId}/envs:
+    get:
+      operationId: listEnvironmentsInOrg
+      summary: List environments in an organization
+      tags:
+        - Environment
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - name: byEnvTypeId
+          in: query
+          description: Filter the list by environment types
+          schema:
+            type: array
+            items:
+              type: string
+          example: development
+          required: false
+      responses:
+        '200':
+          description: Successful list response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/force-delete:
     post:
@@ -667,9 +698,9 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
         - name: deleteRules
           in: query
           description: Whether to delete all rules associated with the environment
@@ -677,12 +708,12 @@ paths:
             type: boolean
           required: false
       responses:
-        "204":
+        '204':
           description: The environment was deleted.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}:
     patch:
@@ -694,28 +725,28 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EnvironmentInternalUpdateBody"
+              $ref: '#/components/schemas/EnvironmentInternalUpdateBody'
       responses:
-        "200":
+        '200':
           description: The update was accepted.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Environment"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Environment'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /orgs/{orgId}/projects/{projectId}/envs/{envId}/actions/refresh_runner:
     post:
@@ -726,22 +757,22 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
-        - $ref: "#/components/parameters/dryRunQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/dryRunQueryParam'
       responses:
-        "200":
+        '200':
           description: The id of the runner that would be or was set.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RefreshRunnerActionResult"
+                $ref: '#/components/schemas/RefreshRunnerActionResult'
 
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /orgs/{orgId}/projects/{projectId}/envs/{envId}/available-resource-types:
     get:
@@ -752,22 +783,22 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
-        - $ref: "#/components/parameters/resourceTypeIdQueryParam"
-        - $ref: "#/components/parameters/includeNonDeveloperAccessibleQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
+        - $ref: '#/components/parameters/resourceTypeIdQueryParam'
+        - $ref: '#/components/parameters/includeNonDeveloperAccessibleQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AvailableResourceTypePage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/AvailableResourceTypePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
   /orgs/{orgId}/resource-types:
     get:
       operationId: listResourceTypes
@@ -777,18 +808,18 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceTypePage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ResourceTypePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createResourceType
       summary: Create a new resource type
@@ -797,24 +828,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResourceTypeCreateBody"
+              $ref: '#/components/schemas/ResourceTypeCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceType"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/resource-types/{typeId}:
     delete:
       operationId: deleteResourceType
@@ -824,15 +855,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/resourceTypeIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     get:
       operationId: getResourceType
       summary: Get a resource type
@@ -841,17 +872,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/resourceTypeIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceType"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ResourceType'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     patch:
       operationId: updateResourceType
       summary: Update a resource type
@@ -860,25 +891,25 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/resourceTypeIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/resourceTypeIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResourceTypeUpdateBody"
+              $ref: '#/components/schemas/ResourceTypeUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResourceType"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ResourceType'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /orgs/{orgId}/module-providers:
     get:
@@ -889,23 +920,23 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
         - name: byProviderType
           in: query
           schema:
             type: string
           description: Filter the list by the given provider type
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModuleProviderPage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ModuleProviderPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createModuleProvider
       tags:
@@ -914,24 +945,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ModuleProviderCreateBody"
+              $ref: '#/components/schemas/ModuleProviderCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModuleProvider"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/ModuleProvider'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/module-providers/{providerType}/{providerId}:
     get:
       operationId: getModuleProvider
@@ -941,18 +972,18 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/providerTypePathParam"
-        - $ref: "#/components/parameters/providerIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/providerTypePathParam'
+        - $ref: '#/components/parameters/providerIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModuleProvider"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ModuleProvider'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     patch:
       operationId: updateModuleProvider
       tags:
@@ -961,28 +992,28 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/providerTypePathParam"
-        - $ref: "#/components/parameters/providerIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/providerTypePathParam'
+        - $ref: '#/components/parameters/providerIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ModuleProviderUpdateBody"
+              $ref: '#/components/schemas/ModuleProviderUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModuleProvider"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/ModuleProvider'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     delete:
       operationId: deleteModuleProvider
       tags:
@@ -991,16 +1022,16 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/providerTypePathParam"
-        - $ref: "#/components/parameters/providerIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/providerTypePathParam'
+        - $ref: '#/components/parameters/providerIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/runners:
     get:
       operationId: listRunners
@@ -1010,23 +1041,23 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
         - name: byRunnerType
           in: query
           schema:
             type: string
           description: Filter the list by the given runner type
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RunnerPage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/RunnerPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
     post:
       operationId: createRunner
@@ -1036,24 +1067,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RunnerCreateBody"
+              $ref: '#/components/schemas/RunnerCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Runner"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Runner'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /orgs/{orgId}/runners/{runnerId}:
     get:
@@ -1064,17 +1095,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/runnerIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Runner"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Runner'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     patch:
       operationId: updateRunner
       tags:
@@ -1083,27 +1114,27 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/runnerIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RunnerUpdateBody"
+              $ref: '#/components/schemas/RunnerUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Runner"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Runner'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     delete:
       operationId: deleteRunner
       tags:
@@ -1112,15 +1143,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/runnerIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/runnerIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/runner-rules:
     get:
       operationId: listRunnerRulesInOrg
@@ -1130,9 +1161,9 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
         - name: byProjectId
           in: query
           schema:
@@ -1149,14 +1180,14 @@ paths:
             type: string
           description: Filter the list by the given runner id
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RunnerRulePage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/RunnerRulePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createRunnerRuleInOrg
       tags:
@@ -1165,24 +1196,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RunnerRuleCreateBody"
+              $ref: '#/components/schemas/RunnerRuleCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RunnerRule"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/RunnerRule'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/runner-rules/{ruleId}:
     get:
       operationId: getRunnerRuleInOrg
@@ -1192,17 +1223,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/ruleIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RunnerRule"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/RunnerRule'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     delete:
       operationId: deleteRunnerRuleInOrg
       tags:
@@ -1211,15 +1242,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/ruleIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /orgs/{orgId}/modules:
     get:
@@ -1230,23 +1261,23 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
         - name: byResourceType
           in: query
           schema:
             type: string
           description: Filter the list by the given resource type
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModulePage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ModulePage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createModule
       tags:
@@ -1255,24 +1286,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ModuleCreateBody"
+              $ref: '#/components/schemas/ModuleCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Module"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Module'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/modules/{moduleId}:
     get:
       operationId: getModule
@@ -1282,17 +1313,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/moduleIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Module"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Module'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     patch:
       operationId: updateModule
       tags:
@@ -1301,27 +1332,27 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/moduleIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ModuleUpdateBody"
+              $ref: '#/components/schemas/ModuleUpdateBody'
       responses:
-        "200":
+        '200':
           description: Successful update response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Module"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Module'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
     delete:
       operationId: deleteModule
       tags:
@@ -1330,15 +1361,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/moduleIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/modules/{moduleId}/versions:
     get:
       operationId: listModuleVersions
@@ -1348,19 +1379,19 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/moduleIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModuleVersionPage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ModuleVersionPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
   /orgs/{orgId}/modules/{moduleId}/versions/{moduleVersionId}:
     get:
       operationId: getModuleVersion
@@ -1370,18 +1401,18 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/moduleIdPathParam"
-        - $ref: "#/components/parameters/moduleVersionIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/moduleIdPathParam'
+        - $ref: '#/components/parameters/moduleVersionIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModuleVersion"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/ModuleVersion'
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
   /orgs/{orgId}/module-rules:
     get:
@@ -1392,9 +1423,9 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
         - name: byResourceType
           in: query
           schema:
@@ -1416,16 +1447,16 @@ paths:
             type: string
           description: Filter the list by the given environment type id. It must be used together with byProjectId.
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RulePage"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/RulePage'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createModuleRuleInOrg
       tags:
@@ -1434,24 +1465,24 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RuleCreateBody"
+              $ref: '#/components/schemas/RuleCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Rule"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Rule'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /orgs/{orgId}/module-rules/{ruleId}:
     get:
       operationId: getModuleRuleInOrg
@@ -1461,17 +1492,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/ruleIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Rule"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     delete:
       operationId: deleteModuleRuleInOrg
       tags:
@@ -1480,15 +1511,15 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/ruleIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/ruleIdPathParam'
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /internal/orgs/{orgId}/projects/{projectId}/envs/{envId}/module-catalogue:
     post:
@@ -1499,26 +1530,26 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/orgIdPathParam"
-        - $ref: "#/components/parameters/projectIdPathParam"
-        - $ref: "#/components/parameters/envIdPathParam"
+        - $ref: '#/components/parameters/orgIdPathParam'
+        - $ref: '#/components/parameters/projectIdPathParam'
+        - $ref: '#/components/parameters/envIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InternalModuleCatalogueGenerateBody"
+              $ref: '#/components/schemas/InternalModuleCatalogueGenerateBody'
       responses:
-        "200":
+        '200':
           description: Successful get response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InternalModuleCatalogue"
-        "404":
-          $ref: "#/components/responses/404NotFound"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/InternalModuleCatalogue'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
 
   /sandboxes:
     get:
@@ -1529,17 +1560,17 @@ paths:
       security:
         - userIdHeader: []
       parameters:
-        - $ref: "#/components/parameters/perPageQueryParam"
-        - $ref: "#/components/parameters/pageTokenQueryParam"
+        - $ref: '#/components/parameters/perPageQueryParam'
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
-        "200":
+        '200':
           description: Successful list response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SandboxPage"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/SandboxPage'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     post:
       operationId: createSandbox
       tags:
@@ -1552,18 +1583,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SandboxCreateBody"
+              $ref: '#/components/schemas/SandboxCreateBody'
       responses:
-        "201":
+        '201':
           description: Successful create response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Sandbox"
-        "400":
-          $ref: "#/components/responses/400BadRequest"
-        "409":
-          $ref: "#/components/responses/409Conflict"
+                $ref: '#/components/schemas/Sandbox'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '409':
+          $ref: '#/components/responses/409Conflict'
   /sandboxes/{sandboxId}:
     get:
       operationId: getSandbox
@@ -1579,14 +1610,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Successful get response.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Sandbox"
-        "404":
-          $ref: "#/components/responses/404NotFound"
+                $ref: '#/components/schemas/Sandbox'
+        '404':
+          $ref: '#/components/responses/404NotFound'
     delete:
       operationId: deleteSandbox
       tags:
@@ -1601,10 +1632,10 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Successful delete response.
-        "404":
-          $ref: "#/components/responses/404NotFound"
+        '404':
+          $ref: '#/components/responses/404NotFound'
 
 components:
   securitySchemes:
@@ -1617,7 +1648,7 @@ components:
       name: orgId
       in: path
       description: The Organization ID
-      example: "sample-org"
+      example: 'sample-org'
       required: true
       schema:
         type: string
@@ -1625,7 +1656,7 @@ components:
       name: projectId
       in: path
       description: The Project ID
-      example: "sample-project"
+      example: 'sample-project'
       required: true
       schema:
         type: string
@@ -1633,7 +1664,7 @@ components:
       name: projectUuid
       in: path
       description: The Project UUID
-      example: "01234567-89ab-cdef-0123-456789abcdef"
+      example: '01234567-89ab-cdef-0123-456789abcdef'
       required: true
       schema:
         type: string
@@ -1642,7 +1673,7 @@ components:
       name: envId
       in: path
       description: The Environment ID
-      example: "sample-env"
+      example: 'sample-env'
       required: true
       schema:
         type: string
@@ -1650,7 +1681,7 @@ components:
       name: envUuid
       in: path
       description: The Environment UUID
-      example: "01234567-89ab-cdef-0123-456789abcdef"
+      example: '01234567-89ab-cdef-0123-456789abcdef'
       required: true
       schema:
         type: string
@@ -1659,7 +1690,7 @@ components:
       name: envTypeId
       in: path
       description: The Environment Type ID
-      example: "development"
+      example: 'development'
       required: true
       schema:
         type: string
@@ -1667,7 +1698,7 @@ components:
       name: typeId
       in: path
       description: The Resource Type
-      example: "s3"
+      example: 's3'
       required: true
       schema:
         type: string
@@ -1675,7 +1706,7 @@ components:
       name: providerId
       in: path
       description: The Module Provider ID
-      example: "my-aws-provider"
+      example: 'my-aws-provider'
       required: true
       schema:
         type: string
@@ -1683,7 +1714,7 @@ components:
       name: providerType
       in: path
       description: The Module Provider Type
-      example: "aws"
+      example: 'aws'
       required: true
       schema:
         type: string
@@ -1691,7 +1722,7 @@ components:
       name: moduleId
       in: path
       description: A Module ID
-      example: "my-s3-module"
+      example: 'my-s3-module'
       required: true
       schema:
         type: string
@@ -1734,7 +1765,7 @@ components:
       in: query
       description: The page token to request from
       required: false
-      example: "AAAAAAAAAA=="
+      example: 'AAAAAAAAAA=='
       schema:
         type: string
     dryRunQueryParam:
@@ -1749,7 +1780,7 @@ components:
       name: type_id
       in: query
       description: Filter by resource type id.
-      example: "s3"
+      example: 's3'
       schema:
         type: string
       required: false
@@ -1776,7 +1807,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     401Unauthorized:
       description: The client didn't provide valid authentication credentials.
       headers:
@@ -1786,25 +1817,25 @@ components:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     403Forbidden:
       description: Server understands the request but refuses to authorize it.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     404NotFound:
       description: The request was valid, but the target resource or relation does not exist.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
     409Conflict:
       description: The request conflicts with existing state in the system.
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: '#/components/schemas/Error'
   schemas:
     Error:
       description: A standard error response
@@ -1818,7 +1849,7 @@ components:
         message:
           description: A human-readable explanation of the error.
           type: string
-          example: "Something happened!"
+          example: 'Something happened!'
         details:
           description: An optional payload of metadata associated with the error.
           additionalProperties: true
@@ -1849,7 +1880,7 @@ components:
           format: uuid
         created_at:
           description: The date and time when the org state was created.
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         created_by:
@@ -1864,7 +1895,7 @@ components:
 
     InternalOrganization:
       allOf:
-        - $ref: "#/components/schemas/Organization"
+        - $ref: '#/components/schemas/Organization'
         - properties:
             source:
               description: The source of the org state. This is used to identify the source of the org state, such as a git repository.
@@ -1887,7 +1918,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/InternalOrganization"
+            $ref: '#/components/schemas/InternalOrganization'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -1900,7 +1931,7 @@ components:
           description: The unique identifier of the org. It will be auto-generated if not provided.
           type: string
           example: my-org123
-          minLength: 5
+          minLength: 2
           maxLength: 50
           pattern: ^[a-z](?:-?[a-z0-9]+)+$
           x-pattern-error: id must be lowercase alphanumeric including hyphens
@@ -1939,12 +1970,12 @@ components:
           example: Sample Project
         created_at:
           description: The date and time when the project was created
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         updated_at:
           description: The date and time when the project was updated due to internal or external changes
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         status:
@@ -1965,7 +1996,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/Project"
+            $ref: '#/components/schemas/Project'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2056,16 +2087,16 @@ components:
           example: My Sample Environment
         created_at:
           description: The date and time when the resource type was created
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         updated_at:
           description: The date and time when the environment was updated.
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         status:
-          $ref: "#/components/schemas/EnvironmentStatus"
+          $ref: '#/components/schemas/EnvironmentStatus'
         status_message:
           description: An optional message associated with the status.
           example: delete failed due to a failure in deployment 'xyz'
@@ -2085,7 +2116,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/Environment"
+            $ref: '#/components/schemas/Environment'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2137,7 +2168,7 @@ components:
       type: object
       properties:
         status:
-          $ref: "#/components/schemas/EnvironmentStatus"
+          $ref: '#/components/schemas/EnvironmentStatus'
         status_message:
           type: string
 
@@ -2161,7 +2192,7 @@ components:
           format: uuid
         created_at:
           description: The date and time when the environment type was created
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         display_name:
@@ -2171,7 +2202,7 @@ components:
 
     EnvironmentType:
       allOf:
-        - $ref: "#/components/schemas/EnvironmentTypeSummary"
+        - $ref: '#/components/schemas/EnvironmentTypeSummary'
 
     EnvironmentTypePage:
       type: object
@@ -2183,7 +2214,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/EnvironmentTypeSummary"
+            $ref: '#/components/schemas/EnvironmentTypeSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2260,7 +2291,7 @@ components:
           additionalProperties: true
         created_at:
           description: The date and time when the resource type was created
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         built_in:
@@ -2281,7 +2312,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/ResourceType"
+            $ref: '#/components/schemas/ResourceType'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2358,7 +2389,7 @@ components:
           type: array
           description: A list of available options for the resource type
           items:
-            $ref: "#/components/schemas/AvailableResourceTypeOption"
+            $ref: '#/components/schemas/AvailableResourceTypeOption'
           example: []
 
     AvailableResourceTypeOption:
@@ -2391,7 +2422,7 @@ components:
             provided and that they keys do not overlap with the 'module_inputs'.
           type: object
           additionalProperties:
-            $ref: "#/components/schemas/ModuleParamItem"
+            $ref: '#/components/schemas/ModuleParamItem'
 
     AvailableResourceTypePage:
       type: object
@@ -2403,7 +2434,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/AvailableResourceType"
+            $ref: '#/components/schemas/AvailableResourceType'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2440,7 +2471,7 @@ components:
           example: hashicorp/aws
         created_at:
           description: The date and time when the provider was created.
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
 
@@ -2448,7 +2479,7 @@ components:
       type: object
       description: Configuration for an OpenTofu provider that will be used in modules
       allOf:
-        - $ref: "#/components/schemas/ModuleProviderSummary"
+        - $ref: '#/components/schemas/ModuleProviderSummary'
         - required:
             - org_id
             - provider_type
@@ -2461,7 +2492,7 @@ components:
             version_constraint:
               description: Specify a specific version of the provider
               type: string
-              example: "~> 1.0"
+              example: '~> 1.0'
             configuration:
               description: Any required configuration for this provider when used.
               example: {}
@@ -2479,7 +2510,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/ModuleProviderSummary"
+            $ref: '#/components/schemas/ModuleProviderSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2525,7 +2556,7 @@ components:
           pattern: ^((=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))(, (=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))*$
           maxLength: 100
           x-pattern-error: version_constraint must be a valid provider version constraint such as = 1.2.3, >= 1.2.2, < 2.0.0, ~> 1.2.2
-          example: "~> 1.0"
+          example: '~> 1.0'
         configuration:
           description: Any required configuration for this provider when used.
           example: {}
@@ -2549,7 +2580,7 @@ components:
           pattern: ^((=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))(, (=|!=|>|>=|<|<=|~>) ([0-9.]+(-.+)?))*$
           maxLength: 100
           x-pattern-error: version_constraint must be a valid provider version constraint such as = 1.2.3, >= 1.2.2, < 2.0.0, ~> 1.2.2
-          example: "~> 1.0"
+          example: '~> 1.0'
         configuration:
           description: Any required configuration for this provider when used.
           example: {}
@@ -2599,6 +2630,7 @@ components:
       enum:
         - kubernetes
         - s3
+        - gcs
 
     ModuleVersionSummaryCoreFields:
       type: object
@@ -2611,7 +2643,7 @@ components:
         version_id:
           description: A unique identifier for this version of the module
           type: string
-          example: "a1b2c3d4-some-version"
+          example: 'a1b2c3d4-some-version'
         resource_type:
           description: The resource type that this module provisions.
           type: string
@@ -2634,14 +2666,14 @@ components:
 
     ModuleVersionSummary:
       allOf:
-        - $ref: "#/components/schemas/ModuleVersionSummaryCoreFields"
+        - $ref: '#/components/schemas/ModuleVersionSummaryCoreFields'
         - description: A summary of Module Version.
           required:
             - created_at
           properties:
             created_at:
               description: The date and time when the module version was created.
-              example: "2023-01-01T00:00:00Z"
+              example: '2023-01-01T00:00:00Z'
               type: string
               format: date-time
 
@@ -2655,7 +2687,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/ModuleVersionSummary"
+            $ref: '#/components/schemas/ModuleVersionSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2664,7 +2696,7 @@ components:
       type: object
       description: A summary of the module that maps an OpenTofu module to a resource type. The full details can be retrieved through the Get api.
       allOf:
-        - $ref: "#/components/schemas/ModuleVersionSummaryCoreFields"
+        - $ref: '#/components/schemas/ModuleVersionSummaryCoreFields'
         - required:
             - org_id
             - id
@@ -2676,15 +2708,15 @@ components:
               type: string
               example: my-org
             id:
-              $ref: "#/components/schemas/ModuleId"
+              $ref: '#/components/schemas/ModuleId'
             created_at:
               description: The date and time when the module was created.
-              example: "2023-01-01T00:00:00Z"
+              example: '2023-01-01T00:00:00Z'
               type: string
               format: date-time
             updated_at:
               description: The date and time when the module was updated to this version.
-              example: "2023-01-01T00:00:00Z"
+              example: '2023-01-01T00:00:00Z'
               type: string
               format: date-time
 
@@ -2698,7 +2730,7 @@ components:
           type: array
           description: The items in this page
           items:
-            $ref: "#/components/schemas/ModuleSummary"
+            $ref: '#/components/schemas/ModuleSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items
@@ -2717,7 +2749,7 @@ components:
             provided and that they keys do not overlap with the 'module_inputs'.
           type: object
           additionalProperties:
-            $ref: "#/components/schemas/ModuleParamItem"
+            $ref: '#/components/schemas/ModuleParamItem'
         module_inputs:
           description: The fixed inputs to this module. These may contain expressions referencing the modules context.
           type: object
@@ -2729,26 +2761,26 @@ components:
           description: A mapping of alias to resource dependencies that must be provisioned with this module
           type: object
           additionalProperties:
-            $ref: "#/components/schemas/ModuleDependencyManifest"
+            $ref: '#/components/schemas/ModuleDependencyManifest'
         coprovisioned:
           description: A set of resources to provision after or in parallel with the resource of the current module.
           type: array
           items:
-            $ref: "#/components/schemas/ModuleCoProvisionManifest"
+            $ref: '#/components/schemas/ModuleCoProvisionManifest'
 
     Module:
       type: object
       description: Configuration for an OpenTofu provider that will be used in modules
       allOf:
-        - $ref: "#/components/schemas/ModuleSummary"
-        - $ref: "#/components/schemas/ModuleCoreFields"
+        - $ref: '#/components/schemas/ModuleSummary'
+        - $ref: '#/components/schemas/ModuleCoreFields'
 
     ModuleVersion:
       type: object
       description: Configuration for an OpenTofu provider that will be used in modules
       allOf:
-        - $ref: "#/components/schemas/ModuleVersionSummary"
-        - $ref: "#/components/schemas/ModuleCoreFields"
+        - $ref: '#/components/schemas/ModuleVersionSummary'
+        - $ref: '#/components/schemas/ModuleCoreFields'
 
     ModuleDependencyManifest:
       description: A dependency to provision before the current resource is provisioned
@@ -2765,9 +2797,9 @@ components:
           pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
           x-pattern-error: type must be a valid resource type
         class:
-          $ref: "#/components/schemas/ResourceClass"
+          $ref: '#/components/schemas/ResourceClass'
         id:
-          $ref: "#/components/schemas/ResourceId"
+          $ref: '#/components/schemas/ResourceId'
         params:
           description: The parameters to pass to the dependency for provisioning.
           type: object
@@ -2790,9 +2822,9 @@ components:
           pattern: ^[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]$
           x-pattern-error: type must be a valid resource type
         class:
-          $ref: "#/components/schemas/ResourceClass"
+          $ref: '#/components/schemas/ResourceClass'
         id:
-          $ref: "#/components/schemas/ResourceId"
+          $ref: '#/components/schemas/ResourceId'
         params:
           description: The parameters to pass for provisioning.
           type: object
@@ -2851,7 +2883,7 @@ components:
         - module_source
       properties:
         id:
-          $ref: "#/components/schemas/ModuleId"
+          $ref: '#/components/schemas/ModuleId'
         description:
           description: An optional text description for this module
           type: string
@@ -2876,7 +2908,7 @@ components:
             provided and that they keys do not overlap with the 'module_inputs'.
           type: object
           additionalProperties:
-            $ref: "#/components/schemas/ModuleParamItem"
+            $ref: '#/components/schemas/ModuleParamItem'
           x-go-type-skip-optional-pointer: true
         module_inputs:
           description: The fixed inputs to this module. These may contain expressions referencing the modules context.
@@ -2898,14 +2930,14 @@ components:
           type: object
           maxItems: 20
           additionalProperties:
-            $ref: "#/components/schemas/ModuleDependencyManifest"
+            $ref: '#/components/schemas/ModuleDependencyManifest'
           x-go-type-skip-optional-pointer: true
         coprovisioned:
           description: A set of resources to provision after or in parallel with the resource of the current module.
           type: array
           maxItems: 20
           items:
-            $ref: "#/components/schemas/ModuleCoProvisionManifest"
+            $ref: '#/components/schemas/ModuleCoProvisionManifest'
           x-go-type-skip-optional-pointer: true
 
     ModuleUpdateBody:
@@ -2932,7 +2964,7 @@ components:
             provided and that they keys do not overlap with the 'module_inputs'.
           type: object
           additionalProperties:
-            $ref: "#/components/schemas/ModuleParamItem"
+            $ref: '#/components/schemas/ModuleParamItem'
         module_inputs:
           description: The inputs to the module. These may contain expressions referencing the modules context.
           type: object
@@ -2951,13 +2983,13 @@ components:
           type: object
           maxItems: 20
           additionalProperties:
-            $ref: "#/components/schemas/ModuleDependencyManifest"
+            $ref: '#/components/schemas/ModuleDependencyManifest'
         coprovisioned:
           description: A set of resources to provision after or in parallel with the resource of the current module.
           type: array
           maxItems: 20
           items:
-            $ref: "#/components/schemas/ModuleCoProvisionManifest"
+            $ref: '#/components/schemas/ModuleCoProvisionManifest'
 
     RunnerPage:
       type: object
@@ -2969,7 +3001,7 @@ components:
           type: array
           description: The items in this page.
           items:
-            $ref: "#/components/schemas/RunnerSummary"
+            $ref: '#/components/schemas/RunnerSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
@@ -2997,24 +3029,24 @@ components:
           example: Runner to execute Terraform in our production cluster
         created_at:
           description: The date and time when the runner was created.
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         updated_at:
           description: The date and time when the runner was updated.
-          example: "2023-01-01T00:00:00Z"
+          example: '2023-01-01T00:00:00Z'
           type: string
           format: date-time
         runner_configuration:
-          $ref: "#/components/schemas/RunnerConfigurationSummary"
+          $ref: '#/components/schemas/RunnerConfigurationSummary'
         state_storage_configuration:
-          $ref: "#/components/schemas/StateStorageConfigurationSummary"
+          $ref: '#/components/schemas/StateStorageConfigurationSummary'
 
     Runner:
       type: object
       description: A summary of configuration a runner.
       allOf:
-        - $ref: "#/components/schemas/RunnerSummary"
+        - $ref: '#/components/schemas/RunnerSummary'
         - required:
             - org_id
             - id
@@ -3023,52 +3055,52 @@ components:
             - created_at
           properties:
             runner_configuration:
-              $ref: "#/components/schemas/RunnerConfiguration"
+              $ref: '#/components/schemas/RunnerConfiguration'
             state_storage_configuration:
-              $ref: "#/components/schemas/StateStorageConfiguration"
+              $ref: '#/components/schemas/StateStorageConfiguration'
 
     RunnerConfiguration:
       description: The data needed to configure the runner.
       oneOf:
-        - $ref: "#/components/schemas/K8sRunnerConfiguration"
-        - $ref: "#/components/schemas/K8sGkeRunnerConfiguration"
-        - $ref: "#/components/schemas/K8sEksRunnerConfiguration"
-        - $ref: "#/components/schemas/K8sAgentRunnerConfiguration"
-        - $ref: "#/components/schemas/ServerlessEcsRunnerConfiguration"
+        - $ref: '#/components/schemas/K8sRunnerConfiguration'
+        - $ref: '#/components/schemas/K8sGkeRunnerConfiguration'
+        - $ref: '#/components/schemas/K8sEksRunnerConfiguration'
+        - $ref: '#/components/schemas/K8sAgentRunnerConfiguration'
+        - $ref: '#/components/schemas/ServerlessEcsRunnerConfiguration'
       discriminator:
         propertyName: type
         mapping:
-          kubernetes: "#/components/schemas/K8sRunnerConfiguration"
-          kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfiguration"
-          kubernetes-eks: "#/components/schemas/K8sEksRunnerConfiguration"
-          kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfiguration"
-          serverless-ecs: "#/components/schemas/ServerlessEcsRunnerConfiguration"
+          kubernetes: '#/components/schemas/K8sRunnerConfiguration'
+          kubernetes-gke: '#/components/schemas/K8sGkeRunnerConfiguration'
+          kubernetes-eks: '#/components/schemas/K8sEksRunnerConfiguration'
+          kubernetes-agent: '#/components/schemas/K8sAgentRunnerConfiguration'
+          serverless-ecs: '#/components/schemas/ServerlessEcsRunnerConfiguration'
 
     RunnerConfigurationUpdate:
       description: The data needed to update the runner configuration.
       oneOf:
-        - $ref: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
-        - $ref: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
-        - $ref: "#/components/schemas/K8sEksRunnerConfigurationUpdateBody"
-        - $ref: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
-        - $ref: "#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody"
+        - $ref: '#/components/schemas/K8sRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/K8sGkeRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/K8sEksRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/K8sAgentRunnerConfigurationUpdateBody'
+        - $ref: '#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody'
       discriminator:
         propertyName: type
         mapping:
-          kubernetes: "#/components/schemas/K8sRunnerConfigurationUpdateBody"
-          kubernetes-gke: "#/components/schemas/K8sGkeRunnerConfigurationUpdateBody"
-          kubernetes-eks: "#/components/schemas/K8sEksRunnerConfigurationUpdateBody"
-          kubernetes-agent: "#/components/schemas/K8sAgentRunnerConfigurationUpdateBody"
-          serverless-ecs: "#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody"
+          kubernetes: '#/components/schemas/K8sRunnerConfigurationUpdateBody'
+          kubernetes-gke: '#/components/schemas/K8sGkeRunnerConfigurationUpdateBody'
+          kubernetes-eks: '#/components/schemas/K8sEksRunnerConfigurationUpdateBody'
+          kubernetes-agent: '#/components/schemas/K8sAgentRunnerConfigurationUpdateBody'
+          serverless-ecs: '#/components/schemas/ServerlessEcsRunnerConfigurationUpdateBody'
 
     InternalRunner:
       type: object
       description: A summary of configuration a runner.
       allOf:
-        - $ref: "#/components/schemas/Runner"
+        - $ref: '#/components/schemas/Runner'
         - properties:
             runner_configuration_secret:
-              $ref: "#/components/schemas/ConfigurationSecret"
+              $ref: '#/components/schemas/ConfigurationSecret'
 
     ConfigurationSecret:
       type: object
@@ -3127,7 +3159,7 @@ components:
           default: false
           type: boolean
         auth:
-          $ref: "#/components/schemas/K8sRunnerGcpTemporaryAuth"
+          $ref: '#/components/schemas/K8sRunnerGcpTemporaryAuth'
       required:
         - name
         - project_id
@@ -3160,7 +3192,7 @@ components:
           description: AWS region where the EKS cluster is located.
           type: string
         auth:
-          $ref: "#/components/schemas/AwsTemporaryAuth"
+          $ref: '#/components/schemas/AwsTemporaryAuth'
       required:
         - name
         - region
@@ -3195,9 +3227,9 @@ components:
       type: object
       properties:
         cluster_data:
-          $ref: "#/components/schemas/K8sRunnerK8sClusterClusterData"
+          $ref: '#/components/schemas/K8sRunnerK8sClusterClusterData'
         auth:
-          $ref: "#/components/schemas/K8sRunnerK8sClusterAuth"
+          $ref: '#/components/schemas/K8sRunnerK8sClusterAuth'
       required:
         - cluster_data
         - auth
@@ -3208,10 +3240,10 @@ components:
       type: object
       properties:
         client_certificate_data:
-          description: "Kubeconfig Field: user.client-certificate-data"
+          description: 'Kubeconfig Field: user.client-certificate-data'
           type: string
         client_key_data:
-          description: "Kubeconfig Field: user.client-key-data"
+          description: 'Kubeconfig Field: user.client-key-data'
           type: string
         service_account_token:
           description: Service account token.
@@ -3223,13 +3255,13 @@ components:
       x-go-type-skip-optional-pointer: true
       properties:
         certificate_authority_data:
-          description: "Kubeconfig Field: cluster.certificate-authority-data"
+          description: 'Kubeconfig Field: cluster.certificate-authority-data'
           type: string
         proxy_url:
-          description: "Kubeconfig Field: cluster.proxy-url"
+          description: 'Kubeconfig Field: cluster.proxy-url'
           type: string
         server:
-          description: "Kubeconfig Field: cluster.server"
+          description: 'Kubeconfig Field: cluster.server'
           type: string
       required:
         - certificate_authority_data
@@ -3243,26 +3275,28 @@ components:
         MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
         -----END PUBLIC KEY-----
       pattern: ^-----BEGIN PUBLIC KEY-----\n[^\n]+\n-----END PUBLIC KEY-----(\n)?$
-      x-pattern-error: "key: does not look like an ed25519 public key in PEM format"
+      x-pattern-error: 'key: does not look like an ed25519 public key in PEM format'
       minLength: 1
       maxLength: 200
 
     StateStorageConfiguration:
       description: Configuration for the Terraform Backend used by the runner.
       oneOf:
-        - $ref: "#/components/schemas/K8sStorageConfiguration"
-        - $ref: "#/components/schemas/S3StorageConfiguration"
+        - $ref: '#/components/schemas/K8sStorageConfiguration'
+        - $ref: '#/components/schemas/S3StorageConfiguration'
+        - $ref: '#/components/schemas/GCSStorageConfiguration'
       discriminator:
         propertyName: type
         mapping:
-          kubernetes: "#/components/schemas/K8sStorageConfiguration"
-          s3: "#/components/schemas/S3StorageConfiguration"
+          kubernetes: '#/components/schemas/K8sStorageConfiguration'
+          s3: '#/components/schemas/S3StorageConfiguration'
+          gcs: '#/components/schemas/GCSStorageConfiguration'
 
     StateStorageConfigurationSummary:
       description: Summary of the state storage configuration.
       properties:
         type:
-          $ref: "#/components/schemas/StateStorageType"
+          $ref: '#/components/schemas/StateStorageType'
       required:
         - type
 
@@ -3274,7 +3308,7 @@ components:
           description: Where the secrets with the state should be created.
           type: string
         type:
-          $ref: "#/components/schemas/StateStorageType"
+          $ref: '#/components/schemas/StateStorageType'
       required:
         - namespace
         - type
@@ -3287,7 +3321,7 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/StateStorageType"
+          $ref: '#/components/schemas/StateStorageType'
         bucket:
           type: string
           description: Name of the S3 Bucket.
@@ -3299,6 +3333,31 @@ components:
           description: A prefix path for the state file. The environment uuid will be used as a unique key within this.
           pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
           x-pattern-error: state storage path_prefix is not a valid S3 prefix path.
+          example: path/to/state/directory
+      required:
+        - type
+        - bucket
+    
+    GCSStorageConfiguration:
+      description: |-
+        Configuration to use a Google Cloud Storage (GCS) bucket as state storage backend of this runner. Authentication and other settings
+        can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/gcs#state-storage>
+        for more details.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/StateStorageType'
+        bucket:
+          type: string
+          description: Name of the GCS Bucket.
+          pattern: ^[a-z0-9][a-z0-9\-]*[a-z0-9]$
+          x-pattern-error: state storage bucket is not a valid GCS Bucket name.
+          example: example-bucket
+        path_prefix:
+          type: string
+          description: A prefix path for the state file. The environment uuid will be used as a unique key within this.
+          pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
+          x-pattern-error: state storage path_prefix is not a valid GCS prefix path.
           example: path/to/state/directory
       required:
         - type
@@ -3323,16 +3382,16 @@ components:
           type: string
           example: Runner to execute Terraform in our production cluster
         runner_configuration:
-          $ref: "#/components/schemas/RunnerConfiguration"
+          $ref: '#/components/schemas/RunnerConfiguration'
         state_storage_configuration:
-          $ref: "#/components/schemas/StateStorageConfiguration"
+          $ref: '#/components/schemas/StateStorageConfiguration'
 
     RunnerConfigurationSummary:
       description: A summary of the runner configuration.
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
       required:
         - type
 
@@ -3341,11 +3400,11 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
-          $ref: "#/components/schemas/K8sRunnerK8sCluster"
+          $ref: '#/components/schemas/K8sRunnerK8sCluster'
       required:
         - type
         - job
@@ -3356,11 +3415,11 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
-          $ref: "#/components/schemas/K8sRunnerGkeCluster"
+          $ref: '#/components/schemas/K8sRunnerGkeCluster'
       required:
         - type
         - job
@@ -3371,11 +3430,11 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
-          $ref: "#/components/schemas/K8sRunnerEksCluster"
+          $ref: '#/components/schemas/K8sRunnerEksCluster'
       required:
         - type
         - job
@@ -3386,11 +3445,11 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         key:
-          $ref: "#/components/schemas/K8sAgentRunnerKey"
+          $ref: '#/components/schemas/K8sAgentRunnerKey'
       required:
         - type
         - job
@@ -3401,11 +3460,11 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
         auth:
-          $ref: "#/components/schemas/AwsTemporaryAuth"
+          $ref: '#/components/schemas/AwsTemporaryAuth'
         job:
-          $ref: "#/components/schemas/ServerlessEcsRunnerJob"
+          $ref: '#/components/schemas/ServerlessEcsRunnerJob'
       required:
         - type
         - auth
@@ -3438,7 +3497,7 @@ components:
           type: array
           items:
             type: string
-            example: "subnet-12345"
+            example: 'subnet-12345'
             minLength: 1
             maxLength: 24
           minItems: 1
@@ -3448,7 +3507,7 @@ components:
           type: array
           items:
             type: string
-            example: "runner-security-group"
+            example: 'runner-security-group'
             minLength: 1
             maxLength: 255
           maxItems: 5
@@ -3507,20 +3566,20 @@ components:
           type: string
           example: Runner to execute Terraform in our production cluster
         runner_configuration:
-          $ref: "#/components/schemas/RunnerConfigurationUpdate"
+          $ref: '#/components/schemas/RunnerConfigurationUpdate'
         state_storage_configuration:
-          $ref: "#/components/schemas/StateStorageConfiguration"
+          $ref: '#/components/schemas/StateStorageConfiguration'
 
     K8sRunnerConfigurationUpdateBody:
       description: Object to update an existing runner configuration for a Kubernetes cluster.
       type: object
       properties:
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
-          $ref: "#/components/schemas/K8sRunnerK8sCluster"
+          $ref: '#/components/schemas/K8sRunnerK8sCluster'
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
       required:
         - type
 
@@ -3529,11 +3588,11 @@ components:
       type: object
       properties:
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
-          $ref: "#/components/schemas/K8sRunnerGkeCluster"
+          $ref: '#/components/schemas/K8sRunnerGkeCluster'
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
       required:
         - type
 
@@ -3542,11 +3601,11 @@ components:
       type: object
       properties:
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         cluster:
-          $ref: "#/components/schemas/K8sRunnerEksCluster"
+          $ref: '#/components/schemas/K8sRunnerEksCluster'
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
       required:
         - type
 
@@ -3555,11 +3614,11 @@ components:
       type: object
       properties:
         job:
-          $ref: "#/components/schemas/K8sRunnerJobConfig"
+          $ref: '#/components/schemas/K8sRunnerJobConfig'
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
         key:
-          $ref: "#/components/schemas/K8sAgentRunnerKey"
+          $ref: '#/components/schemas/K8sAgentRunnerKey'
       required:
         - type
 
@@ -3568,11 +3627,11 @@ components:
       type: object
       properties:
         type:
-          $ref: "#/components/schemas/RunnerType"
+          $ref: '#/components/schemas/RunnerType'
         auth:
-          $ref: "#/components/schemas/AwsTemporaryAuth"
+          $ref: '#/components/schemas/AwsTemporaryAuth'
         job:
-          $ref: "#/components/schemas/ServerlessEcsRunnerJob"
+          $ref: '#/components/schemas/ServerlessEcsRunnerJob'
       required:
         - type
 
@@ -3597,12 +3656,12 @@ components:
           format: uuid
           example: 01234567-89ab-cdef-0123-456789abcdef
         module_id:
-          $ref: "#/components/schemas/ModuleId"
+          $ref: '#/components/schemas/ModuleId'
         created_at:
           description: The time this rule was created
           type: string
           format: date-time
-          example: "2025-01-02T03:04:05Z"
+          example: '2025-01-02T03:04:05Z'
         resource_type:
           description: The resource type matched by this rule
           type: string
@@ -3638,7 +3697,7 @@ components:
           type: array
           description: The items in this page.
           items:
-            $ref: "#/components/schemas/RuleSummary"
+            $ref: '#/components/schemas/RuleSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
@@ -3647,7 +3706,7 @@ components:
       type: object
       description: The full details of a rule that matches resource requests against a module
       allOf:
-        - $ref: "#/components/schemas/RuleSummary"
+        - $ref: '#/components/schemas/RuleSummary'
 
     RuleCreateBody:
       type: object
@@ -3656,11 +3715,11 @@ components:
         - module_id
       properties:
         module_id:
-          $ref: "#/components/schemas/ModuleId"
+          $ref: '#/components/schemas/ModuleId'
         resource_class:
-          $ref: "#/components/schemas/ResourceClass"
+          $ref: '#/components/schemas/ResourceClass'
         resource_id:
-          $ref: "#/components/schemas/ResourceId"
+          $ref: '#/components/schemas/ResourceId'
         env_type_id:
           description: |
             The environment type to match this rule. This environment type must exist in the org.
@@ -3694,7 +3753,7 @@ components:
           type: array
           description: The items in this page.
           items:
-            $ref: "#/components/schemas/RunnerRuleSummary"
+            $ref: '#/components/schemas/RunnerRuleSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
@@ -3703,7 +3762,7 @@ components:
       type: object
       description: The full details of a rule that matches resource requests against a module
       allOf:
-        - $ref: "#/components/schemas/RunnerRuleSummary"
+        - $ref: '#/components/schemas/RunnerRuleSummary'
 
     RunnerRuleCreateBody:
       type: object
@@ -3754,7 +3813,7 @@ components:
           description: The time this rule was created
           type: string
           format: date-time
-          example: "2025-01-02T03:04:05Z"
+          example: '2025-01-02T03:04:05Z'
         project_id:
           description: The optional project id that this rule matches.
           type: string
@@ -3774,11 +3833,11 @@ components:
         modules:
           type: array
           items:
-            $ref: "#/components/schemas/InternalModuleCatalogueModule"
+            $ref: '#/components/schemas/InternalModuleCatalogueModule'
         providers:
           type: array
           items:
-            $ref: "#/components/schemas/ModuleProvider"
+            $ref: '#/components/schemas/ModuleProvider'
 
     InternalModuleCatalogueModuleRule:
       type: object
@@ -3791,9 +3850,9 @@ components:
           type: string
           format: uuid
         resource_class:
-          $ref: "#/components/schemas/ResourceClass"
+          $ref: '#/components/schemas/ResourceClass'
         resource_id:
-          $ref: "#/components/schemas/ResourceId"
+          $ref: '#/components/schemas/ResourceId'
         project_id:
           description: The optional project id that this rule matches.
           type: string
@@ -3811,14 +3870,14 @@ components:
       type: object
       description: A module within a catalogue
       allOf:
-        - $ref: "#/components/schemas/Module"
+        - $ref: '#/components/schemas/Module'
         - required:
             - rules
           properties:
             rules:
               type: array
               items:
-                $ref: "#/components/schemas/InternalModuleCatalogueModuleRule"
+                $ref: '#/components/schemas/InternalModuleCatalogueModuleRule'
 
     InternalModuleCatalogueGenerateBody:
       type: object
@@ -3867,7 +3926,7 @@ components:
           type: array
           description: The items in this page.
           items:
-            $ref: "#/components/schemas/SandboxSummary"
+            $ref: '#/components/schemas/SandboxSummary'
         next_page_token:
           type: string
           description: The page token to use to request the next page of items.
@@ -3885,7 +3944,7 @@ components:
     Sandbox:
       description: The full details of a sandbox
       allOf:
-        - $ref: "#/components/schemas/SandboxSummary"
+        - $ref: '#/components/schemas/SandboxSummary'
         - required:
             - status
             - inputs
@@ -3905,11 +3964,11 @@ components:
               description: The service user token created for the sandbox.
             created_at:
               description: The date and time when the sandbox was created.
-              example: "2023-01-01T00:00:00Z"
+              example: '2023-01-01T00:00:00Z'
               type: string
               format: date-time
             completed_at:
               description: The date and time when the sandbox deployment completed.
-              example: "2023-01-01T00:00:00Z"
+              example: '2023-01-01T00:00:00Z'
               type: string
               format: date-time

@@ -36,6 +36,7 @@ type commonRunnerStateStorageModel struct {
 	Type                    string                                   `tfsdk:"type"`
 	KubernetesConfiguration *commonRunnerKubernetesStateStorageModel `tfsdk:"kubernetes_configuration"`
 	S3Configuration         *commonRunnerS3StateStorageModel         `tfsdk:"s3_configuration"`
+	GCSConfiguration        *commonRunnerGCSStateStorageModel        `tfsdk:"gcs_configuration"`
 }
 
 type commonRunnerKubernetesStateStorageModel struct {
@@ -43,6 +44,11 @@ type commonRunnerKubernetesStateStorageModel struct {
 }
 
 type commonRunnerS3StateStorageModel struct {
+	Bucket     string  `tfsdk:"bucket"`
+	PathPrefix *string `tfsdk:"path_prefix"`
+}
+
+type commonRunnerGCSStateStorageModel struct {
 	Bucket     string  `tfsdk:"bucket"`
 	PathPrefix *string `tfsdk:"path_prefix"`
 }
@@ -77,6 +83,21 @@ var commonRunnerStateStorageDataSourceSchema = schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
 				"bucket": schema.StringAttribute{
 					MarkdownDescription: "Name of the S3 Bucket",
+					Computed:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
+					Computed:            true,
+				},
+			},
+		},
+		"gcs_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The GCS state storage configuration for the Runner",
+			Optional:            true,
+			Computed:            true,
+			Attributes: map[string]schema.Attribute{
+				"bucket": schema.StringAttribute{
+					MarkdownDescription: "Name of the GCS Bucket",
 					Computed:            true,
 				},
 				"path_prefix": schema.StringAttribute{

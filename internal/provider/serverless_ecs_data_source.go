@@ -10,6 +10,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+var ecsRunnerStateStorageDataSourceSchema = schema.SingleNestedAttribute{
+	MarkdownDescription: "The state storage configuration for the Runner",
+	Computed:            true,
+	Attributes: map[string]schema.Attribute{
+		"type": schema.StringAttribute{
+			MarkdownDescription: "The type of state storage configuration for the Runner",
+			Computed:            true,
+		},
+		"s3_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The S3 state storage configuration for the Runner",
+			Optional:            true,
+			Computed:            true,
+			Attributes: map[string]schema.Attribute{
+				"bucket": schema.StringAttribute{
+					MarkdownDescription: "Name of the S3 Bucket",
+					Computed:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
+					Computed:            true,
+				},
+			},
+		},
+	},
+}
+
 func NewServerlessEcsRunnerDataSource() datasource.DataSource {
 	return &commonRunnerDataSource{
 		SubType: "serverless_ecs_runner",
@@ -106,7 +132,7 @@ func NewServerlessEcsRunnerDataSource() datasource.DataSource {
 						},
 					},
 				},
-				"state_storage_configuration": commonRunnerStateStorageDataSourceSchema,
+				"state_storage_configuration": ecsRunnerStateStorageDataSourceSchema,
 			},
 		},
 		ReadApiResponseIntoModel: convertEcsRunnerApiIntoModel,

@@ -63,6 +63,7 @@ const (
 
 // Defines values for StateStorageType.
 const (
+	StateStorageTypeGcs        StateStorageType = "gcs"
 	StateStorageTypeKubernetes StateStorageType = "kubernetes"
 	StateStorageTypeS3         StateStorageType = "s3"
 )
@@ -257,6 +258,20 @@ type Error struct {
 
 	// Message A human-readable explanation of the error.
 	Message string `json:"message"`
+}
+
+// GCSStorageConfiguration Configuration to use a Google Cloud Storage (GCS) bucket as state storage backend of this runner. Authentication and other settings
+// can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/gcs#state-storage>
+// for more details.
+type GCSStorageConfiguration struct {
+	// Bucket Name of the GCS Bucket.
+	Bucket string `json:"bucket"`
+
+	// PathPrefix A prefix path for the state file. The environment uuid will be used as a unique key within this.
+	PathPrefix *string `json:"path_prefix,omitempty"`
+
+	// Type Type of the Terraform Backend used by the runner.
+	Type StateStorageType `json:"type"`
 }
 
 // InternalModuleCatalogue A collation of all the applicable modules, and providers for an environment. A module is applicable if there is at least one rule for it that matches the requested environment.
@@ -1599,6 +1614,18 @@ type ListEnvironmentTypesParams struct {
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
 }
 
+// ListEnvironmentsInOrgParams defines parameters for ListEnvironmentsInOrg.
+type ListEnvironmentsInOrgParams struct {
+	// PerPage The maximum number of items to return in a page of results
+	PerPage *PerPageQueryParam `form:"per_page,omitempty" json:"per_page,omitempty"`
+
+	// Page The page token to request from
+	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
+
+	// ByEnvTypeId Filter the list by environment types
+	ByEnvTypeId *[]string `form:"byEnvTypeId,omitempty" json:"byEnvTypeId,omitempty"`
+}
+
 // ListModuleProvidersParams defines parameters for ListModuleProviders.
 type ListModuleProvidersParams struct {
 	// PerPage The maximum number of items to return in a page of results
@@ -2238,6 +2265,34 @@ func (t *StateStorageConfiguration) MergeS3StorageConfiguration(v S3StorageConfi
 	return err
 }
 
+// AsGCSStorageConfiguration returns the union data inside the StateStorageConfiguration as a GCSStorageConfiguration
+func (t StateStorageConfiguration) AsGCSStorageConfiguration() (GCSStorageConfiguration, error) {
+	var body GCSStorageConfiguration
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromGCSStorageConfiguration overwrites any union data inside the StateStorageConfiguration as the provided GCSStorageConfiguration
+func (t *StateStorageConfiguration) FromGCSStorageConfiguration(v GCSStorageConfiguration) error {
+	v.Type = "gcs"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeGCSStorageConfiguration performs a merge with any union data inside the StateStorageConfiguration, using the provided GCSStorageConfiguration
+func (t *StateStorageConfiguration) MergeGCSStorageConfiguration(v GCSStorageConfiguration) error {
+	v.Type = "gcs"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t StateStorageConfiguration) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"type"`
@@ -2252,6 +2307,8 @@ func (t StateStorageConfiguration) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
+	case "gcs":
+		return t.AsGCSStorageConfiguration()
 	case "kubernetes":
 		return t.AsK8sStorageConfiguration()
 	case "s3":
@@ -2420,6 +2477,9 @@ type ClientInterface interface {
 	UpdateEnvironmentTypeWithBody(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UpdateEnvironmentType(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListEnvironmentsInOrg request
+	ListEnvironmentsInOrg(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentsInOrgParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListModuleProviders request
 	ListModuleProviders(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2916,6 +2976,18 @@ func (c *Client) UpdateEnvironmentTypeWithBody(ctx context.Context, orgId OrgIdP
 
 func (c *Client) UpdateEnvironmentType(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateEnvironmentTypeRequest(c.Server, orgId, envTypeId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListEnvironmentsInOrg(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentsInOrgParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListEnvironmentsInOrgRequest(c.Server, orgId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -4689,6 +4761,94 @@ func NewUpdateEnvironmentTypeRequestWithBody(server string, orgId OrgIdPathParam
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListEnvironmentsInOrgRequest generates requests for ListEnvironmentsInOrg
+func NewListEnvironmentsInOrgRequest(server string, orgId OrgIdPathParam, params *ListEnvironmentsInOrgParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/envs", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PerPage != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "per_page", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.ByEnvTypeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "byEnvTypeId", runtime.ParamLocationQuery, *params.ByEnvTypeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -7525,6 +7685,9 @@ type ClientWithResponsesInterface interface {
 
 	UpdateEnvironmentTypeWithResponse(ctx context.Context, orgId OrgIdPathParam, envTypeId EnvTypeIdPathParam, body UpdateEnvironmentTypeJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateEnvironmentTypeResponse, error)
 
+	// ListEnvironmentsInOrgWithResponse request
+	ListEnvironmentsInOrgWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentsInOrgParams, reqEditors ...RequestEditorFn) (*ListEnvironmentsInOrgResponse, error)
+
 	// ListModuleProvidersWithResponse request
 	ListModuleProvidersWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*ListModuleProvidersResponse, error)
 
@@ -8178,6 +8341,29 @@ func (r UpdateEnvironmentTypeResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r UpdateEnvironmentTypeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListEnvironmentsInOrgResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EnvironmentPage
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListEnvironmentsInOrgResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListEnvironmentsInOrgResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -9505,6 +9691,15 @@ func (c *ClientWithResponses) UpdateEnvironmentTypeWithResponse(ctx context.Cont
 	return ParseUpdateEnvironmentTypeResponse(rsp)
 }
 
+// ListEnvironmentsInOrgWithResponse request returning *ListEnvironmentsInOrgResponse
+func (c *ClientWithResponses) ListEnvironmentsInOrgWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListEnvironmentsInOrgParams, reqEditors ...RequestEditorFn) (*ListEnvironmentsInOrgResponse, error) {
+	rsp, err := c.ListEnvironmentsInOrg(ctx, orgId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListEnvironmentsInOrgResponse(rsp)
+}
+
 // ListModuleProvidersWithResponse request returning *ListModuleProvidersResponse
 func (c *ClientWithResponses) ListModuleProvidersWithResponse(ctx context.Context, orgId OrgIdPathParam, params *ListModuleProvidersParams, reqEditors ...RequestEditorFn) (*ListModuleProvidersResponse, error) {
 	rsp, err := c.ListModuleProviders(ctx, orgId, params, reqEditors...)
@@ -10764,6 +10959,39 @@ func ParseUpdateEnvironmentTypeResponse(rsp *http.Response) (*UpdateEnvironmentT
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest EnvironmentType
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListEnvironmentsInOrgResponse parses an HTTP response from a ListEnvironmentsInOrgWithResponse call
+func ParseListEnvironmentsInOrgResponse(rsp *http.Response) (*ListEnvironmentsInOrgResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListEnvironmentsInOrgResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EnvironmentPage
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

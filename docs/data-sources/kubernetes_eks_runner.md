@@ -75,12 +75,22 @@ Read-Only:
 
 Optional:
 
+- `gcs_configuration` (Attributes) The GCS state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--gcs_configuration))
 - `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
 - `s3_configuration` (Attributes) The S3 state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--s3_configuration))
 
 Read-Only:
 
 - `type` (String) The type of state storage configuration for the Runner
+
+<a id="nestedatt--state_storage_configuration--gcs_configuration"></a>
+### Nested Schema for `state_storage_configuration.gcs_configuration`
+
+Read-Only:
+
+- `bucket` (String) Name of the GCS Bucket
+- `path_prefix` (String) A prefix path for the state file. The environment uuid will be used as a unique key within this
+
 
 <a id="nestedatt--state_storage_configuration--kubernetes_configuration"></a>
 ### Nested Schema for `state_storage_configuration.kubernetes_configuration`

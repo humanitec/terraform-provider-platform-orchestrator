@@ -43,7 +43,7 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 			MarkdownDescription: "The type of state storage configuration for the Runner.",
 			Required:            true,
 			Validators: []validator.String{
-				stringvalidator.OneOf(string(canyoncp.StateStorageTypeKubernetes), string(canyoncp.StateStorageTypeS3)),
+				stringvalidator.OneOf(string(canyoncp.StateStorageTypeKubernetes), string(canyoncp.StateStorageTypeS3), string(canyoncp.StateStorageTypeGcs)),
 			},
 		},
 		"kubernetes_configuration": schema.SingleNestedAttribute{
@@ -65,6 +65,20 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
 				"bucket": schema.StringAttribute{
 					MarkdownDescription: "Name of the S3 Bucket",
+					Required:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
+					Optional:            true,
+				},
+			},
+		},
+		"gcs_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The GCS state storage configuration for the Runner",
+			Optional:            true,
+			Attributes: map[string]schema.Attribute{
+				"bucket": schema.StringAttribute{
+					MarkdownDescription: "Name of the GCS Bucket",
 					Required:            true,
 				},
 				"path_prefix": schema.StringAttribute{

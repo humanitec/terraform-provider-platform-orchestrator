@@ -116,7 +116,6 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
 								"path_prefix": knownvalue.Null(),
 							}),
-							"kubernetes_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -162,7 +161,6 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
 								"path_prefix": knownvalue.StringExact("prefix"),
 							}),
-							"kubernetes_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -212,7 +210,6 @@ data "platform-orchestrator_serverless_ecs_runner" "test" {
 								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
 								"path_prefix": knownvalue.StringExact("prefix"),
 							}),
-							"kubernetes_configuration": knownvalue.Null(),
 						}),
 					),
 				},
@@ -224,4 +221,112 @@ data "platform-orchestrator_serverless_ecs_runner" "test" {
 			},
 		},
 	})
+}
+
+func TestAccEcsRunnerResource_s3_state_prefix_update(t *testing.T) {
+	var runnerId = fmt.Sprintf("test-runner-%d", time.Now().UnixNano())
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create with prefix
+			{
+				Config: testAccEcsRunnerResourceS3State(runnerId, "humanitec-ecs-runner-state", `path_prefix = "initial/prefix"`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_serverless_ecs_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_serverless_ecs_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("s3"),
+							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
+								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"path_prefix": knownvalue.StringExact("initial/prefix"),
+							}),
+						}),
+					),
+				},
+			},
+			// Update prefix
+			{
+				Config: testAccEcsRunnerResourceS3State(runnerId, "humanitec-ecs-runner-state", `path_prefix = "updated/prefix"`),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_serverless_ecs_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_serverless_ecs_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("s3"),
+							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
+								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"path_prefix": knownvalue.StringExact("updated/prefix"),
+							}),
+						}),
+					),
+				},
+			},
+			// Remove prefix
+			{
+				Config: testAccEcsRunnerResourceS3State(runnerId, "humanitec-ecs-runner-state", ""),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_serverless_ecs_runner.test",
+						tfjsonpath.New("id"),
+						knownvalue.StringExact(runnerId),
+					),
+					statecheck.ExpectKnownValue(
+						"platform-orchestrator_serverless_ecs_runner.test",
+						tfjsonpath.New("state_storage_configuration"),
+						knownvalue.MapExact(map[string]knownvalue.Check{
+							"type": knownvalue.StringExact("s3"),
+							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
+								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"path_prefix": knownvalue.Null(),
+							}),
+						}),
+					),
+				},
+			},
+			{
+				ResourceName:      "platform-orchestrator_serverless_ecs_runner.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
+func testAccEcsRunnerResourceS3State(id, bucket, pathPrefixAttr string) string {
+	return `
+resource "platform-orchestrator_serverless_ecs_runner" "test" {
+  id = "` + id + `"
+  runner_configuration = {
+    auth = {
+      role_arn = "arn:aws:iam::123456789012:role/humanitec_role"
+    }
+    job = {
+      region             = "eu-central-1"
+      cluster            = "my-ecs-cluster-name"
+      execution_role_arn = "arn:aws:iam::123456789012:role/execution_role"
+      subnets            = ["my-subnet-1"]
+    }
+  }
+  state_storage_configuration = {
+    type = "s3"
+    s3_configuration = {
+      bucket = "` + bucket + `"
+      ` + pathPrefixAttr + `
+    }
+  }
+}
+`
 }

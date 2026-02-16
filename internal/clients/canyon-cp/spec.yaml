@@ -2631,6 +2631,7 @@ components:
         - kubernetes
         - s3
         - gcs
+        - azurerm
 
     ModuleVersionSummaryCoreFields:
       type: object
@@ -3285,12 +3286,14 @@ components:
         - $ref: '#/components/schemas/K8sStorageConfiguration'
         - $ref: '#/components/schemas/S3StorageConfiguration'
         - $ref: '#/components/schemas/GCSStorageConfiguration'
+        - $ref: '#/components/schemas/AzureRMStorageConfiguration'
       discriminator:
         propertyName: type
         mapping:
           kubernetes: '#/components/schemas/K8sStorageConfiguration'
           s3: '#/components/schemas/S3StorageConfiguration'
           gcs: '#/components/schemas/GCSStorageConfiguration'
+          azurerm: '#/components/schemas/AzureRMStorageConfiguration'
 
     StateStorageConfigurationSummary:
       description: Summary of the state storage configuration.
@@ -3362,6 +3365,42 @@ components:
       required:
         - type
         - bucket
+
+    AzureRMStorageConfiguration:
+      description: |-
+        Configuration to use an AzureRM Storage Account as state storage backend of this runner. Authentication and other settings
+        can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/azurerm#state-storage>
+        for more details.
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/StateStorageType'
+        resource_group_name:
+          type: string
+          description: Name of the Azure Resource Group.
+          example: rg-terraform-state
+        storage_account_name:
+          type: string
+          description: Name of the Azure Storage Account.
+          example: sttfstatepro001
+        container_name:
+          type: string
+          description: Name of the Azure Storage Container.
+          example: tfstates
+        path_prefix:
+          type: string
+          description: A prefix path for the state file. The environment uuid will be used as a unique key within this.
+          pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
+          x-pattern-error: state storage path_prefix is not a valid AzureRM path.
+          example: path/to/state/directory
+        lookup_blob_endpoint:
+          type: boolean
+          description: Whether to use the lookup blob endpoint.
+          example: true
+      required:
+        - type
+        - storage_account_name
+        - container_name
 
     RunnerCreateBody:
       type: object

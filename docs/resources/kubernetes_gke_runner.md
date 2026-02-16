@@ -117,9 +117,25 @@ Required:
 
 Optional:
 
+- `azurerm_configuration` (Attributes) The AzureRM state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--azurerm_configuration))
 - `gcs_configuration` (Attributes) The GCS state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--gcs_configuration))
 - `kubernetes_configuration` (Attributes) The Kubernetes state storage configuration for the Runner. (see [below for nested schema](#nestedatt--state_storage_configuration--kubernetes_configuration))
 - `s3_configuration` (Attributes) The S3 state storage configuration for the Runner (see [below for nested schema](#nestedatt--state_storage_configuration--s3_configuration))
+
+<a id="nestedatt--state_storage_configuration--azurerm_configuration"></a>
+### Nested Schema for `state_storage_configuration.azurerm_configuration`
+
+Required:
+
+- `container_name` (String) Name of the Azure Storage Container.
+- `storage_account_name` (String) Name of the Azure Storage Account.
+
+Optional:
+
+- `lookup_blob_endpoint` (Boolean) Whether to use the lookup blob endpoint.
+- `path_prefix` (String) A prefix path for the state file. The environment uuid will be used as a unique key within this
+- `resource_group_name` (String) Name of the Azure Resource Group.
+
 
 <a id="nestedatt--state_storage_configuration--gcs_configuration"></a>
 ### Nested Schema for `state_storage_configuration.gcs_configuration`

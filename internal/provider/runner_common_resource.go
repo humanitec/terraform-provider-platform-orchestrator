@@ -43,7 +43,7 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 			MarkdownDescription: "The type of state storage configuration for the Runner.",
 			Required:            true,
 			Validators: []validator.String{
-				stringvalidator.OneOf(string(canyoncp.StateStorageTypeKubernetes), string(canyoncp.StateStorageTypeS3), string(canyoncp.StateStorageTypeGcs)),
+				stringvalidator.OneOf(string(canyoncp.StateStorageTypeKubernetes), string(canyoncp.StateStorageTypeS3), string(canyoncp.StateStorageTypeGcs), string(canyoncp.StateStorageTypeAzurerm)),
 			},
 		},
 		"kubernetes_configuration": schema.SingleNestedAttribute{
@@ -80,6 +80,32 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 				"bucket": schema.StringAttribute{
 					MarkdownDescription: "Name of the GCS Bucket",
 					Required:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
+					Optional:            true,
+				},
+			},
+		},
+		"azurerm_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The AzureRM state storage configuration for the Runner",
+			Optional:            true,
+			Attributes: map[string]schema.Attribute{
+				"resource_group_name": schema.StringAttribute{
+					MarkdownDescription: "Name of the Azure Resource Group.",
+					Optional:            true,
+				},
+				"storage_account_name": schema.StringAttribute{
+					MarkdownDescription: "Name of the Azure Storage Account.",
+					Required:            true,
+				},
+				"container_name": schema.StringAttribute{
+					MarkdownDescription: "Name of the Azure Storage Container.",
+					Required:            true,
+				},
+				"lookup_blob_endpoint": schema.BoolAttribute{
+					MarkdownDescription: "Whether to use the lookup blob endpoint.",
+					Optional:            true,
 				},
 				"path_prefix": schema.StringAttribute{
 					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",

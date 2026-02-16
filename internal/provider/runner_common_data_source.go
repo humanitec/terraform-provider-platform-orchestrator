@@ -37,6 +37,7 @@ type commonRunnerStateStorageModel struct {
 	KubernetesConfiguration *commonRunnerKubernetesStateStorageModel `tfsdk:"kubernetes_configuration"`
 	S3Configuration         *commonRunnerS3StateStorageModel         `tfsdk:"s3_configuration"`
 	GCSConfiguration        *commonRunnerGCSStateStorageModel        `tfsdk:"gcs_configuration"`
+	AzureRMConfiguration    *commonRunnerAzureRMStateStorageModel    `tfsdk:"azurerm_configuration"`
 }
 
 type commonRunnerKubernetesStateStorageModel struct {
@@ -51,6 +52,14 @@ type commonRunnerS3StateStorageModel struct {
 type commonRunnerGCSStateStorageModel struct {
 	Bucket     string  `tfsdk:"bucket"`
 	PathPrefix *string `tfsdk:"path_prefix"`
+}
+
+type commonRunnerAzureRMStateStorageModel struct {
+	ResourceGroupName  *string `tfsdk:"resource_group_name"`
+	StorageAccountName string  `tfsdk:"storage_account_name"`
+	ContainerName      string  `tfsdk:"container_name"`
+	LookupBlobEndpoint *bool   `tfsdk:"lookup_blob_endpoint"`
+	PathPrefix         *string `tfsdk:"path_prefix"`
 }
 
 func (d *commonRunnerDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -98,6 +107,33 @@ var commonRunnerStateStorageDataSourceSchema = schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
 				"bucket": schema.StringAttribute{
 					MarkdownDescription: "Name of the GCS Bucket",
+					Computed:            true,
+				},
+				"path_prefix": schema.StringAttribute{
+					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
+					Computed:            true,
+				},
+			},
+		},
+		"azurerm_configuration": schema.SingleNestedAttribute{
+			MarkdownDescription: "The AzureRM state storage configuration for the Runner",
+			Optional:            true,
+			Computed:            true,
+			Attributes: map[string]schema.Attribute{
+				"resource_group_name": schema.StringAttribute{
+					MarkdownDescription: "Name of the Azure Resource Group.",
+					Computed:            true,
+				},
+				"storage_account_name": schema.StringAttribute{
+					MarkdownDescription: "Name of the Azure Storage Account.",
+					Computed:            true,
+				},
+				"container_name": schema.StringAttribute{
+					MarkdownDescription: "Name of the Azure Storage Container.",
+					Computed:            true,
+				},
+				"lookup_blob_endpoint": schema.BoolAttribute{
+					MarkdownDescription: "Whether to use the lookup blob endpoint.",
 					Computed:            true,
 				},
 				"path_prefix": schema.StringAttribute{

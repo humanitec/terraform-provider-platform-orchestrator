@@ -63,6 +63,7 @@ const (
 
 // Defines values for StateStorageType.
 const (
+	StateStorageTypeAzurerm    StateStorageType = "azurerm"
 	StateStorageTypeGcs        StateStorageType = "gcs"
 	StateStorageTypeKubernetes StateStorageType = "kubernetes"
 	StateStorageTypeS3         StateStorageType = "s3"
@@ -121,6 +122,29 @@ type AwsTemporaryAuth struct {
 
 	// StsRegion (Optional) The AWS region identifier for the Security Token Service (STS) endpoint. If not provided, the cluster region will be used.
 	StsRegion *string `json:"sts_region,omitempty"`
+}
+
+// AzureRMStorageConfiguration Configuration to use an AzureRM Storage Account as state storage backend of this runner. Authentication and other settings
+// can be set via environment variables and defaults. See <https://developer.hashicorp.com/terraform/language/backend/azurerm#state-storage>
+// for more details.
+type AzureRMStorageConfiguration struct {
+	// ContainerName Name of the Azure Storage Container.
+	ContainerName string `json:"container_name"`
+
+	// LookupBlobEndpoint Whether to use the lookup blob endpoint.
+	LookupBlobEndpoint *bool `json:"lookup_blob_endpoint,omitempty"`
+
+	// PathPrefix A prefix path for the state file. The environment uuid will be used as a unique key within this.
+	PathPrefix *string `json:"path_prefix,omitempty"`
+
+	// ResourceGroupName Name of the Azure Resource Group.
+	ResourceGroupName *string `json:"resource_group_name,omitempty"`
+
+	// StorageAccountName Name of the Azure Storage Account.
+	StorageAccountName string `json:"storage_account_name"`
+
+	// Type Type of the Terraform Backend used by the runner.
+	Type StateStorageType `json:"type"`
 }
 
 // ConfigurationSecret Secret path and version of a secret stored in the internal store.
@@ -2293,6 +2317,34 @@ func (t *StateStorageConfiguration) MergeGCSStorageConfiguration(v GCSStorageCon
 	return err
 }
 
+// AsAzureRMStorageConfiguration returns the union data inside the StateStorageConfiguration as a AzureRMStorageConfiguration
+func (t StateStorageConfiguration) AsAzureRMStorageConfiguration() (AzureRMStorageConfiguration, error) {
+	var body AzureRMStorageConfiguration
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAzureRMStorageConfiguration overwrites any union data inside the StateStorageConfiguration as the provided AzureRMStorageConfiguration
+func (t *StateStorageConfiguration) FromAzureRMStorageConfiguration(v AzureRMStorageConfiguration) error {
+	v.Type = "azurerm"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAzureRMStorageConfiguration performs a merge with any union data inside the StateStorageConfiguration, using the provided AzureRMStorageConfiguration
+func (t *StateStorageConfiguration) MergeAzureRMStorageConfiguration(v AzureRMStorageConfiguration) error {
+	v.Type = "azurerm"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t StateStorageConfiguration) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"type"`
@@ -2307,6 +2359,8 @@ func (t StateStorageConfiguration) ValueByDiscriminator() (interface{}, error) {
 		return nil, err
 	}
 	switch discriminator {
+	case "azurerm":
+		return t.AsAzureRMStorageConfiguration()
 	case "gcs":
 		return t.AsGCSStorageConfiguration()
 	case "kubernetes":

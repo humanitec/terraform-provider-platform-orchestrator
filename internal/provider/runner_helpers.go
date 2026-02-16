@@ -50,6 +50,15 @@ func buildCommonStateStorageModel(ssc canyoncp.StateStorageConfiguration) (commo
 			Bucket:     typedSsc.Bucket,
 			PathPrefix: typedSsc.PathPrefix,
 		}
+	case canyoncp.StateStorageTypeAzurerm:
+		typedSsc, _ := ssc.AsAzureRMStorageConfiguration()
+		model.AzureRMConfiguration = &commonRunnerAzureRMStateStorageModel{
+			ResourceGroupName:  typedSsc.ResourceGroupName,
+			StorageAccountName: typedSsc.StorageAccountName,
+			ContainerName:      typedSsc.ContainerName,
+			LookupBlobEndpoint: typedSsc.LookupBlobEndpoint,
+			PathPrefix:         typedSsc.PathPrefix,
+		}
 	default:
 		return model, fmt.Errorf("unsupported state storage type: %s", model.Type)
 	}
@@ -110,6 +119,25 @@ func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Ob
 			Type:       canyoncp.StateStorageTypeGcs,
 			Bucket:     gcsConfig.Bucket,
 			PathPrefix: gcsConfig.PathPrefix,
+		})
+
+	case canyoncp.StateStorageTypeAzurerm:
+		azurermObj, ok := obj.Attributes()["azurerm_configuration"].(types.Object)
+		if !ok || azurermObj.IsNull() {
+			return canyoncp.StateStorageConfiguration{}, fmt.Errorf("azurerm configuration in object is not set")
+		}
+		var azurermConfig commonRunnerAzureRMStateStorageModel
+		diags := azurermObj.As(ctx, &azurermConfig, basetypes.ObjectAsOptions{})
+		if diags.HasError() {
+			return canyoncp.StateStorageConfiguration{}, fmt.Errorf("failed to parse azurerm configuration: %v", diags.Errors())
+		}
+		_ = stateStorageConfiguration.FromAzureRMStorageConfiguration(canyoncp.AzureRMStorageConfiguration{
+			Type:               canyoncp.StateStorageTypeAzurerm,
+			ResourceGroupName:  azurermConfig.ResourceGroupName,
+			StorageAccountName: azurermConfig.StorageAccountName,
+			ContainerName:      azurermConfig.ContainerName,
+			LookupBlobEndpoint: azurermConfig.LookupBlobEndpoint,
+			PathPrefix:         azurermConfig.PathPrefix,
 		})
 
 	default:

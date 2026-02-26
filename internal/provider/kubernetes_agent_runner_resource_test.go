@@ -262,7 +262,6 @@ EOT
       storage_account_name = "sa-test"
       container_name       = "container-test"
 	  path_prefix          = "some/prefix"
-	  lookup_blob_endpoint = true
 	}
   }
 }
@@ -282,7 +281,6 @@ EOT
 								"resource_group_name":  knownvalue.StringExact("rg-test"),
 								"storage_account_name": knownvalue.StringExact("sa-test"),
 								"container_name":       knownvalue.StringExact("container-test"),
-								"lookup_blob_endpoint": knownvalue.Bool(true),
 								"path_prefix":          knownvalue.StringExact("some/prefix"),
 							}),
 							"kubernetes_configuration": knownvalue.Null(),
@@ -316,7 +314,6 @@ EOT
       storage_account_name = "sa-test-updated"
       container_name       = "container-test-updated"
 	  path_prefix          = "some/prefix-updated"
-	  lookup_blob_endpoint = false
 	}
   }
 }
@@ -336,7 +333,6 @@ EOT
 								"resource_group_name":  knownvalue.StringExact("rg-test-updated"),
 								"storage_account_name": knownvalue.StringExact("sa-test-updated"),
 								"container_name":       knownvalue.StringExact("container-test-updated"),
-								"lookup_blob_endpoint": knownvalue.Bool(false),
 								"path_prefix":          knownvalue.StringExact("some/prefix-updated"),
 							}),
 							"kubernetes_configuration": knownvalue.Null(),

@@ -99,7 +99,6 @@ Read-Only:
 Read-Only:
 
 - `container_name` (String) Name of the Azure Storage Container.
-- `lookup_blob_endpoint` (Boolean) Whether to use the lookup blob endpoint.
 - `path_prefix` (String) A prefix path for the state file. The environment uuid will be used as a unique key within this
 - `resource_group_name` (String) Name of the Azure Resource Group.
 - `storage_account_name` (String) Name of the Azure Storage Account.

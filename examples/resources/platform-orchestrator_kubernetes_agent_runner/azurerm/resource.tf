@@ -25,7 +25,6 @@ EOT
       resource_group_name  = "my-resource-group"
       storage_account_name = "my-storage-account"
       container_name       = "my-container"
-      lookup_blob_endpoint = true
       path_prefix          = "state/prefix"
     }
   }

@@ -131,9 +131,6 @@ type AzureRMStorageConfiguration struct {
 	// ContainerName Name of the Azure Storage Container.
 	ContainerName string `json:"container_name"`
 
-	// LookupBlobEndpoint Whether to use the lookup blob endpoint.
-	LookupBlobEndpoint *bool `json:"lookup_blob_endpoint,omitempty"`
-
 	// PathPrefix A prefix path for the state file. The environment uuid will be used as a unique key within this.
 	PathPrefix *string `json:"path_prefix,omitempty"`
 

@@ -3393,10 +3393,6 @@ components:
           pattern: ^[a-zA-Z0-9._-]+(?:\/[a-zA-Z0-9._-]+)*\/?$
           x-pattern-error: state storage path_prefix is not a valid AzureRM path.
           example: path/to/state/directory
-        lookup_blob_endpoint:
-          type: boolean
-          description: Whether to use the lookup blob endpoint.
-          example: true
       required:
         - type
         - storage_account_name

@@ -103,10 +103,6 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 					MarkdownDescription: "Name of the Azure Storage Container.",
 					Required:            true,
 				},
-				"lookup_blob_endpoint": schema.BoolAttribute{
-					MarkdownDescription: "Whether to use the lookup blob endpoint.",
-					Optional:            true,
-				},
 				"path_prefix": schema.StringAttribute{
 					MarkdownDescription: "A prefix path for the state file. The environment uuid will be used as a unique key within this",
 					Optional:            true,

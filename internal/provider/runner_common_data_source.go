@@ -58,7 +58,6 @@ type commonRunnerAzureRMStateStorageModel struct {
 	ResourceGroupName  *string `tfsdk:"resource_group_name"`
 	StorageAccountName string  `tfsdk:"storage_account_name"`
 	ContainerName      string  `tfsdk:"container_name"`
-	LookupBlobEndpoint *bool   `tfsdk:"lookup_blob_endpoint"`
 	PathPrefix         *string `tfsdk:"path_prefix"`
 }
 
@@ -130,10 +129,6 @@ var commonRunnerStateStorageDataSourceSchema = schema.SingleNestedAttribute{
 				},
 				"container_name": schema.StringAttribute{
 					MarkdownDescription: "Name of the Azure Storage Container.",
-					Computed:            true,
-				},
-				"lookup_blob_endpoint": schema.BoolAttribute{
-					MarkdownDescription: "Whether to use the lookup blob endpoint.",
 					Computed:            true,
 				},
 				"path_prefix": schema.StringAttribute{

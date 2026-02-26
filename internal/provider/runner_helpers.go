@@ -56,7 +56,6 @@ func buildCommonStateStorageModel(ssc canyoncp.StateStorageConfiguration) (commo
 			ResourceGroupName:  typedSsc.ResourceGroupName,
 			StorageAccountName: typedSsc.StorageAccountName,
 			ContainerName:      typedSsc.ContainerName,
-			LookupBlobEndpoint: typedSsc.LookupBlobEndpoint,
 			PathPrefix:         typedSsc.PathPrefix,
 		}
 	default:
@@ -136,7 +135,6 @@ func createStateStorageConfigurationFromObject(ctx context.Context, obj types.Ob
 			ResourceGroupName:  azurermConfig.ResourceGroupName,
 			StorageAccountName: azurermConfig.StorageAccountName,
 			ContainerName:      azurermConfig.ContainerName,
-			LookupBlobEndpoint: azurermConfig.LookupBlobEndpoint,
 			PathPrefix:         azurermConfig.PathPrefix,
 		})
 

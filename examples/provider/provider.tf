@@ -1,7 +1,8 @@
 terraform {
   required_providers {
     platform-orchestrator = {
-      source  = "humanitec/platform-orchestrator"
+
+      source  = "platform-orchestrator/platform-orchestrator"
       version = "~> 2.0"
     }
   }

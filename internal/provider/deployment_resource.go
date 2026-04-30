@@ -26,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"gopkg.in/yaml.v3"
 
-	canyondp "terraform-provider-humanitec-v2/internal/clients/canyon-dp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	dp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-dp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 )
 
 var _ resource.Resource = &DeploymentResource{}
@@ -38,7 +38,7 @@ func NewDeploymentResource() resource.Resource {
 }
 
 type DeploymentResource struct {
-	dpClient canyondp.ClientWithResponsesInterface
+	dpClient dp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -105,9 +105,9 @@ func (d *DeploymentResource) Schema(ctx context.Context, request resource.Schema
 				MarkdownDescription: "The mode of the deployment. 'deploy' (the default) or 'plan_only'.",
 				Computed:            true,
 				Optional:            true,
-				Default:             stringdefault.StaticString(string(canyondp.Deploy)),
+				Default:             stringdefault.StaticString(string(dp.Deploy)),
 				Validators: []validator.String{
-					stringvalidator.OneOf(string(canyondp.Deploy), string(canyondp.PlanOnly)),
+					stringvalidator.OneOf(string(dp.Deploy), string(dp.PlanOnly)),
 				},
 			},
 			"id": schema.StringAttribute{
@@ -157,11 +157,11 @@ func (d *DeploymentResource) Configure(ctx context.Context, request resource.Con
 		return
 	}
 
-	providerData, ok := request.ProviderData.(*HumanitecProviderData)
+	providerData, ok := request.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		response.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", request.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", request.ProviderData),
 		)
 		return
 	}
@@ -172,33 +172,33 @@ func (d *DeploymentResource) Configure(ctx context.Context, request resource.Con
 
 func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentResourceModel, diags *diag.Diagnostics) (outputsKey *age.X25519Identity) {
 	if data.Mode.IsNull() {
-		data.Mode = types.StringValue(string(canyondp.Deploy))
+		data.Mode = types.StringValue(string(dp.Deploy))
 	}
 	if data.WaitFor.IsNull() {
 		data.WaitFor = types.BoolValue(true)
 	}
 
-	var manifest canyondp.DeploymentManifest
+	var manifest dp.DeploymentManifest
 	if err := yaml.Unmarshal([]byte(data.Manifest.ValueString()), &manifest); err != nil {
-		diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to parse manifest, got error: %s", err))
+		diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to parse manifest, got error: %s", err))
 		return
 	}
 
 	outputsKey, _ = age.GenerateX25519Identity()
 	if r, err := d.dpClient.CreateDeploymentWithResponse(
-		ctx, d.orgId, &canyondp.CreateDeploymentParams{IdempotencyKey: ref.Ref(uuid.NewString())},
-		canyondp.DeploymentCreateBody{
+		ctx, d.orgId, &dp.CreateDeploymentParams{IdempotencyKey: ref.Ref(uuid.NewString())},
+		dp.DeploymentCreateBody{
 			ProjectId:                 data.ProjectId.ValueString(),
 			EnvId:                     data.EnvId.ValueString(),
 			Manifest:                  &manifest,
-			Mode:                      canyondp.DeploymentCreateBodyMode(data.Mode.ValueString()),
+			Mode:                      dp.DeploymentCreateBodyMode(data.Mode.ValueString()),
 			EncryptedOutputsRecipient: ref.Ref(outputsKey.Recipient().String()),
 		},
 	); err != nil {
-		diags.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create deployment, got error: %s", err))
+		diags.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create deployment, got error: %s", err))
 		return
 	} else if r.StatusCode() != http.StatusCreated {
-		diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create deployment, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
+		diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to create deployment, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
 		return
 	} else {
 		data.Id = types.StringValue(r.JSON201.Id.String())
@@ -223,25 +223,25 @@ func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *Deploy
 
 	deploymentUuid, err := uuid.Parse(data.Id.ValueString())
 	if err != nil {
-		diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to parse deployment ID, got error: %s", err))
+		diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to parse deployment ID, got error: %s", err))
 		return
 	}
 
 	for {
-		if r, err := d.dpClient.WaitForDeploymentCompleteWithResponse(ctx, d.orgId, deploymentUuid, &canyondp.WaitForDeploymentCompleteParams{}); err != nil {
+		if r, err := d.dpClient.WaitForDeploymentCompleteWithResponse(ctx, d.orgId, deploymentUuid, &dp.WaitForDeploymentCompleteParams{}); err != nil {
 			if errors.Is(err, context.DeadlineExceeded) && ctx.Err() == nil {
 				continue
 			}
-			diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
+			diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
 			return
 		} else if r.StatusCode() == http.StatusRequestTimeout {
 			if err := ctx.Err(); err != nil {
-				diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
+				diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, got error: %s", err))
 				return
 			}
 			continue
 		} else if r.StatusCode() != http.StatusOK {
-			diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
+			diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to wait for deployment to complete, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
 			return
 		} else {
 			data.Status = types.StringValue(r.JSON200.Status)
@@ -249,20 +249,20 @@ func (d *DeploymentResource) waitForDeployment(ctx context.Context, data *Deploy
 			data.CompletedAt = types.StringValue(r.JSON200.CompletedAt.Format(time.RFC3339))
 			if data.Status.ValueString() == "succeeded" {
 				if r, err := d.dpClient.GetDeploymentEncryptedOutputsWithResponse(ctx, d.orgId, deploymentUuid); err != nil {
-					diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read deployment outputs, got error: %s", err))
+					diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to read deployment outputs, got error: %s", err))
 				} else if r.StatusCode() != http.StatusOK {
-					diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read deployment outputs, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
+					diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to read deployment outputs, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
 				} else {
 					if decrypted, err := age.Decrypt(base64.NewDecoder(base64.StdEncoding, strings.NewReader(r.JSON200.Raw)), outputsKey); err != nil {
-						diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to decrypt deployment outputs, got error: %s", err))
+						diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to decrypt deployment outputs, got error: %s", err))
 					} else if raw, err := io.ReadAll(decrypted); err != nil {
-						diags.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read deployment outputs, got error: %s", err))
+						diags.AddError(PO_API_ERR, fmt.Sprintf("Unable to read deployment outputs, got error: %s", err))
 					} else {
 						data.Outputs = types.StringValue(string(raw))
 					}
 				}
 			} else {
-				diags.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Deployment failed: %s", data.StatusMessage))
+				diags.AddError(PO_CLIENT_ERR, fmt.Sprintf("Deployment failed: %s", data.StatusMessage))
 			}
 			return
 		}
@@ -296,19 +296,19 @@ func (d *DeploymentResource) Read(ctx context.Context, request resource.ReadRequ
 
 	deploymentUuid, err := uuid.Parse(data.Id.ValueString())
 	if err != nil {
-		response.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to parse deployment ID, got error: %s", err))
+		response.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to parse deployment ID, got error: %s", err))
 		return
 	}
 
 	if r, err := d.dpClient.GetDeploymentWithResponse(ctx, d.orgId, deploymentUuid); err != nil {
-		response.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read deployment, got error: %s", err))
+		response.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read deployment, got error: %s", err))
 		return
 	} else if r.StatusCode() == http.StatusNotFound {
-		response.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Deployment with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		response.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Deployment with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 		response.State.RemoveResource(ctx)
 		return
 	} else if r.StatusCode() != http.StatusOK {
-		response.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read deployment, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
+		response.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read deployment, unexpected status code: %d, body: %s", r.StatusCode(), r.Body))
 		return
 	} else {
 		// Just refresh the status/status_message/completed_at fields.

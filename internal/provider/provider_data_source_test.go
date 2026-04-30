@@ -50,7 +50,7 @@ func TestAccProviderDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.platform-orchestrator_provider.test",
 						tfjsonpath.New("configuration"),
-						knownvalue.StringExact(`{"assume_role":{"role_arn":"arn:aws:iam::123456789012:role/HumanitecRole"},"region":"us-east-1"}`),
+						knownvalue.StringExact(`{"assume_role":{"role_arn":"arn:aws:iam::123456789012:role/PlatformOrchestratorRole"},"region":"us-east-1"}`),
 					),
 				},
 			},
@@ -117,7 +117,7 @@ resource "platform-orchestrator_provider" "test" {
   configuration = jsonencode({
     region = "us-east-1"
     assume_role = {
-      role_arn = "arn:aws:iam::123456789012:role/HumanitecRole"
+      role_arn = "arn:aws:iam::123456789012:role/PlatformOrchestratorRole"
     }
   })
 }

@@ -19,7 +19,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "example" {
 
   runner_configuration = {
     auth = {
-      role_arn = "arn:aws:iam::123456789012:role/humanitec_role"
+      role_arn = "arn:aws:iam::123456789012:role/platform_orchestrator_role"
     }
     job = {
       region             = "eu-central-1"
@@ -45,7 +45,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "example" {
   state_storage_configuration = {
     type = "s3"
     s3_configuration = {
-      bucket      = "humanitec-ecs-runner-state"
+      bucket      = "platform-orchestrator-ecs-runner-state"
       path_prefix = "state-files"
     }
   }
@@ -99,7 +99,7 @@ Required:
 Optional:
 
 - `environment` (Map of String) The plain-text environment variables to set for the ECS Task.
-- `image` (String) The container image to use for the ECS Task. If not provided, a default humanitec-runner image will be used.
+- `image` (String) The container image to use for the ECS Task. If not provided, a default platform-orchestrator-runner image will be used.
 - `is_public_ip_enabled` (Boolean) Whether to provision a public IP for the ECS Task.
 - `secrets` (Map of String) The secrets to set for the Runner. The values must be Secrets Manager ARNs or Parameter Store ARNs.
 - `security_groups` (List of String) The list of subnets to use for the Runner.

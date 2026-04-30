@@ -21,7 +21,7 @@ func TestAccKubernetesAgentRunnerResource(t *testing.T) {
 			{
 				Config: testAccKubernetesAgentRunnerResource(runnerId, `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
------END PUBLIC KEY-----`, "humanitec-runner"),
+-----END PUBLIC KEY-----`, "platform-orchestrator-runner"),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_kubernetes_agent_runner.test",
@@ -43,8 +43,8 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 `),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
-								"service_account": knownvalue.StringExact("humanitec-runner"),
-								"pod_template":    knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"humanitec-runner"}}}`),
+								"service_account": knownvalue.StringExact("platform-orchestrator-runner"),
+								"pod_template":    knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"platform-orchestrator-runner"}}}`),
 							}),
 						}),
 					),
@@ -54,7 +54,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("humanitec-runner"),
+								"namespace": knownvalue.StringExact("platform-orchestrator-runner"),
 							}),
 							"s3_configuration":      knownvalue.Null(),
 							"gcs_configuration":     knownvalue.Null(),
@@ -84,7 +84,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 `),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
-								"service_account": knownvalue.StringExact("humanitec-runner"),
+								"service_account": knownvalue.StringExact("platform-orchestrator-runner"),
 								"pod_template":    knownvalue.StringExact("{}"),
 							}),
 						}),
@@ -124,11 +124,11 @@ resource "platform-orchestrator_kubernetes_agent_runner" "test" {
 EOT
 	job = {
 		namespace = "default"
-		service_account = "humanitec-runner"
+		service_account = "platform-orchestrator-runner"
 		pod_template = jsonencode({
 			metadata = {
 				labels = {
-					"app.kubernetes.io/name" = "humanitec-runner"
+					"app.kubernetes.io/name" = "platform-orchestrator-runner"
 				}
 			}
 		})
@@ -154,7 +154,7 @@ resource "platform-orchestrator_kubernetes_agent_runner" "test" {
 EOT
 	job = {
 	  namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
 	  pod_template = "{}"
 	}
   }
@@ -187,7 +187,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 EOT
 	job = {
 	  namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
 	  pod_template = "{}"
 	}
   }
@@ -251,7 +251,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 EOT
 	job = {
 	  namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
 	  pod_template = "{}"
 	}
   }
@@ -303,7 +303,7 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpeg0=
 EOT
 	job = {
 	  namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
 	  pod_template = "{}"
 	}
   }

@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -32,7 +32,7 @@ func NewProviderResource() resource.Resource {
 
 // ProviderResource defines the resource implementation.
 type ProviderResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -128,11 +128,11 @@ func (r *ProviderResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -159,7 +159,7 @@ func (r *ProviderResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
-	httpResp, err := r.cpClient.CreateModuleProviderWithResponse(ctx, r.orgId, canyoncp.CreateModuleProviderJSONRequestBody{
+	httpResp, err := r.cpClient.CreateModuleProviderWithResponse(ctx, r.orgId, cp.CreateModuleProviderJSONRequestBody{
 		Id:                data.Id.ValueString(),
 		Description:       ref.RefStringEmptyNil(data.Description.ValueString()),
 		ProviderType:      data.ProviderType.ValueString(),
@@ -168,12 +168,12 @@ func (r *ProviderResource) Create(ctx context.Context, req resource.CreateReques
 		Configuration:     configuration,
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create provider, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create provider, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 201 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to create provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -193,18 +193,18 @@ func (r *ProviderResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	httpResp, err := r.cpClient.GetModuleProviderWithResponse(ctx, r.orgId, data.ProviderType.ValueString(), data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read module provider, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read module provider, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module provider with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module provider with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read module provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read module provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -231,7 +231,7 @@ func (r *ProviderResource) Update(ctx context.Context, req resource.UpdateReques
 
 	id := state.Id.ValueString()
 	providerType := state.ProviderType.ValueString()
-	var updateBody = canyoncp.UpdateModuleProviderJSONRequestBody{
+	var updateBody = cp.UpdateModuleProviderJSONRequestBody{
 		Description:       ref.RefStringEmptyNil(data.Description.ValueString()),
 		VersionConstraint: ref.RefStringEmptyNil(data.VersionConstraint.ValueString()),
 		Configuration:     ref.Ref(configuration),
@@ -239,12 +239,12 @@ func (r *ProviderResource) Update(ctx context.Context, req resource.UpdateReques
 
 	httpResp, err := r.cpClient.UpdateModuleProviderWithResponse(ctx, r.orgId, providerType, id, updateBody)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update module provider, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to update module provider, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to update module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -263,7 +263,7 @@ func (r *ProviderResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	httpResp, err := r.cpClient.DeleteModuleProviderWithResponse(ctx, r.orgId, data.ProviderType.ValueString(), data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete module provider, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to delete module provider, got error: %s", err))
 		return
 	}
 
@@ -272,9 +272,9 @@ func (r *ProviderResource) Delete(ctx context.Context, req resource.DeleteReques
 		// Successfully deleted, no further action needed.
 	case 404:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module provider with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module provider with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete module provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete module provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -305,7 +305,7 @@ func (r *ProviderResource) ImportState(ctx context.Context, req resource.ImportS
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idValue)...)
 }
 
-func toProviderResourceModel(item canyoncp.ModuleProvider) ProviderResourceModel {
+func toProviderResourceModel(item cp.ModuleProvider) ProviderResourceModel {
 	var configuration jsontypes.Normalized
 	if item.Configuration != nil {
 		configJson, _ := json.Marshal(item.Configuration)

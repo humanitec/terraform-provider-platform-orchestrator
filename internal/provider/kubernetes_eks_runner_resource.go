@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
 )
 
 func NewKubernetesEksRunnerResource() resource.Resource {
@@ -187,7 +187,7 @@ func KubernetesEksRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	}
 }
 
-func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRunnerConfiguration canyoncp.K8sEksRunnerConfiguration) (basetypes.ObjectValue, error) {
+func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRunnerConfiguration cp.K8sEksRunnerConfiguration) (basetypes.ObjectValue, error) {
 	runnerConfig := KubernetesEksRunnerConfiguration{
 		Cluster: KubernetesEksRunnerCluster{
 			Name:   types.StringValue(k8sEksRunnerConfiguration.Cluster.Name),
@@ -218,7 +218,7 @@ func parseKubernetesEksRunnerConfigurationResponse(ctx context.Context, k8sEksRu
 	return objectValue, nil
 }
 
-func toKubernetesEksRunnerResourceModel(item canyoncp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
+func toKubernetesEksRunnerResourceModel(item cp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sEksRunnerConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesEksRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration)
@@ -239,32 +239,32 @@ func toKubernetesEksRunnerResourceModel(item canyoncp.Runner, _ commonRunnerMode
 	}, nil
 }
 
-func createKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
+func createKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (cp.RunnerConfiguration, error) {
 	var runnerConfig KubernetesEksRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
-		return canyoncp.RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
+		return cp.RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
 	}
 
 	var jobPodTemplate *map[string]interface{}
 	if runnerConfig.Job.PodTemplate.ValueString() != "" {
 		if err := json.Unmarshal([]byte(runnerConfig.Job.PodTemplate.ValueString()), &jobPodTemplate); err != nil {
-			return canyoncp.RunnerConfiguration{}, fmt.Errorf("failed to parse pod template from model: %v", err)
+			return cp.RunnerConfiguration{}, fmt.Errorf("failed to parse pod template from model: %v", err)
 		}
 	}
 
-	var runnerConfiguration = new(canyoncp.RunnerConfiguration)
-	_ = runnerConfiguration.FromK8sEksRunnerConfiguration(canyoncp.K8sEksRunnerConfiguration{
-		Cluster: canyoncp.K8sRunnerEksCluster{
+	var runnerConfiguration = new(cp.RunnerConfiguration)
+	_ = runnerConfiguration.FromK8sEksRunnerConfiguration(cp.K8sEksRunnerConfiguration{
+		Cluster: cp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.AwsTemporaryAuth{
+			Auth: cp.AwsTemporaryAuth{
 				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
 				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
 				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),
 			},
 		},
-		Job: canyoncp.K8sRunnerJobConfig{
+		Job: cp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),
 			PodTemplate:    jobPodTemplate,
@@ -273,32 +273,32 @@ func createKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj t
 	return *runnerConfiguration, nil
 }
 
-func updateKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
+func updateKubernetesEksRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (cp.RunnerConfigurationUpdate, error) {
 	var runnerConfig KubernetesEksRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
-		return canyoncp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
+		return cp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
 	}
 
 	var jobPodTemplate *map[string]interface{}
 	if runnerConfig.Job.PodTemplate.ValueString() != "" {
 		if err := json.Unmarshal([]byte(runnerConfig.Job.PodTemplate.ValueString()), &jobPodTemplate); err != nil {
-			return canyoncp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse pod template from model: %v", err)
+			return cp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse pod template from model: %v", err)
 		}
 	}
 
-	var updateRunnerConfiguration = new(canyoncp.RunnerConfigurationUpdate)
-	_ = updateRunnerConfiguration.FromK8sEksRunnerConfigurationUpdateBody(canyoncp.K8sEksRunnerConfigurationUpdateBody{
-		Cluster: &canyoncp.K8sRunnerEksCluster{
+	var updateRunnerConfiguration = new(cp.RunnerConfigurationUpdate)
+	_ = updateRunnerConfiguration.FromK8sEksRunnerConfigurationUpdateBody(cp.K8sEksRunnerConfigurationUpdateBody{
+		Cluster: &cp.K8sRunnerEksCluster{
 			Name:   runnerConfig.Cluster.Name.ValueString(),
 			Region: runnerConfig.Cluster.Region.ValueString(),
-			Auth: canyoncp.AwsTemporaryAuth{
+			Auth: cp.AwsTemporaryAuth{
 				RoleArn:     runnerConfig.Cluster.Auth.RoleArn.ValueString(),
 				SessionName: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.SessionName),
 				StsRegion:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.StsRegion),
 			},
 		},
-		Job: &canyoncp.K8sRunnerJobConfig{
+		Job: &cp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),
 			PodTemplate:    jobPodTemplate,

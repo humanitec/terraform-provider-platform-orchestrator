@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"gopkg.in/yaml.v3"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	canyondp "terraform-provider-humanitec-v2/internal/clients/canyon-dp"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	dp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-dp"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -29,72 +29,73 @@ import (
 )
 
 const (
-	HUM_CLIENT_ERR             = "Humanitec client error"
-	HUM_API_ERR                = "Humanitec API error"
-	HUM_PROVIDER_ERR           = "Provider error"
-	HUM_INPUT_ERR              = "Input error"
-	HUM_RESOURCE_NOT_FOUND_ERR = "Resource not found error"
+	PO_CLIENT_ERR             = "Platform orchestrator client error"
+	PO_API_ERR                = "Platform orchestrator API error"
+	PO_PROVIDER_ERR           = "Provider error"
+	PO_INPUT_ERR              = "Input error"
+	PO_RESOURCE_NOT_FOUND_ERR = "Resource not found error"
 
-	HUM_API_URL_ENV_VAR    = "HUMANITEC_API_URL"
-	HUM_ORG_ID_ENV_VAR     = "HUMANITEC_ORG_ID"
-	HUM_AUTH_TOKEN_ENV_VAR = "HUMANITEC_AUTH_TOKEN"
+	PO_API_URL_ENV_VAR    = "PO_API_URL"
+	PO_ORG_ID_ENV_VAR     = "PO_ORG_ID"
+	PO_AUTH_TOKEN_ENV_VAR = "PO_AUTH_TOKEN"
 
-	HUM_DEFAULT_API_URL = "https://api.humanitec.dev"
+	// FIXME: Update the default API URL to match the new domain
+	PO_DEFAULT_API_URL = "[Default api url]"
 
 	DefaultAsyncPollInterval = time.Second * 3
 	DefaultAsyncTimeout      = time.Minute * 20
 )
 
-// Ensure HumanitecProvider satisfies various provider interfaces.
-var _ provider.Provider = &HumanitecProvider{}
-var _ provider.ProviderWithFunctions = &HumanitecProvider{}
-var _ provider.ProviderWithEphemeralResources = &HumanitecProvider{}
+// Ensure PlatformOrchestratorProvider satisfies various provider interfaces.
+var _ provider.Provider = &PlatformOrchestratorProvider{}
+var _ provider.ProviderWithFunctions = &PlatformOrchestratorProvider{}
+var _ provider.ProviderWithEphemeralResources = &PlatformOrchestratorProvider{}
 
-// HumanitecProvider defines the provider implementation.
-type HumanitecProvider struct {
+// PlatformOrchestratorProvider defines the provider implementation.
+type PlatformOrchestratorProvider struct {
 	// version is set to the provider version on release, "dev" when the
 	// provider is built and ran locally, and "test" when running acceptance
 	// testing.
 	version string
 }
 
-// HumanitecProvider describes the provider data model.
-type HumanitecProviderModel struct {
+// PlatformOrchestratorProviderModel describes the provider data model.
+type PlatformOrchestratorProviderModel struct {
 	ConfigFilePath types.String `tfsdk:"hctl_config_file"`
 	ApiUrl         types.String `tfsdk:"api_url"`
 	OrgId          types.String `tfsdk:"org_id"`
 	AuthToken      types.String `tfsdk:"auth_token"`
 }
 
-type HumanitecProviderData struct {
+type PlatformOrchestratorProviderData struct {
 	OrgId string
 
-	CpClient canyoncp.ClientWithResponsesInterface
-	DpClient canyondp.ClientWithResponsesInterface
+	CpClient cp.ClientWithResponsesInterface
+	DpClient dp.ClientWithResponsesInterface
 }
 
-func (p *HumanitecProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *PlatformOrchestratorProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "platform-orchestrator"
 	resp.Version = p.version
 }
 
-func (p *HumanitecProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (p *PlatformOrchestratorProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"hctl_config_file": schema.StringAttribute{
-				MarkdownDescription: "Path to the hctl config file path. Takes precedences over the HUMANITEC_ environment variables.",
+				MarkdownDescription: "Path to the hctl config file path. Takes precedences over the PO_ environment variables.",
 				Optional:            true,
 			},
 			"api_url": schema.StringAttribute{
-				MarkdownDescription: "Humanitec API URL prefix. Takes precedence over the contents of hctl_config_file but overridden by the HUMANITEC_API_PREFIX environment variable.",
+				MarkdownDescription: "Platform Orchestrator API URL prefix. Takes precedence over the contents of hctl_config_file but overridden by the PO_API_URL environment variable.",
 				Optional:            true,
 			},
 			"org_id": schema.StringAttribute{
-				MarkdownDescription: "Humanitec Organization ID. Takes precedence over the contents of hctl_config_file but overridden by the HUMANITEC_ORG environment variable.",
+				MarkdownDescription: "Platform Orchestrator Organization ID. Takes precedence over the contents of hctl_config_file but overridden by the PO_ORG_ID environment variable.",
 				Optional:            true,
 			},
 			"auth_token": schema.StringAttribute{
-				MarkdownDescription: "Humanitec Auth Token. Takes precedence over the contents of hctl_config_file but overridden by the HUMANITEC_AUTH_TOKEN environment variable.",
+				MarkdownDescription: "Platform Orchestrator Auth Token. Takes precedence over the contents of hctl_config_file but overridden by the PO_AUTH_TOKEN environment variable.",
 				Sensitive:           true,
 				Optional:            true,
 			},
@@ -138,7 +139,7 @@ func getConfigFilePath() (string, error) {
 	return "", fmt.Errorf("failed to find hctl config file path: neither %s nor %s exists", cfgDirPath, homeDirPath)
 }
 
-func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnostics *diag.Diagnostics) (string, string, string) {
+func loadClientConfig(ctx context.Context, data PlatformOrchestratorProviderModel, diagnostics *diag.Diagnostics) (string, string, string) {
 	apiUrl := data.ApiUrl.ValueString()
 	orgId := data.OrgId.ValueString()
 	authToken := data.AuthToken.ValueString()
@@ -146,7 +147,7 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 	// the config file counts as hard coded if set specifically
 	if p := data.ConfigFilePath.ValueString(); p != "" {
 		if cfg, err := readConfigFile(p); err != nil {
-			diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+			diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
 		} else {
 			if apiUrl == "" && cfg.ApiUrl != "" {
 				tflog.Debug(ctx, "using platform-orchestrator api url from explicit hctl config file", map[string]interface{}{"path": p})
@@ -164,15 +165,15 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 	}
 
 	// SECOND - we fall back to environment variables
-	if v := os.Getenv(HUM_API_URL_ENV_VAR); apiUrl == "" && v != "" {
+	if v := os.Getenv(PO_API_URL_ENV_VAR); apiUrl == "" && v != "" {
 		tflog.Debug(ctx, "using platform-orchestrator api url from environment variable")
 		apiUrl = v
 	}
-	if v := os.Getenv(HUM_ORG_ID_ENV_VAR); orgId == "" && v != "" {
+	if v := os.Getenv(PO_ORG_ID_ENV_VAR); orgId == "" && v != "" {
 		tflog.Debug(ctx, "using platform-orchestrator org id from environment variable")
 		orgId = v
 	}
-	if v := os.Getenv(HUM_AUTH_TOKEN_ENV_VAR); authToken == "" && v != "" {
+	if v := os.Getenv(PO_AUTH_TOKEN_ENV_VAR); authToken == "" && v != "" {
 		tflog.Debug(ctx, "using platform-orchestrator auth token from environment variable")
 		authToken = v
 	}
@@ -182,7 +183,7 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 		if p, err := getConfigFilePath(); err != nil {
 			tflog.Debug(ctx, "skipping implicit hctl config file load: "+err.Error())
 		} else if cfg, err := readConfigFile(p); err != nil {
-			diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
+			diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to read config file '%s': %s", p, err))
 		} else {
 			if apiUrl == "" && cfg.ApiUrl != "" {
 				tflog.Debug(ctx, "using platform-orchestrator api url from implicit hctl config file", map[string]interface{}{"path": p})
@@ -201,14 +202,14 @@ func loadClientConfig(ctx context.Context, data HumanitecProviderModel, diagnost
 
 	if apiUrl == "" {
 		tflog.Debug(ctx, "using default platform-orchestrator api url")
-		apiUrl = HUM_DEFAULT_API_URL
+		apiUrl = PO_DEFAULT_API_URL
 	}
 
 	return apiUrl, orgId, authToken
 }
 
-func (p *HumanitecProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var data HumanitecProviderModel
+func (p *PlatformOrchestratorProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	var data PlatformOrchestratorProviderModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -220,16 +221,16 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 
 	if orgId == "" {
 		resp.Diagnostics.AddError(
-			HUM_INPUT_ERR,
+			PO_INPUT_ERR,
 			"While configuring the provider, the Org ID was not found in "+
-				"the HUMANITEC_ORG_ID environment variable or provider "+
+				"the PO_ORG_ID environment variable or provider "+
 				"configuration block org_id attribute.",
 		)
 	}
 
 	u, err := url.Parse(apiUrl)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_INPUT_ERR, fmt.Sprintf("Unable to parse API URL: %s", err))
+		resp.Diagnostics.AddError(PO_INPUT_ERR, fmt.Sprintf("Unable to parse API URL: %s", err))
 		return
 	}
 
@@ -241,9 +242,9 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 		extraHeaders.Set("From", uuid.Nil.String())
 	} else {
 		resp.Diagnostics.AddError(
-			HUM_INPUT_ERR,
+			PO_INPUT_ERR,
 			"While configuring the provider, the Auth token was not found in "+
-				"the HUMANITEC_AUTH_TOKEN environment variable or provider "+
+				"the PO_AUTH_TOKEN environment variable or provider "+
 				"configuration block auth_token attribute.",
 		)
 	}
@@ -263,19 +264,19 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 		Timeout:   30 * time.Second,
 	}
 
-	cpc, err := canyoncp.NewClientWithResponses(apiUrl, canyoncp.WithRequestEditorFn(extraHeadersEditor), canyoncp.WithHTTPClient(client))
+	cpc, err := cp.NewClientWithResponses(apiUrl, cp.WithRequestEditorFn(extraHeadersEditor), cp.WithHTTPClient(client))
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create Canyon CP client: %s", err.Error()))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create Platform Orchestrator CP client: %s", err.Error()))
 		return
 	}
 
-	dpc, err := canyondp.NewClientWithResponses(apiUrl, canyondp.WithRequestEditorFn(extraHeadersEditor), canyondp.WithHTTPClient(client))
+	dpc, err := dp.NewClientWithResponses(apiUrl, dp.WithRequestEditorFn(extraHeadersEditor), dp.WithHTTPClient(client))
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create Canyon DP client: %s", err.Error()))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create Platform Orchestrator DP client: %s", err.Error()))
 		return
 	}
 
-	respData := &HumanitecProviderData{
+	respData := &PlatformOrchestratorProviderData{
 		OrgId:    orgId,
 		CpClient: cpc,
 		DpClient: dpc,
@@ -285,7 +286,7 @@ func (p *HumanitecProvider) Configure(ctx context.Context, req provider.Configur
 	resp.ResourceData = respData
 }
 
-func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Resource {
+func (p *PlatformOrchestratorProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewProjectResource,
 		NewEnvironmentTypeResource,
@@ -304,11 +305,11 @@ func (p *HumanitecProvider) Resources(ctx context.Context) []func() resource.Res
 	}
 }
 
-func (p *HumanitecProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+func (p *PlatformOrchestratorProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
 	return []func() ephemeral.EphemeralResource{}
 }
 
-func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+func (p *PlatformOrchestratorProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewProjectDataSource,
 		NewProjectsDataSource,
@@ -327,13 +328,13 @@ func (p *HumanitecProvider) DataSources(ctx context.Context) []func() datasource
 	}
 }
 
-func (p *HumanitecProvider) Functions(ctx context.Context) []func() function.Function {
+func (p *PlatformOrchestratorProvider) Functions(ctx context.Context) []func() function.Function {
 	return []func() function.Function{}
 }
 
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
-		return &HumanitecProvider{
+		return &PlatformOrchestratorProvider{
 			version: version,
 		}
 	}

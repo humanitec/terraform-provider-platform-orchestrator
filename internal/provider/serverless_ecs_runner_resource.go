@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 )
 
 var ecsRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
@@ -31,7 +31,7 @@ var ecsRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 			MarkdownDescription: "The type of state storage configuration for the Runner.",
 			Required:            true,
 			Validators: []validator.String{
-				stringvalidator.OneOf(string(canyoncp.StateStorageTypeS3)),
+				stringvalidator.OneOf(string(cp.StateStorageTypeS3)),
 			},
 		},
 		"s3_configuration": schema.SingleNestedAttribute{
@@ -145,7 +145,7 @@ var ecsRunnerConfigurationResourceSchema = schema.SingleNestedAttribute{
 					Validators:          []validator.String{stringvalidator.RegexMatches(regexp.MustCompile(`^arn:aws:iam::\d{12}:role/[a-zA-Z_0-9+=,.@\-_/]+$`), "must be a valid IAM role ARN")},
 				},
 				"image": schema.StringAttribute{
-					MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default humanitec-runner image will be used.",
+					MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default platform-orchestrator-runner image will be used.",
 					Optional:            true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),
@@ -223,11 +223,11 @@ type ecsRunnerStateStorageModel struct {
 	S3Configuration *commonRunnerS3StateStorageModel `tfsdk:"s3_configuration"`
 }
 
-func buildEcsStateStorageModel(ssc canyoncp.StateStorageConfiguration) (ecsRunnerStateStorageModel, error) {
+func buildEcsStateStorageModel(ssc cp.StateStorageConfiguration) (ecsRunnerStateStorageModel, error) {
 	var model ecsRunnerStateStorageModel
 	model.Type, _ = ssc.Discriminator()
-	switch canyoncp.StateStorageType(model.Type) {
-	case canyoncp.StateStorageTypeS3:
+	switch cp.StateStorageType(model.Type) {
+	case cp.StateStorageTypeS3:
 		typedSsc, _ := ssc.AsS3StorageConfiguration()
 		model.S3Configuration = &commonRunnerS3StateStorageModel{
 			Bucket:     typedSsc.Bucket,
@@ -257,7 +257,7 @@ type ServerlessEcsRunnerJob struct {
 	Secrets           types.Map    `tfsdk:"secrets"`
 }
 
-func convertEcsRunnerApiIntoModel(item canyoncp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
+func convertEcsRunnerApiIntoModel(item cp.Runner, _ commonRunnerModel) (commonRunnerModel, error) {
 	typedSsc, _ := item.RunnerConfiguration.AsServerlessEcsRunnerConfiguration()
 
 	runnerConfigurationModel, err := convertEcsRunnerApiConfigIntoObject(context.Background(), typedSsc)
@@ -278,7 +278,7 @@ func convertEcsRunnerApiIntoModel(item canyoncp.Runner, _ commonRunnerModel) (co
 	}, nil
 }
 
-func convertEcsRunnerApiConfigIntoObject(ctx context.Context, typedSsc canyoncp.ServerlessEcsRunnerConfiguration) (basetypes.ObjectValue, error) {
+func convertEcsRunnerApiConfigIntoObject(ctx context.Context, typedSsc cp.ServerlessEcsRunnerConfiguration) (basetypes.ObjectValue, error) {
 	runnerConfig := ServerlessEcsRunnerConfiguration{
 		Auth: KubernetesEksRunnerClusterAuth{
 			RoleArn:     types.StringValue(typedSsc.Auth.RoleArn),
@@ -300,7 +300,7 @@ func convertEcsRunnerApiConfigIntoObject(ctx context.Context, typedSsc canyoncp.
 	return objectValue, nil
 }
 
-func convertEcsRunnerApiJobIntoModel(j canyoncp.ServerlessEcsRunnerJob) ServerlessEcsRunnerJob {
+func convertEcsRunnerApiJobIntoModel(j cp.ServerlessEcsRunnerJob) ServerlessEcsRunnerJob {
 	return ServerlessEcsRunnerJob{
 		Region:  types.StringValue(j.Region),
 		Cluster: types.StringValue(j.Cluster),
@@ -338,15 +338,15 @@ func convertEcsRunnerApiJobIntoModel(j canyoncp.ServerlessEcsRunnerJob) Serverle
 	}
 }
 
-func convertEcsRunnerModelIntoRunnerConfigCreate(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
+func convertEcsRunnerModelIntoRunnerConfigCreate(ctx context.Context, obj types.Object) (cp.RunnerConfiguration, error) {
 	var runnerConfig ServerlessEcsRunnerConfiguration
 	if diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{}); diags.HasError() {
-		return canyoncp.RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
+		return cp.RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
 	}
 
-	var runnerConfiguration = new(canyoncp.RunnerConfiguration)
-	_ = runnerConfiguration.FromServerlessEcsRunnerConfiguration(canyoncp.ServerlessEcsRunnerConfiguration{
-		Auth: canyoncp.AwsTemporaryAuth{
+	var runnerConfiguration = new(cp.RunnerConfiguration)
+	_ = runnerConfiguration.FromServerlessEcsRunnerConfiguration(cp.ServerlessEcsRunnerConfiguration{
+		Auth: cp.AwsTemporaryAuth{
 			RoleArn:     runnerConfig.Auth.RoleArn.ValueString(),
 			SessionName: fromStringValueToStringPointer(runnerConfig.Auth.SessionName),
 			StsRegion:   fromStringValueToStringPointer(runnerConfig.Auth.StsRegion),
@@ -356,15 +356,15 @@ func convertEcsRunnerModelIntoRunnerConfigCreate(ctx context.Context, obj types.
 	return *runnerConfiguration, nil
 }
 
-func convertEcsRunnerModelIntoRunnerConfigUpdate(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
+func convertEcsRunnerModelIntoRunnerConfigUpdate(ctx context.Context, obj types.Object) (cp.RunnerConfigurationUpdate, error) {
 	var runnerConfig ServerlessEcsRunnerConfiguration
 	if diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{}); diags.HasError() {
-		return canyoncp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
+		return cp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
 	}
 
-	var updateRunnerConfiguration = new(canyoncp.RunnerConfigurationUpdate)
-	_ = updateRunnerConfiguration.FromServerlessEcsRunnerConfigurationUpdateBody(canyoncp.ServerlessEcsRunnerConfigurationUpdateBody{
-		Auth: &canyoncp.AwsTemporaryAuth{
+	var updateRunnerConfiguration = new(cp.RunnerConfigurationUpdate)
+	_ = updateRunnerConfiguration.FromServerlessEcsRunnerConfigurationUpdateBody(cp.ServerlessEcsRunnerConfigurationUpdateBody{
+		Auth: &cp.AwsTemporaryAuth{
 			RoleArn:     runnerConfig.Auth.RoleArn.ValueString(),
 			SessionName: fromStringValueToStringPointer(runnerConfig.Auth.SessionName),
 			StsRegion:   fromStringValueToStringPointer(runnerConfig.Auth.StsRegion),
@@ -374,7 +374,7 @@ func convertEcsRunnerModelIntoRunnerConfigUpdate(ctx context.Context, obj types.
 	return *updateRunnerConfiguration, nil
 }
 
-func convertEcsRunnerJobModelIntoApi(j ServerlessEcsRunnerJob) canyoncp.ServerlessEcsRunnerJob {
+func convertEcsRunnerJobModelIntoApi(j ServerlessEcsRunnerJob) cp.ServerlessEcsRunnerJob {
 	// helper function to convert known types
 	stringify := func(a attr.Value) string {
 		if s, ok := a.(types.String); ok {
@@ -382,7 +382,7 @@ func convertEcsRunnerJobModelIntoApi(j ServerlessEcsRunnerJob) canyoncp.Serverle
 		}
 		return ""
 	}
-	result := canyoncp.ServerlessEcsRunnerJob{
+	result := cp.ServerlessEcsRunnerJob{
 		Region:  j.Region.ValueString(),
 		Cluster: j.Cluster.ValueString(),
 		Subnets: slices.Collect(func(yield func(string) bool) {

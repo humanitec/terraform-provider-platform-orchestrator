@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"time"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -29,7 +29,7 @@ func NewProjectResource() resource.Resource {
 }
 
 type ProjectResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -111,11 +111,11 @@ func (r *ProjectResource) Configure(ctx context.Context, req resource.ConfigureR
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -139,17 +139,17 @@ func (r *ProjectResource) Create(ctx context.Context, req resource.CreateRequest
 		displayName = &v
 	}
 
-	httpResp, err := r.cpClient.CreateProjectWithResponse(ctx, r.orgId, canyoncp.CreateProjectJSONRequestBody{
+	httpResp, err := r.cpClient.CreateProjectWithResponse(ctx, r.orgId, cp.CreateProjectJSONRequestBody{
 		Id:          data.Id.ValueString(),
 		DisplayName: displayName,
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create project, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create project, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 201 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to create project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -171,18 +171,18 @@ func (r *ProjectResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	httpResp, err := r.cpClient.GetProjectWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read project, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read project, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Project with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Project with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -201,16 +201,16 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	httpResp, err := r.cpClient.UpdateProjectWithResponse(ctx, r.orgId, data.Id.ValueString(), canyoncp.UpdateProjectJSONRequestBody{
+	httpResp, err := r.cpClient.UpdateProjectWithResponse(ctx, r.orgId, data.Id.ValueString(), cp.UpdateProjectJSONRequestBody{
 		DisplayName: data.DisplayName.ValueString(),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update project got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to update project got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to update project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -233,11 +233,11 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 		deleteRules = &v
 	}
 
-	httpResp, err := r.cpClient.DeleteProjectWithResponse(ctx, r.orgId, data.Id.ValueString(), &canyoncp.DeleteProjectParams{
+	httpResp, err := r.cpClient.DeleteProjectWithResponse(ctx, r.orgId, data.Id.ValueString(), &cp.DeleteProjectParams{
 		DeleteRules: deleteRules,
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete project, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to delete project, got error: %s", err))
 		return
 	}
 
@@ -246,9 +246,9 @@ func (r *ProjectResource) Delete(ctx context.Context, req resource.DeleteRequest
 		// Successfully deleted, no further action needed.
 	case 404:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Project with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Project with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete project, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -259,7 +259,7 @@ func (r *ProjectResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func toProjectModel(previous ProjectModel, item canyoncp.Project) ProjectModel {
+func toProjectModel(previous ProjectModel, item cp.Project) ProjectModel {
 	deleteRules := previous.DeleteRules
 	if deleteRules.IsNull() {
 		deleteRules = types.BoolValue(false)

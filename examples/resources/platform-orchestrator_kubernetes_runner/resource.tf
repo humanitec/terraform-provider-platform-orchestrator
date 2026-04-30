@@ -13,11 +13,11 @@ resource "platform-orchestrator_kubernetes_runner" "my_runner" {
     }
     job = {
       namespace       = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
       pod_template = jsonencode({
         metadata = {
           labels = {
-            "app.kubernetes.io/name" = "humanitec-runner"
+            "app.kubernetes.io/name" = "platform-orchestrator-runner"
           }
         }
       })
@@ -26,7 +26,7 @@ resource "platform-orchestrator_kubernetes_runner" "my_runner" {
   state_storage_configuration = {
     type = "kubernetes"
     kubernetes_configuration = {
-      namespace = "humanitec"
+      namespace = "platform-orchestrator"
     }
   }
 }

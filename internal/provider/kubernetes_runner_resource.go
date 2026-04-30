@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
 )
 
 func NewKubernetesRunnerResource() resource.Resource {
@@ -191,7 +191,7 @@ func KubernetesRunnerConfigurationAttributeTypes() map[string]attr.Type {
 	}
 }
 
-func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration canyoncp.K8sRunnerConfiguration, data *commonRunnerModel) (basetypes.ObjectValue, error) {
+func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerConfiguration cp.K8sRunnerConfiguration, data *commonRunnerModel) (basetypes.ObjectValue, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	if data.RunnerConfiguration.IsUnknown() || data.RunnerConfiguration.IsNull() {
 		runnerConfig = KubernetesRunnerConfiguration{}
@@ -249,7 +249,7 @@ func parseKubernetesRunnerConfigurationResponse(ctx context.Context, k8sRunnerCo
 	return objectValue, nil
 }
 
-func toKubernetesRunnerResourceModel(item canyoncp.Runner, data commonRunnerModel) (commonRunnerModel, error) {
+func toKubernetesRunnerResourceModel(item cp.Runner, data commonRunnerModel) (commonRunnerModel, error) {
 	k8sRunnerConfiguration, _ := item.RunnerConfiguration.AsK8sRunnerConfiguration()
 
 	runnerConfigurationModel, err := parseKubernetesRunnerConfigurationResponse(context.Background(), k8sRunnerConfiguration, &data)
@@ -270,35 +270,35 @@ func toKubernetesRunnerResourceModel(item canyoncp.Runner, data commonRunnerMode
 	}, nil
 }
 
-func createKubernetesRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error) {
+func createKubernetesRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (cp.RunnerConfiguration, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
-		return canyoncp.RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
+		return cp.RunnerConfiguration{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
 	}
 
 	var jobPodTemplate *map[string]interface{}
 	if runnerConfig.Job.PodTemplate.ValueString() != "" {
 		if err := json.Unmarshal([]byte(runnerConfig.Job.PodTemplate.ValueString()), &jobPodTemplate); err != nil {
-			return canyoncp.RunnerConfiguration{}, fmt.Errorf("failed to parse pod template from model: %v", err)
+			return cp.RunnerConfiguration{}, fmt.Errorf("failed to parse pod template from model: %v", err)
 		}
 	}
 
-	var runnerConfiguration = new(canyoncp.RunnerConfiguration)
-	_ = runnerConfiguration.FromK8sRunnerConfiguration(canyoncp.K8sRunnerConfiguration{
-		Cluster: canyoncp.K8sRunnerK8sCluster{
-			ClusterData: canyoncp.K8sRunnerK8sClusterClusterData{
+	var runnerConfiguration = new(cp.RunnerConfiguration)
+	_ = runnerConfiguration.FromK8sRunnerConfiguration(cp.K8sRunnerConfiguration{
+		Cluster: cp.K8sRunnerK8sCluster{
+			ClusterData: cp.K8sRunnerK8sClusterClusterData{
 				CertificateAuthorityData: runnerConfig.Cluster.ClusterData.CertificateAuthorityData.ValueString(),
 				Server:                   runnerConfig.Cluster.ClusterData.Server.ValueString(),
 				ProxyUrl:                 fromStringValueToStringPointer(runnerConfig.Cluster.ClusterData.ProxyUrl),
 			},
-			Auth: canyoncp.K8sRunnerK8sClusterAuth{
+			Auth: cp.K8sRunnerK8sClusterAuth{
 				ClientCertificateData: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.ClientCertificateData),
 				ClientKeyData:         fromStringValueToStringPointer(runnerConfig.Cluster.Auth.ClientKeyData),
 				ServiceAccountToken:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.ServiceAccountToken),
 			},
 		},
-		Job: canyoncp.K8sRunnerJobConfig{
+		Job: cp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),
 			PodTemplate:    jobPodTemplate,
@@ -307,35 +307,35 @@ func createKubernetesRunnerConfigurationFromObject(ctx context.Context, obj type
 	return *runnerConfiguration, nil
 }
 
-func updateKubernetesRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error) {
+func updateKubernetesRunnerConfigurationFromObject(ctx context.Context, obj types.Object) (cp.RunnerConfigurationUpdate, error) {
 	var runnerConfig KubernetesRunnerConfiguration
 	diags := obj.As(ctx, &runnerConfig, basetypes.ObjectAsOptions{})
 	if diags.HasError() {
-		return canyoncp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
+		return cp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse runner configuration from model: %v", diags.Errors())
 	}
 
 	var jobPodTemplate *map[string]interface{}
 	if runnerConfig.Job.PodTemplate.ValueString() != "" {
 		if err := json.Unmarshal([]byte(runnerConfig.Job.PodTemplate.ValueString()), &jobPodTemplate); err != nil {
-			return canyoncp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse pod template from model: %v", err)
+			return cp.RunnerConfigurationUpdate{}, fmt.Errorf("failed to parse pod template from model: %v", err)
 		}
 	}
 
-	var updateRunnerConfiguration = new(canyoncp.RunnerConfigurationUpdate)
-	_ = updateRunnerConfiguration.FromK8sRunnerConfigurationUpdateBody(canyoncp.K8sRunnerConfigurationUpdateBody{
-		Cluster: &canyoncp.K8sRunnerK8sCluster{
-			ClusterData: canyoncp.K8sRunnerK8sClusterClusterData{
+	var updateRunnerConfiguration = new(cp.RunnerConfigurationUpdate)
+	_ = updateRunnerConfiguration.FromK8sRunnerConfigurationUpdateBody(cp.K8sRunnerConfigurationUpdateBody{
+		Cluster: &cp.K8sRunnerK8sCluster{
+			ClusterData: cp.K8sRunnerK8sClusterClusterData{
 				CertificateAuthorityData: runnerConfig.Cluster.ClusterData.CertificateAuthorityData.ValueString(),
 				Server:                   runnerConfig.Cluster.ClusterData.Server.ValueString(),
 				ProxyUrl:                 fromStringValueToStringPointer(runnerConfig.Cluster.ClusterData.ProxyUrl),
 			},
-			Auth: canyoncp.K8sRunnerK8sClusterAuth{
+			Auth: cp.K8sRunnerK8sClusterAuth{
 				ClientCertificateData: fromStringValueToStringPointer(runnerConfig.Cluster.Auth.ClientCertificateData),
 				ClientKeyData:         fromStringValueToStringPointer(runnerConfig.Cluster.Auth.ClientKeyData),
 				ServiceAccountToken:   fromStringValueToStringPointer(runnerConfig.Cluster.Auth.ServiceAccountToken),
 			},
 		},
-		Job: &canyoncp.K8sRunnerJobConfig{
+		Job: &cp.K8sRunnerJobConfig{
 			Namespace:      runnerConfig.Job.Namespace.ValueString(),
 			ServiceAccount: runnerConfig.Job.ServiceAccount.ValueString(),
 			PodTemplate:    jobPodTemplate,

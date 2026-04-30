@@ -106,13 +106,13 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 EOT
     job = {
       namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
     }
   }
   state_storage_configuration = {
     type = "kubernetes"
     kubernetes_configuration = {
-      namespace = "humanitec-runner"
+      namespace = "platform-orchestrator-runner"
     }
   }
 }
@@ -139,13 +139,13 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 EOT
     job = {
       namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
     }
   }
   state_storage_configuration = {
     type = "kubernetes"
     kubernetes_configuration = {
-      namespace = "humanitec-runner"
+      namespace = "platform-orchestrator-runner"
     }
   }
 }

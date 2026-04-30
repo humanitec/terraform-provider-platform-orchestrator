@@ -1,5 +1,5 @@
 # Config used for generating the API models and server stubs based on the openapi/spec.yaml
-package: canyoncp
+package: platformorchestratordp
 generate:
   models: true
   client: true

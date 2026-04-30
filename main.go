@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
-	"terraform-provider-humanitec-v2/internal/provider"
+	"terraform-provider-platform-orchestrator/internal/provider"
 )
 
 var (
@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/humanitec/platform-orchestrator",
+		Address: "registry.terraform.io/platform-orchestrator/platform-orchestrator",
 		Debug:   debug,
 	}
 

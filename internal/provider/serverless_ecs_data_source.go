@@ -115,7 +115,7 @@ func NewServerlessEcsRunnerDataSource() datasource.DataSource {
 									Computed:            true,
 								},
 								"image": schema.StringAttribute{
-									MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default humanitec-runner image will be used.",
+									MarkdownDescription: "The container image to use for the ECS Task. If not provided, a default platform-orchestrator-runner image will be used.",
 									Computed:            true,
 								},
 								"environment": schema.MapAttribute{

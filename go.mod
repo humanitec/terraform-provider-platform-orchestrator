@@ -1,4 +1,4 @@
-module terraform-provider-humanitec-v2
+module terraform-provider-platform-orchestrator
 
 go 1.24.0
 

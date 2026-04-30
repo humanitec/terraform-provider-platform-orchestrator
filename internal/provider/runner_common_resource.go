@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 )
 
 var _ resource.Resource = &commonRunnerResource{}
@@ -22,12 +22,12 @@ var _ resource.ResourceWithImportState = &commonRunnerResource{}
 type commonRunnerResource struct {
 	SubType                          string
 	SchemaDef                        schema.Schema
-	ReadApiResponseIntoModel         func(canyoncp.Runner, commonRunnerModel) (commonRunnerModel, error)
-	ConvertRunnerConfigIntoCreateApi func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfiguration, error)
-	ConvertRunnerConfigIntoUpdateApi func(ctx context.Context, obj types.Object) (canyoncp.RunnerConfigurationUpdate, error)
+	ReadApiResponseIntoModel         func(cp.Runner, commonRunnerModel) (commonRunnerModel, error)
+	ConvertRunnerConfigIntoCreateApi func(ctx context.Context, obj types.Object) (cp.RunnerConfiguration, error)
+	ConvertRunnerConfigIntoUpdateApi func(ctx context.Context, obj types.Object) (cp.RunnerConfigurationUpdate, error)
 
 	// params set during Configure()
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -43,7 +43,7 @@ var commonRunnerStateStorageResourceSchema = schema.SingleNestedAttribute{
 			MarkdownDescription: "The type of state storage configuration for the Runner.",
 			Required:            true,
 			Validators: []validator.String{
-				stringvalidator.OneOf(string(canyoncp.StateStorageTypeKubernetes), string(canyoncp.StateStorageTypeS3), string(canyoncp.StateStorageTypeGcs), string(canyoncp.StateStorageTypeAzurerm)),
+				stringvalidator.OneOf(string(cp.StateStorageTypeKubernetes), string(cp.StateStorageTypeS3), string(cp.StateStorageTypeGcs), string(cp.StateStorageTypeAzurerm)),
 			},
 		},
 		"kubernetes_configuration": schema.SingleNestedAttribute{
@@ -122,11 +122,11 @@ func (r *commonRunnerResource) Configure(ctx context.Context, req resource.Confi
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -147,34 +147,34 @@ func (r *commonRunnerResource) Create(ctx context.Context, req resource.CreateRe
 
 	runnerConfigurationFromObject, err := r.ConvertRunnerConfigIntoCreateApi(ctx, data.RunnerConfiguration)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
 		return
 	}
 
 	stateStorageConfigurationFromObject, err := createStateStorageConfigurationFromObject(ctx, data.StateStorageConfiguration)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse state storage configuration from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse state storage configuration from model: %s", err))
 		return
 	}
 
-	httpResp, err := r.cpClient.CreateRunnerWithResponse(ctx, r.orgId, canyoncp.CreateRunnerJSONRequestBody{
+	httpResp, err := r.cpClient.CreateRunnerWithResponse(ctx, r.orgId, cp.CreateRunnerJSONRequestBody{
 		Id:                        data.Id.ValueString(),
 		Description:               ref.RefStringEmptyNil(data.Description.ValueString()),
 		RunnerConfiguration:       runnerConfigurationFromObject,
 		StateStorageConfiguration: stateStorageConfigurationFromObject,
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create runner, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create runner, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != http.StatusCreated {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to create runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	if data, err = r.ReadApiResponseIntoModel(*httpResp.JSON201, data); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to %s: %s", r.SubType, err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to %s: %s", r.SubType, err))
 		return
 	} else {
 		// Save data into Terraform state
@@ -195,23 +195,23 @@ func (r *commonRunnerResource) Read(ctx context.Context, req resource.ReadReques
 
 	httpResp, err := r.cpClient.GetRunnerWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read runner, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read runner, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	if data, err = r.ReadApiResponseIntoModel(*httpResp.JSON200, data); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to %s: %s", r.SubType, err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to %s: %s", r.SubType, err))
 		return
 	} else {
 		// Save updated data into Terraform state
@@ -232,18 +232,18 @@ func (r *commonRunnerResource) Update(ctx context.Context, req resource.UpdateRe
 
 	updateRunnerConfigurationBodyFromObject, err := r.ConvertRunnerConfigIntoUpdateApi(ctx, data.RunnerConfiguration)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse runner configuration from model: %s", err))
 		return
 	}
 
 	updateStateStorageBodyConfigurationFromObject, err := createStateStorageConfigurationFromObject(ctx, data.StateStorageConfiguration)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse state storage configuration from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse state storage configuration from model: %s", err))
 		return
 	}
 
 	id := state.Id.ValueString()
-	var updateBody = canyoncp.UpdateRunnerJSONRequestBody{
+	var updateBody = cp.UpdateRunnerJSONRequestBody{
 		Description:               ref.RefStringEmptyNil(data.Description.ValueString()),
 		RunnerConfiguration:       &updateRunnerConfigurationBodyFromObject,
 		StateStorageConfiguration: &updateStateStorageBodyConfigurationFromObject,
@@ -251,17 +251,17 @@ func (r *commonRunnerResource) Update(ctx context.Context, req resource.UpdateRe
 
 	httpResp, err := r.cpClient.UpdateRunnerWithResponse(ctx, r.orgId, id, updateBody)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update runner, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to update runner, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to update runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	if data, err = r.ReadApiResponseIntoModel(*httpResp.JSON200, data); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to %s: %s", r.SubType, err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to %s: %s", r.SubType, err))
 		return
 	} else {
 		// Save data info into Terraform state
@@ -281,7 +281,7 @@ func (r *commonRunnerResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	httpResp, err := r.cpClient.DeleteRunnerWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete runner, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to delete runner, got error: %s", err))
 		return
 	}
 
@@ -290,9 +290,9 @@ func (r *commonRunnerResource) Delete(ctx context.Context, req resource.DeleteRe
 		// Successfully deleted, no further action needed.
 	case http.StatusNotFound:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Runner with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete runner, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 

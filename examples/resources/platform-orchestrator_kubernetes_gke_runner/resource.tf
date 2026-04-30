@@ -8,17 +8,17 @@ resource "platform-orchestrator_kubernetes_gke_runner" "my_runner" {
       location    = "europe-west3"
       internal_ip = false
       auth = {
-        gcp_audience        = "//iam.googleapis.com/projects/123456789/locations/global/workloadIdentityPools/humanitec-runner-pool/providers/humanitec-runner"
-        gcp_service_account = "humanitec-runner@my-account.iam.gserviceaccount.com"
+        gcp_audience        = "//iam.googleapis.com/projects/123456789/locations/global/workloadIdentityPools/platform-orchestrator-runner-pool/providers/platform-orchestrator-runner"
+        gcp_service_account = "platform-orchestrator-runner@my-account.iam.gserviceaccount.com"
       }
     }
     job = {
       namespace       = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
       pod_template = jsonencode({
         metadata = {
           labels = {
-            "app.kubernetes.io/name" = "humanitec-runner"
+            "app.kubernetes.io/name" = "platform-orchestrator-runner"
           }
         }
       })
@@ -27,7 +27,7 @@ resource "platform-orchestrator_kubernetes_gke_runner" "my_runner" {
   state_storage_configuration = {
     type = "kubernetes"
     kubernetes_configuration = {
-      namespace = "humanitec"
+      namespace = "platform-orchestrator"
     }
   }
 }

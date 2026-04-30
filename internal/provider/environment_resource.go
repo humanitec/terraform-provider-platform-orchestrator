@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -34,7 +34,7 @@ func NewEnvironmentResource() resource.Resource {
 
 // EnvironmentResource defines the resource implementation.
 type EnvironmentResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -169,11 +169,11 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -197,18 +197,18 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		displayName = &v
 	}
 
-	httpResp, err := r.cpClient.CreateEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), canyoncp.CreateEnvironmentJSONRequestBody{
+	httpResp, err := r.cpClient.CreateEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), cp.CreateEnvironmentJSONRequestBody{
 		Id:          data.Id.ValueString(),
 		EnvTypeId:   data.EnvTypeId.ValueString(),
 		DisplayName: displayName,
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create environment, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create environment, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 201 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to create environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -230,18 +230,18 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 	httpResp, err := r.cpClient.GetEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read environment, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read environment, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s not found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -260,16 +260,16 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	httpResp, err := r.cpClient.UpdateEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), canyoncp.UpdateEnvironmentJSONRequestBody{
+	httpResp, err := r.cpClient.UpdateEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), cp.UpdateEnvironmentJSONRequestBody{
 		DisplayName: data.DisplayName.ValueString(),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update environment, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to update environment, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to update environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -297,13 +297,13 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		deleteRules = &v
 	}
 
-	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), &canyoncp.DeleteEnvironmentParams{
+	if httpResp, err := r.cpClient.DeleteEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString(), &cp.DeleteEnvironmentParams{
 		Force:       forceDelete,
 		DeleteRules: deleteRules,
 	}); err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete environment, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to delete environment, got error: %s", err))
 	} else if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s no longer found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment with ID %s no longer found in project %s", data.Id.ValueString(), data.ProjectId.ValueString()))
 		resp.State.RemoveResource(ctx)
 	} else if httpResp.StatusCode() == http.StatusNoContent {
 		resp.State.RemoveResource(ctx)
@@ -320,18 +320,18 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		for {
 			select {
 			case <-ctx.Done():
-				resp.Diagnostics.AddError(HUM_API_ERR, "Unable to delete environment, context canceled")
+				resp.Diagnostics.AddError(PO_API_ERR, "Unable to delete environment, context canceled")
 				return
 			case <-time.After(DefaultAsyncPollInterval):
 				tflog.Info(ctx, "Checking if environment has been successfully deleted...")
 				if httpResp, err := r.cpClient.GetEnvironmentWithResponse(ctx, r.orgId, data.ProjectId.ValueString(), data.Id.ValueString()); err != nil {
-					resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to get environment, got error: %s", err))
+					resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to get environment, got error: %s", err))
 				} else if httpResp.StatusCode() == http.StatusNotFound {
 					resp.State.RemoveResource(ctx)
 				} else if httpResp.StatusCode() != http.StatusOK {
-					resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to get environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+					resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to get environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 				} else if httpResp.JSON200.Status == "delete_failed" {
-					resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment, got status: %s (%s)", httpResp.JSON200.Status, ref.DerefOr(httpResp.JSON200.StatusMessage, "")))
+					resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete environment, got status: %s (%s)", httpResp.JSON200.Status, ref.DerefOr(httpResp.JSON200.StatusMessage, "")))
 				} else {
 					continue
 				}
@@ -339,7 +339,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 			return
 		}
 	} else {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete environment, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 	}
 }
 
@@ -359,7 +359,7 @@ func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.Impo
 }
 
 // toEnvironmentModel converts the API Environment object to the Terraform model.
-func toEnvironmentModel(previous EnvironmentResourceModel, environment canyoncp.Environment) EnvironmentResourceModel {
+func toEnvironmentModel(previous EnvironmentResourceModel, environment cp.Environment) EnvironmentResourceModel {
 	displayName := types.StringValue(environment.Id)
 	if environment.DisplayName != "" {
 		displayName = types.StringValue(environment.DisplayName)

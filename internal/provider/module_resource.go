@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"regexp"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -35,7 +35,7 @@ func NewModuleResource() resource.Resource {
 
 // ModuleResource defines the resource implementation.
 type ModuleResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -290,11 +290,11 @@ func (r *ModuleResource) Configure(ctx context.Context, req resource.ConfigureRe
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -315,20 +315,20 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	coprovisioned, err := toCoprovisionedFromModel(ctx, data.Coprovisioned)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse coprovisioned from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse coprovisioned from model: %s", err))
 		return
 	}
 
 	dependencies, err := toDependenciesFromModel(ctx, data.Dependencies)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse dependencies from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse dependencies from model: %s", err))
 		return
 	}
 
 	inputs := make(map[string]interface{})
 	if !data.ModuleInputs.IsNull() && !data.ModuleInputs.IsUnknown() {
 		if diags := data.ModuleInputs.Unmarshal(&inputs); diags.HasError() {
-			resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Module inputs is not a valid object: %s", diags.Errors()))
+			resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Module inputs is not a valid object: %s", diags.Errors()))
 			return
 		}
 	}
@@ -339,7 +339,7 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 			if strValue, ok := value.(basetypes.StringValue); ok {
 				providerMappings[key] = strValue.ValueString()
 			} else {
-				resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Provider mapping for key %s is not a string value", key))
+				resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Provider mapping for key %s is not a string value", key))
 				return
 			}
 		}
@@ -347,11 +347,11 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	moduleParams, err := toModuleParamsFromModel(ctx, data.ModuleParams)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
 		return
 	}
 
-	httpResp, err := r.cpClient.CreateModuleWithResponse(ctx, r.orgId, canyoncp.CreateModuleJSONRequestBody{
+	httpResp, err := r.cpClient.CreateModuleWithResponse(ctx, r.orgId, cp.CreateModuleJSONRequestBody{
 		Id:               data.Id.ValueString(),
 		Description:      ref.RefStringEmptyNil(data.Description.ValueString()),
 		Coprovisioned:    coprovisioned,
@@ -364,17 +364,17 @@ func (r *ModuleResource) Create(ctx context.Context, req resource.CreateRequest,
 		ResourceType:     data.ResourceType.ValueString(),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create module, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create module, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 201 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to create module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	if data, err = toModuleResourceModel(ctx, *httpResp.JSON201); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to ModuleResourceModel: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to ModuleResourceModel: %s", err))
 		return
 	} else {
 		// Save data into Terraform state
@@ -395,23 +395,23 @@ func (r *ModuleResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	httpResp, err := r.cpClient.GetModuleWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read module, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read module, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	if moduleModel, err := toModuleResourceModel(ctx, *httpResp.JSON200); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert module response to model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to convert module response to model: %s", err))
 		return
 	} else {
 		resp.Diagnostics.Append(resp.State.Set(ctx, ref.Ref(moduleModel))...)
@@ -430,20 +430,20 @@ func (r *ModuleResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	coprovisioned, err := toCoprovisionedFromModel(ctx, data.Coprovisioned)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse coprovisioned from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse coprovisioned from model: %s", err))
 		return
 	}
 
 	dependencies, err := toDependenciesFromModel(ctx, data.Dependencies)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse dependencies from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse dependencies from model: %s", err))
 		return
 	}
 
 	inputs := make(map[string]interface{})
 	if !data.ModuleInputs.IsNull() && !data.ModuleInputs.IsUnknown() {
 		if err := json.Unmarshal([]byte(data.ModuleInputs.ValueString()), &inputs); err != nil {
-			resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Data module inputs is not a valid object: %s", err))
+			resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Data module inputs is not a valid object: %s", err))
 			return
 		}
 	}
@@ -451,20 +451,20 @@ func (r *ModuleResource) Update(ctx context.Context, req resource.UpdateRequest,
 	providerMappings := make(map[string]string)
 	if !data.ProviderMapping.IsNull() && !data.ProviderMapping.IsUnknown() {
 		if diags := data.ProviderMapping.ElementsAs(ctx, &providerMappings, false); diags.HasError() {
-			resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse provider mapping from model: %s", diags.Errors()))
+			resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse provider mapping from model: %s", diags.Errors()))
 			return
 		}
 	}
 
 	moduleParams, err := toModuleParamsFromModel(ctx, data.ModuleParams)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to parse module params from model: %s", err))
 		return
 	}
 
 	id := state.Id.ValueString()
 
-	var updateBody = canyoncp.UpdateModuleJSONRequestBody{
+	var updateBody = cp.UpdateModuleJSONRequestBody{
 		Description:      ref.RefStringEmptyNil(data.Description.ValueString()),
 		Dependencies:     ref.Ref(dependencies),
 		ModuleInputs:     ref.Ref(inputs),
@@ -477,17 +477,17 @@ func (r *ModuleResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	httpResp, err := r.cpClient.UpdateModuleWithResponse(ctx, r.orgId, id, updateBody)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update module, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to update module, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to update module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	if data, err = toModuleResourceModel(ctx, *httpResp.JSON200); err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to ModuleResourceModel: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Failed to convert API response to ModuleResourceModel: %s", err))
 		return
 	} else {
 		// Save data into Terraform state
@@ -508,7 +508,7 @@ func (r *ModuleResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	httpResp, err := r.cpClient.DeleteModuleWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete module, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to delete module, got error: %s", err))
 		return
 	}
 
@@ -517,9 +517,9 @@ func (r *ModuleResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		// Successfully deleted, no further action needed.
 	case 404:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete module, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -530,11 +530,11 @@ func (r *ModuleResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func toCoprovisionedFromModel(ctx context.Context, coprovisioned basetypes.ListValue) ([]canyoncp.ModuleCoProvisionManifest, error) {
-	var result = make([]canyoncp.ModuleCoProvisionManifest, len(coprovisioned.Elements()))
+func toCoprovisionedFromModel(ctx context.Context, coprovisioned basetypes.ListValue) ([]cp.ModuleCoProvisionManifest, error) {
+	var result = make([]cp.ModuleCoProvisionManifest, len(coprovisioned.Elements()))
 	if !coprovisioned.IsNull() && !coprovisioned.IsUnknown() {
-		for i, cp := range coprovisioned.Elements() {
-			cpObj, ok := cp.(basetypes.ObjectValue)
+		for i, elem := range coprovisioned.Elements() {
+			cpObj, ok := elem.(basetypes.ObjectValue)
 			if !ok {
 				return nil, fmt.Errorf("expected object value for coprovisioned item")
 			}
@@ -551,7 +551,7 @@ func toCoprovisionedFromModel(ctx context.Context, coprovisioned basetypes.ListV
 				}
 			}
 
-			result[i] = canyoncp.ModuleCoProvisionManifest{
+			result[i] = cp.ModuleCoProvisionManifest{
 				Type:                      cpModel.Type.ValueString(),
 				CopyDependentsFromCurrent: cpModel.CopyDependentsFromCurrent.ValueBool(),
 				IsDependentOnCurrent:      cpModel.IsDependentOnCurrent.ValueBool(),
@@ -566,8 +566,8 @@ func toCoprovisionedFromModel(ctx context.Context, coprovisioned basetypes.ListV
 	return result, nil
 }
 
-func toDependenciesFromModel(ctx context.Context, dependencies basetypes.MapValue) (map[string]canyoncp.ModuleDependencyManifest, error) {
-	result := make(map[string]canyoncp.ModuleDependencyManifest)
+func toDependenciesFromModel(ctx context.Context, dependencies basetypes.MapValue) (map[string]cp.ModuleDependencyManifest, error) {
+	result := make(map[string]cp.ModuleDependencyManifest)
 	if !dependencies.IsNull() && !dependencies.IsUnknown() {
 		for alias, dep := range dependencies.Elements() {
 			depObj, ok := dep.(basetypes.ObjectValue)
@@ -587,7 +587,7 @@ func toDependenciesFromModel(ctx context.Context, dependencies basetypes.MapValu
 				}
 			}
 
-			result[alias] = canyoncp.ModuleDependencyManifest{
+			result[alias] = cp.ModuleDependencyManifest{
 				Type:   depModel.Type.ValueString(),
 				Class:  ref.RefStringEmptyNil(depModel.Class.ValueString()),
 				Id:     ref.RefStringEmptyNil(depModel.Id.ValueString()),
@@ -598,8 +598,8 @@ func toDependenciesFromModel(ctx context.Context, dependencies basetypes.MapValu
 	return result, nil
 }
 
-func toModuleParamsFromModel(ctx context.Context, moduleParams basetypes.MapValue) (map[string]canyoncp.ModuleParamItem, error) {
-	result := make(map[string]canyoncp.ModuleParamItem)
+func toModuleParamsFromModel(ctx context.Context, moduleParams basetypes.MapValue) (map[string]cp.ModuleParamItem, error) {
+	result := make(map[string]cp.ModuleParamItem)
 	if !moduleParams.IsNull() && !moduleParams.IsUnknown() {
 		for key, value := range moduleParams.Elements() {
 			paramObj, ok := value.(basetypes.ObjectValue)
@@ -612,37 +612,37 @@ func toModuleParamsFromModel(ctx context.Context, moduleParams basetypes.MapValu
 				return nil, fmt.Errorf("failed to convert module param model: %v", diags.Errors())
 			}
 
-			result[key] = canyoncp.ModuleParamItem{
+			result[key] = cp.ModuleParamItem{
 				Description: paramModel.Description.ValueStringPointer(),
 				IsOptional:  paramModel.IsOptional.ValueBool(),
-				Type:        canyoncp.ModuleParamItemType(paramModel.Type.ValueString()),
+				Type:        cp.ModuleParamItemType(paramModel.Type.ValueString()),
 			}
 		}
 	}
 	return result, nil
 }
 
-func toModuleResourceModel(ctx context.Context, item canyoncp.Module) (ModuleResourceModel, error) {
+func toModuleResourceModel(ctx context.Context, item cp.Module) (ModuleResourceModel, error) {
 	var coprovisioned basetypes.ListValue
 	var diags diag.Diagnostics
 	if item.Coprovisioned != nil {
 		coprovisionedList := make([]attr.Value, len(item.Coprovisioned))
-		for i, cp := range item.Coprovisioned {
+		for i, cpItem := range item.Coprovisioned {
 			var params jsontypes.Normalized
-			if cp.Params != nil {
-				paramJson, _ := json.Marshal(cp.Params)
+			if cpItem.Params != nil {
+				paramJson, _ := json.Marshal(cpItem.Params)
 				params = jsontypes.NewNormalizedValue(string(paramJson))
 			} else {
 				params = jsontypes.NewNormalizedNull()
 			}
 
 			cpModel := ModuleCoprovisionedModel{
-				Class:                     toStringValueOrNil(cp.Class),
-				CopyDependentsFromCurrent: types.BoolValue(cp.CopyDependentsFromCurrent),
-				Id:                        toStringValueOrNil(cp.Id),
-				IsDependentOnCurrent:      types.BoolValue(cp.IsDependentOnCurrent),
+				Class:                     toStringValueOrNil(cpItem.Class),
+				CopyDependentsFromCurrent: types.BoolValue(cpItem.CopyDependentsFromCurrent),
+				Id:                        toStringValueOrNil(cpItem.Id),
+				IsDependentOnCurrent:      types.BoolValue(cpItem.IsDependentOnCurrent),
 				Params:                    params,
-				Type:                      types.StringValue(cp.Type),
+				Type:                      types.StringValue(cpItem.Type),
 			}
 			objectValue, diags := types.ObjectValueFrom(ctx, ModuleCoprovisionedModelAttributeTypes(), cpModel)
 			if diags.HasError() {

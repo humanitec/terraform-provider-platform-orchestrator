@@ -2,7 +2,7 @@ resource "platform-orchestrator_module" "minio" {
   id            = "my-minio"
   description   = "Module for a minio bucket"
   resource_type = "minio"
-  module_source = "git::https://github.com/humanitec/module-definition-library//minio?ref=preview"
+  module_source = "git::https://github.com/platform-orchestrator/module-definition-library//minio?ref=preview"
   provider_mapping = {
     minio = "minio.default"
   }

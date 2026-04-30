@@ -4,7 +4,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "example" {
 
   runner_configuration = {
     auth = {
-      role_arn = "arn:aws:iam::123456789012:role/humanitec_role"
+      role_arn = "arn:aws:iam::123456789012:role/platform_orchestrator_role"
     }
     job = {
       region             = "eu-central-1"
@@ -30,7 +30,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "example" {
   state_storage_configuration = {
     type = "s3"
     s3_configuration = {
-      bucket      = "humanitec-ecs-runner-state"
+      bucket      = "platform-orchestrator-ecs-runner-state"
       path_prefix = "state-files"
     }
   }

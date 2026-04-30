@@ -19,7 +19,7 @@ func TestAccKubernetesEksRunnerResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccKubernetesEksRunnerResource(runnerId, "humanitec-runner", ""),
+				Config: testAccKubernetesEksRunnerResource(runnerId, "platform-orchestrator-runner", ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_kubernetes_eks_runner.test",
@@ -41,7 +41,7 @@ func TestAccKubernetesEksRunnerResource(t *testing.T) {
 							}),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
-								"service_account": knownvalue.StringExact("humanitec-runner"),
+								"service_account": knownvalue.StringExact("platform-orchestrator-runner"),
 								"pod_template":    knownvalue.Null(),
 							}),
 						}),
@@ -52,7 +52,7 @@ func TestAccKubernetesEksRunnerResource(t *testing.T) {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("humanitec-runner"),
+								"namespace": knownvalue.StringExact("platform-orchestrator-runner"),
 							}),
 							"s3_configuration":      knownvalue.Null(),
 							"gcs_configuration":     knownvalue.Null(),
@@ -85,7 +85,7 @@ func TestAccKubernetesEksRunnerResource(t *testing.T) {
 							}),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
-								"service_account": knownvalue.StringExact("humanitec-runner"),
+								"service_account": knownvalue.StringExact("platform-orchestrator-runner"),
 								"pod_template":    knownvalue.Null(),
 							}),
 						}),
@@ -311,7 +311,7 @@ resource "platform-orchestrator_kubernetes_eks_runner" "test" {
     }
     job = {
       namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
     }
   }
   state_storage_configuration = {
@@ -339,7 +339,7 @@ resource "platform-orchestrator_kubernetes_eks_runner" "test" {
     }
     job = {
       namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
     }
   }
   state_storage_configuration = {
@@ -367,7 +367,7 @@ resource "platform-orchestrator_kubernetes_eks_runner" "test" {
     }
     job = {
       namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
     }
   }
   state_storage_configuration = {
@@ -394,7 +394,7 @@ resource "platform-orchestrator_kubernetes_eks_runner" "test" {
     }
     job = {
       namespace = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
       ` + podTemplate + `
     }
   }

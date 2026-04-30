@@ -9,11 +9,11 @@ MCowBQYDK2VwAyEAc5dgCx4ano39JT0XgTsHnts3jej+5xl7ZAwSIrKpef0=
 EOT
     job = {
       namespace       = "default"
-      service_account = "humanitec-runner"
+      service_account = "platform-orchestrator-runner"
       pod_template = jsonencode({
         metadata = {
           labels = {
-            "app.kubernetes.io/name" = "humanitec-runner"
+            "app.kubernetes.io/name" = "platform-orchestrator-runner"
           }
         }
       })
@@ -22,7 +22,7 @@ EOT
   state_storage_configuration = {
     type = "kubernetes"
     kubernetes_configuration = {
-      namespace = "humanitec"
+      namespace = "platform-orchestrator"
     }
   }
 }

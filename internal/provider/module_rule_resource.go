@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
-	"terraform-provider-humanitec-v2/internal/ref"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
+	"terraform-provider-platform-orchestrator/internal/ref"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -28,7 +28,7 @@ func NewModuleRuleResource() resource.Resource {
 
 // ModuleRuleResource defines the resource implementation.
 type ModuleRuleResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -116,11 +116,11 @@ func (r *ModuleRuleResource) Configure(ctx context.Context, req resource.Configu
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -139,7 +139,7 @@ func (r *ModuleRuleResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	httpResp, err := r.cpClient.CreateModuleRuleInOrgWithResponse(ctx, r.orgId, canyoncp.CreateModuleRuleInOrgJSONRequestBody{
+	httpResp, err := r.cpClient.CreateModuleRuleInOrgWithResponse(ctx, r.orgId, cp.CreateModuleRuleInOrgJSONRequestBody{
 		ModuleId:      data.ModuleId.ValueString(),
 		ResourceClass: ref.RefStringEmptyNil(data.ResourceClass.ValueString()),
 		ResourceId:    ref.RefStringEmptyNil(data.ResourceId.ValueString()),
@@ -148,12 +148,12 @@ func (r *ModuleRuleResource) Create(ctx context.Context, req resource.CreateRequ
 		EnvId:         ref.RefStringEmptyNil(data.EnvId.ValueString()),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create module rule, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create module rule, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 201 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create module rule, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to create module rule, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -173,18 +173,18 @@ func (r *ModuleRuleResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	httpResp, err := r.cpClient.GetModuleRuleInOrgWithResponse(ctx, r.orgId, uuid.MustParse(data.Id.ValueString()))
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read module rule, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read module rule, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module rule with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module rule with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read module rule, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read module rule, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -207,7 +207,7 @@ func (r *ModuleRuleResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	httpResp, err := r.cpClient.DeleteModuleRuleInOrgWithResponse(ctx, r.orgId, uuid.MustParse(data.Id.ValueString()))
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete module rule, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to delete module rule, got error: %s", err))
 		return
 	}
 
@@ -216,9 +216,9 @@ func (r *ModuleRuleResource) Delete(ctx context.Context, req resource.DeleteRequ
 		// Successfully deleted, no further action needed.
 	case 404:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module rule with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Module rule with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete module rule, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete module rule, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -229,7 +229,7 @@ func (r *ModuleRuleResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func toModuleRuleResourceModel(item canyoncp.Rule) ModuleRuleResourceModel {
+func toModuleRuleResourceModel(item cp.Rule) ModuleRuleResourceModel {
 	return ModuleRuleResourceModel{
 		Id:            types.StringValue(item.Id.String()),
 		ModuleId:      types.StringValue(item.ModuleId),

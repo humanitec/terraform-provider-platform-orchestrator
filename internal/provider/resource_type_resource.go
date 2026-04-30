@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"regexp"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -31,7 +31,7 @@ func NewResourceTypeResource() resource.Resource {
 
 // ResourceTypeResource defines the resource implementation.
 type ResourceTypeResource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -94,11 +94,11 @@ func (r *ResourceTypeResource) Configure(ctx context.Context, req resource.Confi
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -131,25 +131,25 @@ func (r *ResourceTypeResource) Create(ctx context.Context, req resource.CreateRe
 
 	isDeveloperAccessible := data.IsDeveloperAccessible.ValueBool()
 
-	httpResp, err := r.cpClient.CreateResourceTypeWithResponse(ctx, r.orgId, canyoncp.CreateResourceTypeJSONRequestBody{
+	httpResp, err := r.cpClient.CreateResourceTypeWithResponse(ctx, r.orgId, cp.CreateResourceTypeJSONRequestBody{
 		Id:                    data.Id.ValueString(),
 		Description:           description,
 		OutputSchema:          outputSchema,
 		IsDeveloperAccessible: &isDeveloperAccessible,
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to create resource type, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to create resource type, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 201 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to create resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to create resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	data, err = toResourceTypeModel(*httpResp.JSON201)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to convert resource type response, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to convert resource type response, got error: %s", err))
 		return
 	}
 
@@ -169,24 +169,24 @@ func (r *ResourceTypeResource) Read(ctx context.Context, req resource.ReadReques
 
 	httpResp, err := r.cpClient.GetResourceTypeWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to read resource type, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to read resource type, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Resource type with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Resource type with ID %s not found in org %s", data.Id.ValueString(), r.orgId))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	data, err = toResourceTypeModel(*httpResp.JSON200)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to convert resource type response, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to convert resource type response, got error: %s", err))
 		return
 	}
 
@@ -209,24 +209,24 @@ func (r *ResourceTypeResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	httpResp, err := r.cpClient.UpdateResourceTypeWithResponse(ctx, r.orgId, data.Id.ValueString(), canyoncp.UpdateResourceTypeJSONRequestBody{
+	httpResp, err := r.cpClient.UpdateResourceTypeWithResponse(ctx, r.orgId, data.Id.ValueString(), cp.UpdateResourceTypeJSONRequestBody{
 		Description:           data.Description.ValueStringPointer(),
 		OutputSchema:          &outputSchema,
 		IsDeveloperAccessible: data.IsDeveloperAccessible.ValueBoolPointer(),
 	})
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to update resource type, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to update resource type, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() != 200 {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to update resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to update resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
 	data, err = toResourceTypeModel(*httpResp.JSON200)
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_PROVIDER_ERR, fmt.Sprintf("Unable to convert resource type response, got error: %s", err))
+		resp.Diagnostics.AddError(PO_PROVIDER_ERR, fmt.Sprintf("Unable to convert resource type response, got error: %s", err))
 		return
 	}
 
@@ -246,7 +246,7 @@ func (r *ResourceTypeResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	httpResp, err := r.cpClient.DeleteResourceTypeWithResponse(ctx, r.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to delete resource type, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to delete resource type, got error: %s", err))
 		return
 	}
 
@@ -255,9 +255,9 @@ func (r *ResourceTypeResource) Delete(ctx context.Context, req resource.DeleteRe
 		// Successfully deleted, no further action needed.
 	case 404:
 		// If the resource is not found, we can consider it deleted.
-		resp.Diagnostics.AddWarning(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Resource Type with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
+		resp.Diagnostics.AddWarning(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Resource Type with ID %s not found, assuming it has been deleted.", data.Id.ValueString()))
 	default:
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to delete resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to delete resource type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 
@@ -268,7 +268,7 @@ func (r *ResourceTypeResource) ImportState(ctx context.Context, req resource.Imp
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func toResourceTypeModel(item canyoncp.ResourceType) (ResourceTypeResourceModel, error) {
+func toResourceTypeModel(item cp.ResourceType) (ResourceTypeResourceModel, error) {
 	var description types.String
 	if item.Description != nil {
 		description = types.StringValue(*item.Description)

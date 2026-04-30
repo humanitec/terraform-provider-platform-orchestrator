@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"regexp"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -24,7 +24,7 @@ func NewEnvironmentTypeDataSource() datasource.DataSource {
 
 // EnvironmentTypeDataSource defines the data source implementation.
 type EnvironmentTypeDataSource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -73,11 +73,11 @@ func (d *EnvironmentTypeDataSource) Configure(ctx context.Context, req datasourc
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -98,18 +98,18 @@ func (d *EnvironmentTypeDataSource) Read(ctx context.Context, req datasource.Rea
 
 	httpResp, err := d.cpClient.GetEnvironmentTypeWithResponse(ctx, d.orgId, data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read environment type, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to read environment type, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment type with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+		resp.Diagnostics.AddError(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Environment type with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read environment type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read environment type, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 

@@ -18,7 +18,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
   id          = "` + runnerId + `"
   runner_configuration = {
     auth = {
-      role_arn = "arn:aws:iam::123456789012:role/humanitec_role"
+      role_arn = "arn:aws:iam::123456789012:role/platform_orchestrator_role"
     }
     job = {
       region             = "eu-central-1"
@@ -30,7 +30,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
   state_storage_configuration = {
     type        = "s3"
     s3_configuration = {
-	  bucket      = "humanitec-ecs-runner-state"
+	  bucket      = "platform-orchestrator-ecs-runner-state"
     }
   }
 }`
@@ -39,7 +39,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
   id          = "` + runnerId + `"
   runner_configuration = {
     auth = {
-      role_arn = "arn:aws:iam::123456789012:role/humanitec_role"
+      role_arn = "arn:aws:iam::123456789012:role/platform_orchestrator_role"
       session_name = "ecs-runner-session"
       sts_region = "eu-central-1"
     }
@@ -63,7 +63,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
   state_storage_configuration = {
     type        = "s3"
     s3_configuration = {
-	  bucket      = "humanitec-ecs-runner-state"
+	  bucket      = "platform-orchestrator-ecs-runner-state"
       path_prefix = "prefix"
     }
   }
@@ -86,7 +86,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 						"platform-orchestrator_serverless_ecs_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("auth"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"role_arn":     knownvalue.StringExact("arn:aws:iam::123456789012:role/humanitec_role"),
+							"role_arn":     knownvalue.StringExact("arn:aws:iam::123456789012:role/platform_orchestrator_role"),
 							"session_name": knownvalue.Null(),
 							"sts_region":   knownvalue.Null(),
 						}),
@@ -113,7 +113,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("s3"),
 							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"bucket":      knownvalue.StringExact("platform-orchestrator-ecs-runner-state"),
 								"path_prefix": knownvalue.Null(),
 							}),
 						}),
@@ -127,7 +127,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 						"platform-orchestrator_serverless_ecs_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("auth"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"role_arn":     knownvalue.StringExact("arn:aws:iam::123456789012:role/humanitec_role"),
+							"role_arn":     knownvalue.StringExact("arn:aws:iam::123456789012:role/platform_orchestrator_role"),
 							"session_name": knownvalue.StringExact("ecs-runner-session"),
 							"sts_region":   knownvalue.StringExact("eu-central-1"),
 						}),
@@ -158,7 +158,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("s3"),
 							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"bucket":      knownvalue.StringExact("platform-orchestrator-ecs-runner-state"),
 								"path_prefix": knownvalue.StringExact("prefix"),
 							}),
 						}),
@@ -176,7 +176,7 @@ data "platform-orchestrator_serverless_ecs_runner" "test" {
 						"data.platform-orchestrator_serverless_ecs_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("auth"),
 						knownvalue.MapExact(map[string]knownvalue.Check{
-							"role_arn":     knownvalue.StringExact("arn:aws:iam::123456789012:role/humanitec_role"),
+							"role_arn":     knownvalue.StringExact("arn:aws:iam::123456789012:role/platform_orchestrator_role"),
 							"session_name": knownvalue.StringExact("ecs-runner-session"),
 							"sts_region":   knownvalue.StringExact("eu-central-1"),
 						}),
@@ -207,7 +207,7 @@ data "platform-orchestrator_serverless_ecs_runner" "test" {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("s3"),
 							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"bucket":      knownvalue.StringExact("platform-orchestrator-ecs-runner-state"),
 								"path_prefix": knownvalue.StringExact("prefix"),
 							}),
 						}),
@@ -231,7 +231,7 @@ func TestAccEcsRunnerResource_s3_state_prefix_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create with prefix
 			{
-				Config: testAccEcsRunnerResourceS3State(runnerId, "humanitec-ecs-runner-state", `path_prefix = "initial/prefix"`),
+				Config: testAccEcsRunnerResourceS3State(runnerId, "platform-orchestrator-ecs-runner-state", `path_prefix = "initial/prefix"`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_serverless_ecs_runner.test",
@@ -244,7 +244,7 @@ func TestAccEcsRunnerResource_s3_state_prefix_update(t *testing.T) {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("s3"),
 							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"bucket":      knownvalue.StringExact("platform-orchestrator-ecs-runner-state"),
 								"path_prefix": knownvalue.StringExact("initial/prefix"),
 							}),
 						}),
@@ -253,7 +253,7 @@ func TestAccEcsRunnerResource_s3_state_prefix_update(t *testing.T) {
 			},
 			// Update prefix
 			{
-				Config: testAccEcsRunnerResourceS3State(runnerId, "humanitec-ecs-runner-state", `path_prefix = "updated/prefix"`),
+				Config: testAccEcsRunnerResourceS3State(runnerId, "platform-orchestrator-ecs-runner-state", `path_prefix = "updated/prefix"`),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_serverless_ecs_runner.test",
@@ -266,7 +266,7 @@ func TestAccEcsRunnerResource_s3_state_prefix_update(t *testing.T) {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("s3"),
 							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"bucket":      knownvalue.StringExact("platform-orchestrator-ecs-runner-state"),
 								"path_prefix": knownvalue.StringExact("updated/prefix"),
 							}),
 						}),
@@ -275,7 +275,7 @@ func TestAccEcsRunnerResource_s3_state_prefix_update(t *testing.T) {
 			},
 			// Remove prefix
 			{
-				Config: testAccEcsRunnerResourceS3State(runnerId, "humanitec-ecs-runner-state", ""),
+				Config: testAccEcsRunnerResourceS3State(runnerId, "platform-orchestrator-ecs-runner-state", ""),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"platform-orchestrator_serverless_ecs_runner.test",
@@ -288,7 +288,7 @@ func TestAccEcsRunnerResource_s3_state_prefix_update(t *testing.T) {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("s3"),
 							"s3_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"bucket":      knownvalue.StringExact("humanitec-ecs-runner-state"),
+								"bucket":      knownvalue.StringExact("platform-orchestrator-ecs-runner-state"),
 								"path_prefix": knownvalue.Null(),
 							}),
 						}),
@@ -311,7 +311,7 @@ resource "platform-orchestrator_serverless_ecs_runner" "test" {
   id = "` + id + `"
   runner_configuration = {
     auth = {
-      role_arn = "arn:aws:iam::123456789012:role/humanitec_role"
+      role_arn = "arn:aws:iam::123456789012:role/platform_orchestrator_role"
     }
     job = {
       region             = "eu-central-1"

@@ -78,7 +78,7 @@ func TestAccKubernetesRunnerDataSource(t *testing.T) {
 					statecheck.ExpectKnownValue(
 						"data.platform-orchestrator_kubernetes_runner.test",
 						tfjsonpath.New("runner_configuration").AtMapKey("job").AtMapKey("pod_template"),
-						knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"k8s-runner-test","runner-type":"kubernetes"}},"spec":{"containers":[{"image":"humanitec/runner:latest","name":"runner"}]}}`),
+						knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"k8s-runner-test","runner-type":"kubernetes"}},"spec":{"containers":[{"image":"platform-orchestrator/runner:latest","name":"runner"}]}}`),
 					),
 					// Verify state storage configuration
 					statecheck.ExpectKnownValue(
@@ -128,7 +128,7 @@ resource "platform-orchestrator_kubernetes_runner" "test" {
           containers = [
             {
               name = "runner"
-              image = "humanitec/runner:latest"
+              image = "platform-orchestrator/runner:latest"
             }
           ]
         }

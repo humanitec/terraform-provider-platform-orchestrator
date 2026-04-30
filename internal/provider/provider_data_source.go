@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"regexp"
 
-	canyoncp "terraform-provider-humanitec-v2/internal/clients/canyon-cp"
+	cp "terraform-provider-platform-orchestrator/internal/clients/platform-orchestrator-cp"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -25,7 +25,7 @@ func NewProviderDataSource() datasource.DataSource {
 
 // ProviderDataSource defines the data source implementation.
 type ProviderDataSource struct {
-	cpClient canyoncp.ClientWithResponsesInterface
+	cpClient cp.ClientWithResponsesInterface
 	orgId    string
 }
 
@@ -96,11 +96,11 @@ func (d *ProviderDataSource) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
-	providerData, ok := req.ProviderData.(*HumanitecProviderData)
+	providerData, ok := req.ProviderData.(*PlatformOrchestratorProviderData)
 	if !ok {
 		resp.Diagnostics.AddError(
-			HUM_PROVIDER_ERR,
-			fmt.Sprintf("Expected *HumanitecProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			PO_PROVIDER_ERR,
+			fmt.Sprintf("Expected *PlatformOrchestratorProviderData, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -121,18 +121,18 @@ func (d *ProviderDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	httpResp, err := d.cpClient.GetModuleProviderWithResponse(ctx, d.orgId, data.ProviderType.ValueString(), data.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(HUM_CLIENT_ERR, fmt.Sprintf("Unable to read provider, got error: %s", err))
+		resp.Diagnostics.AddError(PO_CLIENT_ERR, fmt.Sprintf("Unable to read provider, got error: %s", err))
 		return
 	}
 
 	if httpResp.StatusCode() == http.StatusNotFound {
-		resp.Diagnostics.AddError(HUM_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Provider with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
+		resp.Diagnostics.AddError(PO_RESOURCE_NOT_FOUND_ERR, fmt.Sprintf("Provider with ID %s not found in org %s", data.Id.ValueString(), d.orgId))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 
 	if httpResp.StatusCode() != http.StatusOK {
-		resp.Diagnostics.AddError(HUM_API_ERR, fmt.Sprintf("Unable to read provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
+		resp.Diagnostics.AddError(PO_API_ERR, fmt.Sprintf("Unable to read provider, unexpected status code: %d, body: %s", httpResp.StatusCode(), httpResp.Body))
 		return
 	}
 

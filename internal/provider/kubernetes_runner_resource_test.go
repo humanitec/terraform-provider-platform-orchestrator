@@ -51,7 +51,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 							}),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
-								"service_account": knownvalue.StringExact("humanitec-runner"),
+								"service_account": knownvalue.StringExact("platform-orchestrator-runner"),
 								"pod_template":    knownvalue.Null(),
 							}),
 						}),
@@ -62,7 +62,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("humanitec-runner"),
+								"namespace": knownvalue.StringExact("platform-orchestrator-runner"),
 							}),
 							"s3_configuration":      knownvalue.Null(),
 							"gcs_configuration":     knownvalue.Null(),
@@ -71,7 +71,7 @@ func TestAccKubernetesRunnerResource(t *testing.T) {
 					),
 				},
 				Check: func(s *terraform.State) error {
-					res, err := cpClient.GetRunnerWithResponse(t.Context(), os.Getenv(HUM_ORG_ID_ENV_VAR), runnerId)
+					res, err := cpClient.GetRunnerWithResponse(t.Context(), os.Getenv(PO_ORG_ID_ENV_VAR), runnerId)
 					if err != nil {
 						return fmt.Errorf("error fetching runner from API: %s", err)
 					}
@@ -123,7 +123,7 @@ service_account_token = "service-account-token"
 							}),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
-								"service_account": knownvalue.StringExact("humanitec-runner"),
+								"service_account": knownvalue.StringExact("platform-orchestrator-runner"),
 								"pod_template":    knownvalue.Null(),
 							}),
 						}),
@@ -134,7 +134,7 @@ service_account_token = "service-account-token"
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("humanitec-runner"),
+								"namespace": knownvalue.StringExact("platform-orchestrator-runner"),
 							}),
 							"s3_configuration":      knownvalue.Null(),
 							"gcs_configuration":     knownvalue.Null(),
@@ -150,7 +150,7 @@ service_account_token = "another-service-account-token"
 				`, `pod_template = jsonencode({
 	metadata = {
 		labels = {
-			"app.kubernetes.io/name" = "humanitec-runner"
+			"app.kubernetes.io/name" = "platform-orchestrator-runner"
 		}
 	}	
 })`),
@@ -178,8 +178,8 @@ service_account_token = "another-service-account-token"
 							}),
 							"job": knownvalue.MapExact(map[string]knownvalue.Check{
 								"namespace":       knownvalue.StringExact("default"),
-								"service_account": knownvalue.StringExact("humanitec-runner"),
-								"pod_template":    knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"humanitec-runner"}}}`),
+								"service_account": knownvalue.StringExact("platform-orchestrator-runner"),
+								"pod_template":    knownvalue.StringExact(`{"metadata":{"labels":{"app.kubernetes.io/name":"platform-orchestrator-runner"}}}`),
 							}),
 						}),
 					),
@@ -189,7 +189,7 @@ service_account_token = "another-service-account-token"
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"type": knownvalue.StringExact("kubernetes"),
 							"kubernetes_configuration": knownvalue.MapExact(map[string]knownvalue.Check{
-								"namespace": knownvalue.StringExact("humanitec-runner"),
+								"namespace": knownvalue.StringExact("platform-orchestrator-runner"),
 							}),
 							"s3_configuration":      knownvalue.Null(),
 							"gcs_configuration":     knownvalue.Null(),
@@ -241,14 +241,14 @@ resource "platform-orchestrator_kubernetes_runner" "test" {
    }
 	job = {
 		namespace = "default"
-		service_account = "humanitec-runner"
+		service_account = "platform-orchestrator-runner"
 		` + podTemplate + `
 	}
   }
   state_storage_configuration = {
 	type = "kubernetes"
 	kubernetes_configuration = {
-	  namespace = "humanitec-runner"
+	  namespace = "platform-orchestrator-runner"
     }
   }
 }

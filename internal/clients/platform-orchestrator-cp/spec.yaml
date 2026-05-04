@@ -1,7 +1,9 @@
 openapi: 3.0.0
+
 info:
   title: ''
   version: ''
+
 paths:
   /internal/orgs:
     get:
@@ -47,6 +49,7 @@ paths:
           $ref: '#/components/responses/400BadRequest'
         '409':
           $ref: '#/components/responses/409Conflict'
+
   /internal/orgs/{orgId}:
     get:
       operationId: getInternalOrganization
@@ -89,7 +92,7 @@ paths:
                 $ref: '#/components/schemas/Project'
         '404':
           $ref: '#/components/responses/404NotFound'
-  
+
   /internal/orgs/{orgId}/projects/{projectUuid}/envs:
     get:
       operationId: listInternalEnvironmentsByProjectUuid
@@ -103,7 +106,7 @@ paths:
         - $ref: '#/components/parameters/orgIdPathParam'
         - $ref: '#/components/parameters/projectUuidPathParam'
         - $ref: '#/components/parameters/perPageQueryParam'
-        - $ref: '#/components/parameters/pageTokenQueryParam'          
+        - $ref: '#/components/parameters/pageTokenQueryParam'
       responses:
         '200':
           description: Successful get response.
@@ -653,7 +656,7 @@ paths:
                 $ref: '#/components/schemas/Environment'
         '404':
           $ref: '#/components/responses/404NotFound'
-  
+
   /orgs/{orgId}/envs:
     get:
       operationId: listEnvironmentsInOrg
@@ -1868,6 +1871,7 @@ components:
         - created_at
         - created_by
         - plan
+        - status
       properties:
         id:
           description: The unique identifier of the org
@@ -1888,6 +1892,20 @@ components:
           example: 00000000-0000-0000-0000-000000000000
           type: string
           format: uuid
+        updated_at:
+          description: The date and time when the org was last updated.
+          example: '2023-01-01T00:00:00Z'
+          type: string
+          format: date-time
+        status:
+          description: The current status of the org.
+          type: string
+          enum:
+            - active
+            - deleting
+            - delete_failed
+            - deleted
+          example: active
         plan:
           description: The plan of the org.
           example: custom
@@ -3340,7 +3358,7 @@ components:
       required:
         - type
         - bucket
-    
+
     GCSStorageConfiguration:
       description: |-
         Configuration to use a Google Cloud Storage (GCS) bucket as state storage backend of this runner. Authentication and other settings
@@ -3565,7 +3583,7 @@ components:
           type: string
           pattern: ^[a-zA-Z0-9._:/-]+(?:@[a-z0-9]+:[a-fA-F0-9]+)?$
           x-pattern-error: image must be a valid container image
-          example: humanitec/humanitec-runner:latest
+          example: platform-orchestrator/platform-orchestrator-runner:latest
           maxLength: 255
         task_role_arn:
           description: An optional ARN for the role available inside the Runner.

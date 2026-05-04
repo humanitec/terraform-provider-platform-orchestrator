@@ -26,9 +26,9 @@ const (
 
 // Defines values for DeploymentCreateBodyMode.
 const (
-	Deploy   DeploymentCreateBodyMode = "deploy"
-	PlanOnly DeploymentCreateBodyMode = "plan_only"
-	Rollback DeploymentCreateBodyMode = "rollback"
+	DeploymentCreateBodyModeDeploy   DeploymentCreateBodyMode = "deploy"
+	DeploymentCreateBodyModePlanOnly DeploymentCreateBodyMode = "plan_only"
+	DeploymentCreateBodyModeRollback DeploymentCreateBodyMode = "rollback"
 )
 
 // Defines values for DeploymentCreateBodyRunnerLogLevel.
@@ -67,6 +67,22 @@ const (
 // Defines values for UpdateMetadataKeySchemaType.
 const (
 	UpdateMetadataKeySchemaTypeString UpdateMetadataKeySchemaType = "string"
+)
+
+// Defines values for ListDeploymentsParamsByMode.
+const (
+	ListDeploymentsParamsByModeDeploy       ListDeploymentsParamsByMode = "deploy"
+	ListDeploymentsParamsByModeDestroy      ListDeploymentsParamsByMode = "destroy"
+	ListDeploymentsParamsByModePlanOnly     ListDeploymentsParamsByMode = "plan_only"
+	ListDeploymentsParamsByModeRollback     ListDeploymentsParamsByMode = "rollback"
+	ListDeploymentsParamsByModeRollbackPlan ListDeploymentsParamsByMode = "rollback_plan"
+)
+
+// Defines values for ListDeploymentsParamsByStatus.
+const (
+	Executing ListDeploymentsParamsByStatus = "executing"
+	Failed    ListDeploymentsParamsByStatus = "failed"
+	Succeeded ListDeploymentsParamsByStatus = "succeeded"
 )
 
 // ActiveResourceNode A node in the active resource graph
@@ -560,6 +576,12 @@ type ResourceClass = string
 // ResourceId A specific resource id requested by the resource graph
 type ResourceId = string
 
+// ResourceNodesPage defines model for ResourceNodesPage.
+type ResourceNodesPage struct {
+	// Items The list of resource nodes for this deployment.
+	Items []ActiveResourceNode `json:"items"`
+}
+
 // UpdateMetadataKeySchema The schema of the metadata key.
 type UpdateMetadataKeySchema struct {
 	// Format The format of the metadata key.
@@ -574,6 +596,12 @@ type UpdateMetadataKeySchema struct {
 
 // UpdateMetadataKeySchemaType The type of the metadata key.
 type UpdateMetadataKeySchemaType string
+
+// ByModeQueryParam defines model for byModeQueryParam.
+type ByModeQueryParam = []string
+
+// ByStatusQueryParam defines model for byStatusQueryParam.
+type ByStatusQueryParam = []string
 
 // DeploymentIdPathParam defines model for deploymentIdPathParam.
 type DeploymentIdPathParam = openapi_types.UUID
@@ -647,7 +675,19 @@ type ListDeploymentsParams struct {
 
 	// Page The page token to request from
 	Page *PageTokenQueryParam `form:"page,omitempty" json:"page,omitempty"`
+
+	// ByMode Filter deployments by mode
+	ByMode *ByModeQueryParam `form:"by_mode,omitempty" json:"by_mode,omitempty"`
+
+	// ByStatus Filter deployments by status
+	ByStatus *ByStatusQueryParam `form:"by_status,omitempty" json:"by_status,omitempty"`
 }
+
+// ListDeploymentsParamsByMode defines parameters for ListDeployments.
+type ListDeploymentsParamsByMode string
+
+// ListDeploymentsParamsByStatus defines parameters for ListDeployments.
+type ListDeploymentsParamsByStatus string
 
 // CreateDeploymentParams defines parameters for CreateDeployment.
 type CreateDeploymentParams struct {
@@ -938,6 +978,9 @@ type ClientInterface interface {
 	// GetDeploymentEncryptedOutputs request
 	GetDeploymentEncryptedOutputs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListDeploymentResourceNodes request
+	ListDeploymentResourceNodes(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// UpdateDeploymentResultsWithBody request with any body
 	UpdateDeploymentResultsWithBody(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1166,6 +1209,18 @@ func (c *Client) GetDeploymentBundle(ctx context.Context, orgId OrgIdPathParam, 
 
 func (c *Client) GetDeploymentEncryptedOutputs(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDeploymentEncryptedOutputsRequest(c.Server, orgId, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListDeploymentResourceNodes(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDeploymentResourceNodesRequest(c.Server, orgId, deploymentId)
 	if err != nil {
 		return nil, err
 	}
@@ -1785,6 +1840,38 @@ func NewListDeploymentsRequest(server string, orgId OrgIdPathParam, params *List
 
 		}
 
+		if params.ByMode != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "by_mode", runtime.ParamLocationQuery, *params.ByMode); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.ByStatus != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "by_status", runtime.ParamLocationQuery, *params.ByStatus); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -2159,6 +2246,47 @@ func NewGetDeploymentEncryptedOutputsRequest(server string, orgId OrgIdPathParam
 	}
 
 	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/encrypted-outputs", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListDeploymentResourceNodesRequest generates requests for ListDeploymentResourceNodes
+func NewListDeploymentResourceNodesRequest(server string, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "orgId", runtime.ParamLocationPath, orgId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "deploymentId", runtime.ParamLocationPath, deploymentId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/orgs/%s/deployments/%s/resources", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2792,6 +2920,9 @@ type ClientWithResponsesInterface interface {
 	// GetDeploymentEncryptedOutputsWithResponse request
 	GetDeploymentEncryptedOutputsWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*GetDeploymentEncryptedOutputsResponse, error)
 
+	// ListDeploymentResourceNodesWithResponse request
+	ListDeploymentResourceNodesWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*ListDeploymentResourceNodesResponse, error)
+
 	// UpdateDeploymentResultsWithBodyWithResponse request with any body
 	UpdateDeploymentResultsWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateDeploymentResultsResponse, error)
 
@@ -2830,6 +2961,7 @@ type GetJwksResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Jwks
+	JSON404      *N404NotFound
 }
 
 // Status returns HTTPResponse.Status
@@ -2852,6 +2984,7 @@ type GetOpenidConfigurationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *OpenidConfiguration
+	JSON404      *N404NotFound
 }
 
 // Status returns HTTPResponse.Status
@@ -3175,6 +3308,29 @@ func (r GetDeploymentEncryptedOutputsResponse) StatusCode() int {
 	return 0
 }
 
+type ListDeploymentResourceNodesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ResourceNodesPage
+	JSON404      *N404NotFound
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDeploymentResourceNodesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDeploymentResourceNodesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type UpdateDeploymentResultsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3274,6 +3430,7 @@ type CreateMetadataKeyResponse struct {
 	JSON201      *MetadataKey
 	JSON400      *N400BadRequest
 	JSON404      *N404NotFound
+	JSON409      *N409Conflict
 }
 
 // Status returns HTTPResponse.Status
@@ -3535,6 +3692,15 @@ func (c *ClientWithResponses) GetDeploymentEncryptedOutputsWithResponse(ctx cont
 	return ParseGetDeploymentEncryptedOutputsResponse(rsp)
 }
 
+// ListDeploymentResourceNodesWithResponse request returning *ListDeploymentResourceNodesResponse
+func (c *ClientWithResponses) ListDeploymentResourceNodesWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, reqEditors ...RequestEditorFn) (*ListDeploymentResourceNodesResponse, error) {
+	rsp, err := c.ListDeploymentResourceNodes(ctx, orgId, deploymentId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDeploymentResourceNodesResponse(rsp)
+}
+
 // UpdateDeploymentResultsWithBodyWithResponse request with arbitrary body returning *UpdateDeploymentResultsResponse
 func (c *ClientWithResponses) UpdateDeploymentResultsWithBodyWithResponse(ctx context.Context, orgId OrgIdPathParam, deploymentId DeploymentIdPathParam, params *UpdateDeploymentResultsParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateDeploymentResultsResponse, error) {
 	rsp, err := c.UpdateDeploymentResultsWithBody(ctx, orgId, deploymentId, params, contentType, body, reqEditors...)
@@ -3661,6 +3827,13 @@ func ParseGetJwksResponse(rsp *http.Response) (*GetJwksResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
 	}
 
 	return response, nil
@@ -3686,6 +3859,13 @@ func ParseGetOpenidConfigurationResponse(rsp *http.Response) (*GetOpenidConfigur
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 
@@ -4160,6 +4340,39 @@ func ParseGetDeploymentEncryptedOutputsResponse(rsp *http.Response) (*GetDeploym
 	return response, nil
 }
 
+// ParseListDeploymentResourceNodesResponse parses an HTTP response from a ListDeploymentResourceNodesWithResponse call
+func ParseListDeploymentResourceNodesResponse(rsp *http.Response) (*ListDeploymentResourceNodesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDeploymentResourceNodesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResourceNodesPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest N404NotFound
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseUpdateDeploymentResultsResponse parses an HTTP response from a UpdateDeploymentResultsWithResponse call
 func ParseUpdateDeploymentResultsResponse(rsp *http.Response) (*UpdateDeploymentResultsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -4333,6 +4546,13 @@ func ParseCreateMetadataKeyResponse(rsp *http.Response) (*CreateMetadataKeyRespo
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest N409Conflict
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
 
 	}
 

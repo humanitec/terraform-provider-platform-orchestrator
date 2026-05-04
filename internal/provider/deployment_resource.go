@@ -105,9 +105,9 @@ func (d *DeploymentResource) Schema(ctx context.Context, request resource.Schema
 				MarkdownDescription: "The mode of the deployment. 'deploy' (the default) or 'plan_only'.",
 				Computed:            true,
 				Optional:            true,
-				Default:             stringdefault.StaticString(string(dp.Deploy)),
+				Default:             stringdefault.StaticString(string(dp.DeploymentCreateBodyModeDeploy)),
 				Validators: []validator.String{
-					stringvalidator.OneOf(string(dp.Deploy), string(dp.PlanOnly)),
+					stringvalidator.OneOf(string(dp.DeploymentCreateBodyModeDeploy), string(dp.DeploymentCreateBodyModePlanOnly)),
 				},
 			},
 			"id": schema.StringAttribute{
@@ -172,7 +172,7 @@ func (d *DeploymentResource) Configure(ctx context.Context, request resource.Con
 
 func (d *DeploymentResource) doDeployment(ctx context.Context, data *DeploymentResourceModel, diags *diag.Diagnostics) (outputsKey *age.X25519Identity) {
 	if data.Mode.IsNull() {
-		data.Mode = types.StringValue(string(dp.Deploy))
+		data.Mode = types.StringValue(string(dp.DeploymentCreateBodyModeDeploy))
 	}
 	if data.WaitFor.IsNull() {
 		data.WaitFor = types.BoolValue(true)

@@ -12,11 +12,16 @@ paths:
       security:
         - userIdHeader: []
       parameters:
+        # path
         - $ref: "#/components/parameters/orgIdPathParam"
         - $ref: "#/components/parameters/projectIdQueryParam"
         - $ref: "#/components/parameters/envIdQueryParam"
+        # pagination
         - $ref: "#/components/parameters/perPageQueryParam"
         - $ref: "#/components/parameters/pageTokenQueryParam"
+        # filter params
+        - $ref: "#/components/parameters/byModeQueryParam"
+        - $ref: "#/components/parameters/byStatusQueryParam"
       responses:
         "200":
           description: Successful list response
@@ -384,6 +389,31 @@ paths:
         "404":
           $ref: "#/components/responses/404NotFound"
 
+  /orgs/{orgId}/deployments/{deploymentId}/resources:
+    get:
+      operationId: listDeploymentResourceNodes
+      tags:
+        - Deployment
+      summary: List resource nodes for a deployment
+      description: |
+        Returns the resource graph calculated for this deployment. Works for all
+        deployment types including plan-only and historical deployments. Unlike
+        active-resources, this endpoint returns graph nodes without runtime metadata.
+      security:
+        - userIdHeader: []
+      parameters:
+        - $ref: "#/components/parameters/orgIdPathParam"
+        - $ref: "#/components/parameters/deploymentIdPathParam"
+      responses:
+        200:
+          description: Resource nodes retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceNodesPage"
+        404:
+          $ref: "#/components/responses/404NotFound"
+
   /orgs/{orgId}/active-resources:
     get:
       operationId: listActiveResourceNodes
@@ -517,6 +547,8 @@ paths:
                 $ref: "#/components/schemas/MetadataKey"
         400:
           $ref: "#/components/responses/400BadRequest"
+        409:
+          $ref: "#/components/responses/409Conflict"
         404:
           $ref: "#/components/responses/404NotFound"
   /orgs/{orgId}/metadata-keys/{metadataKeyName}:
@@ -632,6 +664,8 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/OpenidConfiguration"
+        "404":
+          $ref: "#/components/responses/404NotFound"
   "/.well-known/jwks":
     get:
       operationId: getJwks
@@ -645,6 +679,8 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/Jwks"
+        "404":
+          $ref: "#/components/responses/404NotFound"
 
 components:
   securitySchemes:
@@ -742,6 +778,36 @@ components:
       example: "AAAAAAAAAA=="
       schema:
         type: string
+    byModeQueryParam:
+      name: by_mode
+      in: query
+      description: Filter deployments by mode
+      required: false
+      schema:
+        type: array
+        items:
+          # todo: make this enum reusable?
+          type: string
+          enum:
+            - plan_only
+            - deploy
+            - rollback
+            - rollback_plan
+            - destroy
+    byStatusQueryParam:
+      name: by_status
+      in: query
+      description: Filter deployments by status
+      required: false
+      schema:
+        type: array
+        items:
+          # todo: make this enum reusable?
+          type: string
+          enum:
+            - executing
+            - failed
+            - succeeded
 
   schemas:
     Error:
@@ -1403,6 +1469,17 @@ components:
         items:
           type: array
           description: The list of active resource nodes.
+          items:
+            $ref: "#/components/schemas/ActiveResourceNode"
+
+    ResourceNodesPage:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: The list of resource nodes for this deployment.
           items:
             $ref: "#/components/schemas/ActiveResourceNode"
 

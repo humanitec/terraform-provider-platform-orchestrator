@@ -36,6 +36,14 @@ const (
 	Public   InternalOrganizationSource = "public"
 )
 
+// Defines values for InternalOrganizationStatus.
+const (
+	InternalOrganizationStatusActive       InternalOrganizationStatus = "active"
+	InternalOrganizationStatusDeleteFailed InternalOrganizationStatus = "delete_failed"
+	InternalOrganizationStatusDeleted      InternalOrganizationStatus = "deleted"
+	InternalOrganizationStatusDeleting     InternalOrganizationStatus = "deleting"
+)
+
 // Defines values for ModuleParamItemType.
 const (
 	Any    ModuleParamItemType = "any"
@@ -44,6 +52,14 @@ const (
 	Map    ModuleParamItemType = "map"
 	Number ModuleParamItemType = "number"
 	String ModuleParamItemType = "string"
+)
+
+// Defines values for OrganizationStatus.
+const (
+	OrganizationStatusActive       OrganizationStatus = "active"
+	OrganizationStatusDeleteFailed OrganizationStatus = "delete_failed"
+	OrganizationStatusDeleted      OrganizationStatus = "deleted"
+	OrganizationStatusDeleting     OrganizationStatus = "deleting"
 )
 
 // Defines values for ProjectStatus.
@@ -396,12 +412,21 @@ type InternalOrganization struct {
 	// Source The source of the org state. This is used to identify the source of the org state, such as a git repository.
 	Source InternalOrganizationSource `json:"source"`
 
+	// Status The current status of the org.
+	Status InternalOrganizationStatus `json:"status"`
+
+	// UpdatedAt The date and time when the org was last updated.
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+
 	// Uuid Unique uid for the org to identify a unique lifecycle
 	Uuid openapi_types.UUID `json:"uuid"`
 }
 
 // InternalOrganizationSource The source of the org state. This is used to identify the source of the org state, such as a git repository.
 type InternalOrganizationSource string
+
+// InternalOrganizationStatus The current status of the org.
+type InternalOrganizationStatus string
 
 // InternalOrganizationCreateBody A request to create a new organization state in the control plane.
 type InternalOrganizationCreateBody struct {
@@ -1053,9 +1078,18 @@ type Organization struct {
 	// Plan The plan of the org.
 	Plan string `json:"plan"`
 
+	// Status The current status of the org.
+	Status OrganizationStatus `json:"status"`
+
+	// UpdatedAt The date and time when the org was last updated.
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+
 	// Uuid Unique uid for the org to identify a unique lifecycle
 	Uuid openapi_types.UUID `json:"uuid"`
 }
+
+// OrganizationStatus The current status of the org.
+type OrganizationStatus string
 
 // Project A project.
 type Project struct {

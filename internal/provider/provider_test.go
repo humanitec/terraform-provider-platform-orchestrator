@@ -99,7 +99,7 @@ func TestLoadClientConfig_with_env(t *testing.T) {
 	t.Setenv(PO_AUTH_TOKEN_ENV_VAR, "a-token")
 	d := new(diag.Diagnostics)
 	u, o, a := loadClientConfig(t.Context(), PlatformOrchestratorProviderModel{}, d)
-	// FIXME: Update the default API URL to match the new domain
+	// FIXME: Update the default API URL to match the new domain.
 	assert.Equal(t, "[Default api url]", u)
 	assert.Equal(t, "another-org", o)
 	assert.Equal(t, "a-token", a)
@@ -121,7 +121,7 @@ func TestLoadClientConfig_with_fallback_file(t *testing.T) {
 
 	ctx := tflogtest.RootLogger(t.Context(), os.Stdout)
 	u, o, a := loadClientConfig(ctx, PlatformOrchestratorProviderModel{}, d)
-	// FIXME: Update the default API URL to match the new domain
+	// FIXME: Update the default API URL to match the new domain.
 	assert.Equal(t, "[Default api url]", u)
 	assert.Equal(t, "some-org", o)
 	assert.Equal(t, "some-token", a)

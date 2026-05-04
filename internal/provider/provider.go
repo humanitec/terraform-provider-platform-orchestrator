@@ -39,7 +39,7 @@ const (
 	PO_ORG_ID_ENV_VAR     = "PO_ORG_ID"
 	PO_AUTH_TOKEN_ENV_VAR = "PO_AUTH_TOKEN"
 
-	// FIXME: Update the default API URL to match the new domain
+	// FIXME: Update the default API URL to match the new domain.
 	PO_DEFAULT_API_URL = "[Default api url]"
 
 	DefaultAsyncPollInterval = time.Second * 3

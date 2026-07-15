@@ -7,6 +7,8 @@ description: |-
 
 # platform-orchestrator Provider
 
+~> **Deprecated:** This provider is deprecated and no longer maintained. Please migrate to `stellwerk-labs/platform-orchestrator` instead.
+
 
 
 ## Example Usage

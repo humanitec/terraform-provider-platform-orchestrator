@@ -24,8 +24,8 @@ jobs:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.ONEPASSWORD_SERVICE_ACCOUNT }}
-          GPG_PRIVATE_KEY: "op://Humanitec Operations/Terraform provider signing GPG key/GPG_KEYS/GPG_PRIVATE_KEY"
-          PASSPHRASE: "op://Humanitec Operations/Terraform provider signing GPG key/password"
+          GPG_PRIVATE_KEY: "op://Operations/Terraform provider signing GPG key/GPG_KEYS/GPG_PRIVATE_KEY"
+          PASSPHRASE: "op://Operations/Terraform provider signing GPG key/password"
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:

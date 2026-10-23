@@ -1,3 +1,5 @@
+**Deprecated**: This provider is deprecated and no longer maintained. Please migrate to stellwerk-labs/platform-orchestrator instead.
+
 # Terraform Provider Humanitec V2
 
 This repo holds the source code for the Platform Orchestrator terraform provider by Humanitec. This allows organizations to configure all platform engineering concerns through infrastructure as code.
